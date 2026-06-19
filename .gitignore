@@ -1,0 +1,102 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# .gitignore — ex05-airllm
+# Goal: never commit secrets, model weights, large artifacts, caches, or
+# machine-local state. Source, docs, configs, and small reproducible results
+# (CSV/JSON/figures) are tracked.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Secrets & credentials (NEVER commit) ────────────────────────────────────
+.env
+.env.*
+!.env-example
+*.key
+*.pem
+*.pfx
+credentials.json
+secrets.json
+hf_token*
+*.hf_token
+.huggingface/
+token
+*token*.txt
+
+# ── Python ──────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+
+# ── Virtual environments / uv ───────────────────────────────────────────────
+.venv/
+venv/
+env/
+.uv/
+uv-cache/
+# Note: uv.lock IS committed (reproducible deps); only caches are ignored.
+
+# ── Testing, coverage, linters ──────────────────────────────────────────────
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.tox/
+.nox/
+
+# ── Jupyter ─────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.nbconvert.ipynb
+
+# ── Model weights & large artifacts (NEVER commit) ──────────────────────────
+# Downloaded models, shards, and converted formats can be many GB. They are
+# reproducible from Hugging Face model IDs documented in docs/ and must stay
+# out of git history.
+models/
+model_cache/
+hf_cache/
+*.safetensors
+*.gguf
+*.ggml
+*.bin
+*.pt
+*.pth
+*.onnx
+*.h5
+*.ckpt
+splitted_model/          # AirLLM per-layer shard output
+layer_shards/
+*.tar
+*.tar.gz
+*.zip
+
+# ── Experiment runtime artifacts ────────────────────────────────────────────
+# Raw, machine-local, or oversized run output. Curated/summary results that are
+# small and reproducible live in results/ and figures/ and ARE tracked; the
+# patterns below keep the bulky/volatile pieces out.
+results/raw/
+results/cache/
+results/**/*.tmp
+*.log
+logs/
+profiling/
+*.prof
+nvidia-smi-*.txt
+
+# ── OS / editor noise ───────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.code-workspace
