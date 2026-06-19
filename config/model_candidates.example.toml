@@ -1,0 +1,90 @@
+# Example model-candidate shortlist (Stage 2B) — PLANNING TEMPLATE, NOT EVIDENCE.
+#
+# This mirrors docs/MODEL_SELECTION.md. It is a planning artifact, NOT experimental evidence
+# and NOT a final selection. Sizes/licenses/gated flags were checked via Hugging Face
+# *metadata only* (no weights downloaded) on 2026-06-20. No model is downloaded, and no final
+# model is chosen, until explicitly approved (ADR-0101). Never store tokens here (ADR-0003).
+
+version = "1.0.0"
+is_example = true                      # planning/example config — NOT experimental evidence
+selection_finalized = false           # no final model is committed in Stage 2B
+planning_approved = true              # lead-approved at PLANNING level only...
+download_approved = false             # ...weight download is a separate gate (T2.6 / ADR-0101)
+metadata_checked = "huggingface_hub metadata only; no weights downloaded"
+
+[[candidate]]
+role = "tiny_smoke"
+candidate_model_id = "Qwen/Qwen2-0.5B"
+family = "qwen2"                        # AirLLM class: AirLLMQWen2
+estimated_size_gb = 1.0                 # metadata-verified
+expected_format = "safetensors"
+license_status = "apache-2.0"
+access_status = "public-ungated-no-token"
+decision_status = "RECOMMENDED_FOR_VERIFICATION"
+verification_needed = "on-disk size; Stage 3 CPU smoke run"
+
+[[candidate]]
+role = "main_airllm"
+candidate_model_id = "Qwen/Qwen2-7B"
+family = "qwen2"
+estimated_size_gb = 15.24              # fp16 > ~11.24 GiB WSL RAM -> forces AirLLM
+expected_format = "safetensors"
+license_status = "apache-2.0"
+access_status = "public-ungated-no-token"
+decision_status = "RECOMMENDED_FOR_VERIFICATION"
+verification_needed = "download size/time budget; Stage 3 then Stage 5 CPU run"
+
+[[candidate]]
+role = "main_airllm_instruct_alt"
+candidate_model_id = "Qwen/Qwen2.5-7B-Instruct"
+family = "qwen2"
+estimated_size_gb = 15.24
+expected_format = "safetensors"
+license_status = "apache-2.0"
+access_status = "public-ungated-no-token"
+decision_status = "RECOMMENDED_FOR_VERIFICATION"
+verification_needed = "confirm AirLLMQWen2 handles Qwen2.5 arch"
+
+[[candidate]]
+role = "main_backup_family"
+candidate_model_id = "mistralai/Mistral-7B-Instruct-v0.2"
+family = "mistral"                      # AirLLM class: AirLLMMistral
+estimated_size_gb = 14.5               # fp16 safetensors (repo also lists .bin)
+expected_format = "safetensors+bin"
+license_status = "apache-2.0"
+access_status = "public-ungated-no-token"
+decision_status = "DEFERRED"
+verification_needed = "pull safetensors only; size/time"
+
+[[candidate]]
+role = "baseline_direct_run"
+candidate_model_id = "Qwen/Qwen2-7B"   # same as main, for a fair comparison
+family = "qwen2"
+estimated_size_gb = 15.24
+expected_format = "safetensors"
+license_status = "apache-2.0"
+access_status = "public-ungated-no-token"
+decision_status = "RECOMMENDED_FOR_VERIFICATION"
+verification_needed = "expected OOM/swap on 11 GiB is the documented baseline result"
+
+[[candidate]]
+role = "optional_directml_gpu"
+candidate_model_id = "Qwen/Qwen2-1.5B"
+family = "qwen2"
+estimated_size_gb = 3.1
+expected_format = "safetensors"
+license_status = "apache-2.0"
+access_status = "public-ungated-no-token"
+decision_status = "DEFERRED"
+verification_needed = "only if the optional Windows DirectML extension is pursued"
+
+[[candidate]]
+role = "stretch_massive"
+candidate_model_id = "Qwen/Qwen2-72B"
+family = "qwen2"
+estimated_size_gb = 145.42            # fits 933 GB disk; far exceeds RAM
+expected_format = "safetensors"
+license_status = "other"               # Qwen license — review before use
+access_status = "public-ungated-no-token"
+decision_status = "DEFERRED"
+verification_needed = "CPU runtime within time budget; license terms"

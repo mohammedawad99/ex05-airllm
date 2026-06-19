@@ -1,11 +1,14 @@
 # EX05 — Running a Massive LLM Locally: AirLLM, Quantization & Performance Benchmarking
 
-> **⚠️ STAGE 1A/1B — DOCUMENTATION & HARDWARE INTAKE ONLY.**
-> This repository currently contains **planning/requirements documentation plus measured
-> hardware evidence** for both the Windows host and the Ubuntu WSL2 execution environment
-> (`docs/HARDWARE.md`). There are **no experimental results, no benchmarks, no figures, and
-> no implementation code yet**, and **no model has been selected**. **This repository is NOT
-> submission-ready.** It is the audited foundation on which the experiment will later be built.
+> **⚠️ STAGE 2A — DOCS + HARDWARE/FEASIBILITY EVIDENCE + DEPENDENCY SKELETON.**
+> This repository currently contains planning/requirements documentation, measured hardware
+> & backend-feasibility evidence (`docs/HARDWARE.md`, `docs/GPU_FEASIBILITY.md`,
+> `docs/AIRLLM_FEASIBILITY.md`), and a **reproducible `uv` project skeleton** (`pyproject.toml`
+> + `uv.lock`, a minimal `src/ex05_airllm` package with a version test, and
+> `docs/MEASUREMENT_DESIGN.md`). There are **no experiment results, no benchmarks, no figures,
+> no runner/AirLLM/DirectML code yet**. A model **shortlist** is metadata-verified
+> (`docs/MODEL_SELECTION.md`), but **no model has been finally selected or downloaded**.
+> **This repository is NOT submission-ready.** It is the audited foundation for the experiment.
 
 ---
 
@@ -45,46 +48,49 @@ tables, graphs, an evidence map, reproduction instructions, and honest limitatio
 | Planning (PRD / PLAN / TODO) | ✅ Stage 0 drafts in `docs/` |
 | Risks, decisions, AI workflow, prompts logged | ✅ Done in `docs/` |
 | Hardware specification | 🟡 Captured & verified (Stage 1A/1B) — `docs/HARDWARE.md` (host ≈24 GB/iGPU/NVMe vs experiment ~11 GiB CPU-only; GPU/VRAM partial) |
-| Final model choice | ⛔ Intentionally deferred (Stage 2, against measured hardware) |
+| Backend feasibility | 🟡 GPU DirectML works (optional); CPU + AirLLM is main path (`docs/GPU_FEASIBILITY.md`, `docs/AIRLLM_FEASIBILITY.md`) |
+| Dependency skeleton & measurement design | ✅ Stage 2A — `pyproject.toml` + `uv.lock` (pinned matrix, CPU torch), `src/ex05_airllm` + version test, `docs/MEASUREMENT_DESIGN.md` |
+| Model shortlist | 🟡 Stage 2B — metadata-verified shortlist (`docs/MODEL_SELECTION.md`): tiny `Qwen2-0.5B`, main `Qwen2-7B`; **no download** |
+| Final model choice | ⛔ Shortlisted, not finalized — final pick + download await approval & Stage 3 smoke run |
 | Baseline experiment | ⛔ Not started (Stage 4) |
 | AirLLM + quantization experiment | ⛔ Not started (Stage 5) |
 | Measurements / figures / cost analysis | ⛔ Not started (Stages 5–6) |
-| Implementation code & tests | ⛔ Not started (Stage 3+) |
+| Implementation code & tests | 🟡 Skeleton only (`version`/`constants` + version test); runners not started (Stage 3+) |
 
 There are **no results to report yet**, and none are claimed.
 
 ---
 
-## Repository layout (Stage 0)
+## Repository layout (Stage 2A)
 
 ```
 ex05-airllm/
-├── README.md                     # This file (Stage 0 requirements README)
+├── README.md                     # This file (the evolving technical report)
 ├── .gitignore                    # Excludes secrets, model weights, caches, large artifacts
+├── pyproject.toml                # uv project: pinned AirLLM matrix + CPU torch, ruff/pytest/coverage
+├── uv.lock                       # Locked, reproducible dependency set
 ├── docs/                         # Mandatory documentation (audited)
 │   ├── REQUIREMENTS_AUDIT.md     # Traceability: requirement → status → evidence
-│   ├── HARDWARE.md               # Stage 1A hardware evidence (measured, not benchmarks)
-│   ├── PRD.md                    # Product Requirements Document (Stage 0 draft)
-│   ├── PLAN.md                   # Architecture & staged plan (Stage 0..7)
-│   ├── TODO.md                   # Staged task ledger with definition-of-done
-│   ├── AI_WORKFLOW.md            # How AI agents are used as collaborators
-│   ├── PROMPTS.md                # Prompt engineering log (Prompt 001 = this kickoff)
-│   ├── DECISIONS.md              # Architecture Decision Records (ADRs)
-│   ├── RISKS.md                  # Risk register with mitigations
-│   ├── QUALITY.md                # Planned quality gates (no results yet)
-│   ├── COSTS.md                  # Cost-analysis methodology (no numbers yet)
-│   └── SUBMISSION_CHECKLIST.md   # Final-audit checklist
-├── config/                       # Configuration files (populated from Stage 2)
-├── src/                          # Implementation (populated from Stage 3) — empty in Stage 0
-├── tests/                        # Tests (populated from Stage 3) — empty in Stage 0
-├── experiments/                  # Experiment runners/scripts (Stage 4+)
-├── results/                      # Measured data: CSV/JSON (Stage 5+)
-├── figures/                      # Generated graphs (Stage 6)
+│   ├── HARDWARE.md               # Stage 1A/1B hardware evidence (host vs WSL2)
+│   ├── GPU_FEASIBILITY.md        # Stage 1C GPU/DirectML feasibility
+│   ├── AIRLLM_FEASIBILITY.md     # Stage 1D AirLLM CPU feasibility (pinned matrix)
+│   ├── MEASUREMENT_DESIGN.md     # Stage 2A metrics + result schema + repro rules
+│   ├── PRD.md  PLAN.md  TODO.md  # Requirements / architecture / task ledger
+│   ├── AI_WORKFLOW.md  PROMPTS.md  DECISIONS.md  RISKS.md
+│   ├── QUALITY.md  COSTS.md  SUBMISSION_CHECKLIST.md
+├── config/
+│   └── experiment.example.toml   # Versioned config template (placeholder model id)
+├── src/ex05_airllm/              # Package skeleton: version.py, constants.py (no runners yet)
+├── tests/unit/                   # test_version.py (version/schema consistency)
+├── experiments/                  # Experiment runners (Stage 4+) — not started
+├── results/                      # Measured data: CSV/JSON (Stage 5+) — none yet
+├── figures/                      # Generated graphs (Stage 6) — none yet
 └── reports/                      # Long-form reports linked from README (Stage 6)
 ```
 
-> `src/`, `tests/`, `experiments/`, `results/`, `figures/`, and `reports/` exist as
-> scaffolding for later stages and are intentionally empty of project artifacts in Stage 0.
+> `experiments/`, `results/`, `figures/`, and `reports/` are scaffolding for later stages and
+> hold no project artifacts yet. `src/`/`tests/` contain only the Stage 2A skeleton + version
+> test — no runner, AirLLM, DirectML, plotting, or cost code exists yet.
 
 ---
 

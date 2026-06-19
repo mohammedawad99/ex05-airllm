@@ -19,6 +19,8 @@
 | 006 | 1C-C | Stage 1C-C — DirectML retest with compatible Python | No Python 3.10–3.12 installed; winget could add 3.11.9 but persistent host change stopped-and-reported (user-gated); DirectML stays BLOCKED; CPU/AirLLM remains main path |
 | 007 | 1C-D | Stage 1C-D — DirectML retest (user-authorized Python 3.11) | Python 3.11.9 installed (user-scope); DirectML matmul SUCCEEDS on Radeon 890M; transformers imports (no model); GPU = verified optional baseline/extension; CPU/AirLLM stays main path |
 | 008 | 1D | Stage 1D — AirLLM CPU feasibility check | airllm 2.11.0 installs+imports on CPU with a pinned matrix (transformers 4.44.2/optimum 1.23.3/sentencepiece/torch-cpu); `device='cpu'` first-class; CPU path EVIDENCED; `AIRLLM_FEASIBILITY.md` + R-AIRLLM-DEPS + ADR-0011 |
+| 009 | 2A | Stage 2A — Project dependency skeleton & measurement design | Created `pyproject.toml`+`uv.lock` (pinned matrix, CPU torch), `src/ex05_airllm` skeleton + version test, `MEASUREMENT_DESIGN.md`, `config/experiment.example.toml`; gates green (uv sync, 4 tests @100%, ruff, ≤150 lines); ADR-0012 |
+| 010 | 2B | Stage 2B — Model shortlist & selection matrix | Metadata-verified shortlist (no downloads): tiny Qwen2-0.5B, main Qwen2-7B (15.24 GB > 11 GiB), apache-2.0/ungated; `MODEL_SELECTION.md`, `PRD_measurement.md`, `PRD_airllm_pipeline.md`, candidate config; ADR-0101a; final pick deferred to approval |
 
 ---
 
@@ -520,6 +522,121 @@
 - **Lessons / notes for next prompts:** Stage 2 must pin the 1D matrix in the `uv` lock; the
   last open gate is a **Stage 3 small-model runtime check** with `device='cpu'` (T1D.8) to
   confirm no CUDA-only code path at run time before finalizing the backend ADR.
+
+---
+
+## Prompt 009 — Stage 2A: Project dependency skeleton & measurement design
+
+- **Stage:** 2A
+- **Date:** 2026-06-20
+- **Intent:** Create the project's **reproducible Python/uv skeleton** and the **measurement
+  architecture documentation** — without downloading models, running AirLLM inference, or
+  benchmarking. First stage that creates `pyproject.toml`/`uv.lock` and real (skeleton) code.
+- **Context:** Stage 1 (hardware + GPU/AirLLM feasibility) is committed (`6a64afe`). CPU +
+  AirLLM is the main path with the 1D pinned matrix; this stage turns that into a locked env
+  plus the measurement design, ahead of Stage 2B model selection.
+- **Key constraints encoded:** `uv` only (no `requirements.txt`, no direct project `pip`);
+  pin the 1D AirLLM matrix; CPU torch wheel; Python `>=3.12,<3.13` (stop & report if it can't
+  resolve); ruff (line 100, py312, `E,F,W,I,N,UP,B,C4,SIM`), pytest, coverage `fail_under=85`;
+  every file ≤150 code lines; no secrets/weights/downloads; **no runner/AirLLM/DirectML/plot/
+  cost code**, no inference, no Ollama, no benchmark, no final model, no fake results; no
+  commit/push.
+- **Verbatim prompt (condensed; full text retained in the conversation transcript):**
+
+  > **Stage 2A — Project Dependency Skeleton and Measurement Design.** Create the project's
+  > reproducible Python/uv skeleton and measurement architecture docs without downloading
+  > models, running AirLLM, or benchmarking. Create `pyproject.toml`, `uv.lock` (via uv),
+  > minimal `src/ex05_airllm` (`__init__`, `version`, `constants`), `tests/unit/test_version.py`
+  > (package vs pyproject version consistency), `docs/MEASUREMENT_DESIGN.md`, a
+  > `config/experiment.example.{toml,json}` (example only, no real model id), and update
+  > PLAN/QUALITY/TODO/DECISIONS/REQUIREMENTS_AUDIT (no experiments DONE)/PROMPTS/README. Pin the
+  > AirLLM matrix (airllm==2.11.0, transformers==4.44.2, optimum==1.23.3, sentencepiece) + CPU
+  > torch; add psutil/pandas/matplotlib/pydantic/typer/rich and dev pytest/pytest-cov/ruff;
+  > Python >=3.12,<3.13 (stop & report if resolution fails). ruff line-length 100, target py312,
+  > select E,F,W,I,N,UP,B,C4,SIM; pytest + coverage source=src fail_under=85; files ≤150 code
+  > lines. MEASUREMENT_DESIGN.md must have the 9 sections (status/goals/metrics/result schema/
+  > experiment matrix/tools/repro rules/risks/Stage 2B acceptance). Validation: `uv sync --extra
+  > dev`, `uv run pytest`, `uv run ruff check .`, `uv run ruff format --check .`, and a ≤150
+  > line-count script. Forbidden: benchmark/AirLLM/DirectML/plot/cost runners, model download,
+  > inference, Ollama, fake results/figures, commit, push.
+
+- **Results / validation:**
+  - **`uv sync --extra dev`:** ✅ resolved & installed with **no version conflicts** — pins
+    landed exactly: `airllm 2.11.0`, `transformers 4.44.2`, `optimum 1.23.3`, `sentencepiece
+    0.2.1`, `torch 2.12.1+cpu`, plus pandas/matplotlib/pydantic/typer/rich/psutil + dev tools.
+    `uv.lock` created (1343 lines). `airllm` imports in the project env (import only).
+  - **`uv run pytest`:** ✅ 4 passed; **coverage 100%** (≥85).
+  - **`ruff check .`:** ✅ All checks passed (after merging two imports). **`ruff format
+    --check .`:** ✅ clean. **Line-count:** ✅ all Python files ≤150 code lines.
+  - **Files:** created `pyproject.toml`, `uv.lock`, `src/ex05_airllm/{__init__,version,
+    constants}.py`, `tests/unit/test_version.py`, `docs/MEASUREMENT_DESIGN.md`,
+    `config/experiment.example.toml`; updated `config/README.md`, `docs/{PLAN,QUALITY,TODO,
+    DECISIONS,REQUIREMENTS_AUDIT,PROMPTS}.md` (+ README if needed). ADR-0012 recorded.
+- **Outcome:** Reproducible CPU env + measurement design in place; **no model selected, no
+  download, no inference, no benchmark, no fake results, no commit/push.**
+- **Iterations / corrections:** ruff flagged unsorted imports in the test → merged
+  `from ex05_airllm import __version__, constants`; re-ran, clean.
+- **Lessons / notes for next prompts:** Stage 2B = model shortlist + ADR-0101 selection
+  (sized to ~11 GiB / 933 GB / AirLLM families), then `PRD_measurement.md`/`PRD_airllm_pipeline.md`;
+  no download before the model decision is approved.
+
+---
+
+## Prompt 010 — Stage 2B: Model shortlist and selection matrix
+
+- **Stage:** 2B
+- **Date:** 2026-06-20
+- **Intent:** Produce a justified model-selection plan and shortlist for each role (tiny smoke /
+  main AirLLM CPU / direct baseline / optional DirectML GPU) **without downloading weights,
+  running inference, or selecting blindly**.
+- **Context:** Stage 2A locked the env (pinned AirLLM matrix, CPU torch). CPU+AirLLM is the main
+  path; this stage picks *candidates* sized to ~11.24 GiB RAM / 933 GB disk and verifies them via
+  HF metadata only.
+- **Key constraints encoded:** HF **metadata only** (model card / file sizes / config — no
+  `.safetensors`/`.bin`/`.gguf`/shards); if live metadata can't be checked, mark
+  `NEEDS_ONLINE_VERIFICATION` and don't fake facts; no inference/AirLLM/Ollama/benchmark; no final
+  model chosen blindly; no tokens/secrets; don't touch local course materials; no fake
+  results/figures; no commit/push.
+- **Verbatim prompt (condensed; full text retained in the conversation transcript):**
+
+  > **Stage 2B — Model Shortlist and Selection Matrix.** Create a model-selection plan and
+  > shortlist without downloading weights, running inference, or selecting blindly, justifying
+  > candidate categories for: tiny smoke model; main AirLLM CPU candidate; baseline direct-run;
+  > optional Windows DirectML GPU extension. Use repo docs; inspect installed AirLLM metadata/help/
+  > source (no model loading); use HF metadata only if accessible without downloading weights
+  > (lightweight API/model-card metadata/small config files; forbid downloading
+  > safetensors/bin/gguf/shards). If metadata can't be checked safely, mark
+  > NEEDS_ONLINE_VERIFICATION. Create `docs/MODEL_SELECTION.md` (status; constraints; roles;
+  > candidate table with role/candidate_model_id/family/estimated_size/expected_format/
+  > license_status/access_status/why_candidate/risk/decision_status/verification_needed; criteria;
+  > strategy; preliminary recommendation with RECOMMENDED_FOR_VERIFICATION/DEFERRED/
+  > REJECTED_WITH_REASON; what-to-verify-before-download), `docs/PRD_measurement.md`,
+  > `docs/PRD_airllm_pipeline.md`, and `config/model_candidates.example.toml` (example groups only,
+  > no fake final model, each with decision_status + verification_needed). Update
+  > DECISIONS/TODO/RISKS/PLAN/REQUIREMENTS_AUDIT/PROMPTS/README (no final model unless truly
+  > verified). Forbidden: download weights, inference, AirLLM/Ollama runtime, benchmark, final
+  > model blindly, HF tokens/secrets, local course materials, fake results/figures, commit, push.
+
+- **Metadata actually verified (HF `model_info`, metadata only — no weights):**
+  - `Qwen/Qwen2-0.5B` — ungated, apache-2.0, safetensors, **~1.0 GB**.
+  - `Qwen/Qwen2-1.5B` — ungated, apache-2.0, **~3.1 GB**.
+  - `Qwen/Qwen2-7B` — ungated, apache-2.0, **~15.24 GB** (> 11.24 GiB RAM).
+  - `Qwen/Qwen2.5-7B-Instruct` — ungated, apache-2.0, **~15.24 GB**.
+  - `mistralai/Mistral-7B-Instruct-v0.2` — ungated, apache-2.0, ~14.5 GB fp16 (repo ~29.5 GB w/ dup).
+  - `Qwen/Qwen2-72B` — ungated, license `other`, **~145.4 GB**.
+  - Also verified (import only): transformers 4.44.2 natively supports qwen2/mistral/mixtral/llama
+    (no `trust_remote_code`); AirLLM exposes `AirLLMQWen2`/`AirLLMMistral`/etc.
+- **Outcome:** `MODEL_SELECTION.md` + `PRD_measurement.md` + `PRD_airllm_pipeline.md` +
+  `config/model_candidates.example.toml` created; recommendation = tiny `Qwen2-0.5B`, main + direct
+  baseline `Qwen2-7B` (RECOMMENDED_FOR_VERIFICATION), Mistral backup / Qwen2-72B stretch /
+  Qwen2-1.5B optional GPU all DEFERRED; ADR-0101a recorded, ADR-0101 → SHORTLISTED; RISKS/PLAN/
+  TODO/audit/README updated. **No weights downloaded, no inference, no benchmark, no final pick,
+  no commit/push.**
+- **Iterations / corrections:** none — live metadata was reachable, so no candidate needed the
+  `NEEDS_ONLINE_VERIFICATION` fallback.
+- **Lessons / notes for next prompts:** final selection (T2.6) needs **user download approval**;
+  then Stage 3 runs the tiny model end-to-end on `device='cpu'` to confirm the AirLLM path before
+  the 7B run. Primary picks are ungated → no token expected (keeps the no-secrets posture).
 
 ---
 

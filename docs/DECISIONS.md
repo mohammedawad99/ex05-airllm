@@ -156,6 +156,27 @@
   1D: Llama2/Mistral/Mixtral/QWen2). The **final backend ADR** (revisiting ADR-0008) is taken
   after a Stage 3 small-model runtime check confirms no remaining CUDA-only code path at run time.
 
+## ADR-0012 — Project skeleton: hatchling + src-layout, `uv`-locked, pinned AirLLM matrix, CPU torch
+- **Status:** ACCEPTED
+- **Context:** Stage 2A needs a reproducible Python environment before any runner code, with
+  the AirLLM stack that 1D proved (and which breaks on latest optimum/transformers).
+- **Decision:**
+  - **Build:** `hatchling` backend, **src-layout** package `src/ex05_airllm` (`version.py` as
+    the single version source, `constants.py` for the result schema / labels — no magic values).
+  - **Deps:** `pyproject.toml` is the source of truth; `uv.lock` committed; **no
+    `requirements.txt`**, **no direct `pip`** for the project env (R-UV). Pinned per 1D:
+    `airllm==2.11.0`, `transformers==4.44.2`, `optimum==1.23.3`, `sentencepiece`.
+  - **Torch:** sourced from the **`pytorch-cpu` index** (`[tool.uv.sources]`) so only CPU
+    wheels are used (`torch 2.12.1+cpu`), never a multi-GB CUDA build.
+  - **Quality:** `ruff` (line-length 100, py312, `E,F,W,I,N,UP,B,C4,SIM`), `pytest` +
+    coverage `fail_under=85`, every Python file ≤150 code lines.
+  - **Version:** starts at `1.0.0` in code + `pyproject` + config, test-enforced (R-VERSION).
+- **Evidence:** `pyproject.toml`, `uv.lock`; Stage 2A validation (uv sync OK; 4 tests, 100%
+  coverage; ruff/format clean; line-count OK).
+- **Consequences:** Reproducible CPU env ready for Stage 2B model selection and Stage 3 code.
+  Resolution succeeded with **no version conflicts**; if the pins ever drift, re-resolve from
+  `docs/AIRLLM_FEASIBILITY.md` §3. No model/inference/benchmark performed.
+
 ---
 
 ## Deferred decisions (evidence required first)
@@ -163,11 +184,34 @@
 These are intentionally **not** decided in Stage 0; deciding them now would mean guessing.
 
 ## ADR-0101 — Final Hugging Face model selection
-- **Status:** DEFERRED → Stage 2
-- **Why deferred:** Requires the real hardware profile (`NEEDED_USER_INPUT`). The model must
-  be deliberately larger than local memory yet feasible to finish via AirLLM.
+- **Status:** SHORTLISTED (Stage 2B) → final pick still DEFERRED to download approval + Stage 3
+- **Stage 2B update:** hardware is known and candidates are **metadata-verified** (no weights
+  downloaded). The shortlist (`docs/MODEL_SELECTION.md`) recommends, for verification:
+  tiny = `Qwen/Qwen2-0.5B` (~1.0 GB), main + direct baseline = `Qwen/Qwen2-7B` (~15.24 GB fp16,
+  exceeds ~11.24 GiB RAM), all apache-2.0 and **ungated** (no token). Mistral-7B-Instruct-v0.2 is
+  a deferred backup; Qwen2-72B a deferred stretch.
+- **Not finalized because:** per ADR-0101a, the final pick needs download approval and a Stage 3
+  runtime smoke check (no model is chosen blindly, no download yet).
 - **Decision criteria (pre-committed):** parameter count vs RAM/VRAM, file format
   (SafeTensors/GGUF), on-disk size vs free space, AirLLM/quantization support, license/access.
+
+## ADR-0101a — Model-selection strategy (Stage 2B)
+- **Status:** ACCEPTED
+- **Context:** A model must be chosen against the measured ~11.24 GiB / CPU-only / 933 GB profile
+  without downloading weights blindly or storing tokens.
+- **Decision:**
+  1. Shortlist per role (tiny smoke / main AirLLM / direct baseline / optional DirectML / stretch)
+     and verify each via **HF metadata only** (size, format, license, gated) — no weight download.
+  2. Prefer **apache-2.0 + ungated** models (no token; honours the no-secrets policy); reject
+     gated repos when an ungated equivalent exists.
+  3. Main candidate must have fp16 weights **> ~11 GiB** (forces AirLLM) yet be CPU-feasible in
+     budget → 7B class; 72B is a deferred stretch.
+  4. The **direct baseline uses the same model** as the main AirLLM run for a fair comparison.
+  5. **No download** until the pick is approved; finalize only after the Stage 3 smoke run.
+- **Evidence:** `docs/MODEL_SELECTION.md`, `config/model_candidates.example.toml`; metadata probe
+  (Qwen2 family + Mistral verified ungated/apache-2.0; native in transformers 4.44.2).
+- **Consequences:** Stage 3 can proceed on the tiny model once approved; the final-model ADR is
+  closed after that runtime check.
 
 ## ADR-0102 — Baseline path: Ollama vs Hugging Face `transformers`
 - **Status:** DEFERRED → Stage 4

@@ -151,15 +151,36 @@
 | T1.3 | Resolve hardware-independent open questions (PRD §10) | P1 | TODO | R-DOC-PRD | OQ-1..4 dispositioned |
 | T1.4 | Freeze PRD v1.0 after user approval | P0 | BLOCKED | R-DOC-PRD | User sign-off; version bumped |
 
-## Stage 2 — Measurement architecture & model selection
+## Stage 2A — Dependency skeleton & measurement design  *(complete)*
 
 | id | task | pri | status | req | DoD |
 | --- | --- | --- | --- | --- | --- |
-| T2.1 | Write `PRD_measurement.md` (metric defs + timing method) | P0 | TODO | R-DOC-PRD-MECH,R-MEAS-* | Every metric precisely defined |
-| T2.2 | Write `PRD_airllm_pipeline.md` | P0 | TODO | R-DOC-PRD-MECH | Layer-wise + quant pipeline specified |
-| T2.3 | Select & justify HF model vs hardware (ADR) | P0 | TODO | R-MODEL-01 | ADR with params/format/size rationale |
-| T2.4 | Define `config/*.json` schema (versioned) + `.env-example` | P0 | TODO | R-CONFIG-ARCH,R-VERSION | Config schema v1.00; placeholders only |
-| T2.5 | Set up `pyproject.toml`, `uv`, `ruff`, coverage(fail_under=85) | P0 | TODO | R-UV,R-LINT,R-COVERAGE | `uv sync` works; ruff/coverage configured |
+| T2A.1 | Create `pyproject.toml` + `uv.lock` (pinned AirLLM matrix, CPU torch) | P0 | DONE | R-UV,R-AIRLLM-DEPS | `uv sync --extra dev` resolves; pins match 1D |
+| T2A.2 | Minimal `src/ex05_airllm` (`__init__`, `version`, `constants`) | P0 | DONE | R-ARCH-SDK,R-VERSION | Package imports; version `1.0.0` |
+| T2A.3 | `tests/unit/test_version.py` (version consistency) | P0 | DONE | R-TDD,R-VERSION | 4 tests pass; coverage 100% |
+| T2A.4 | Configure `ruff` + `pytest` + coverage (fail_under=85) | P0 | DONE | R-LINT,R-COVERAGE,R-FILELEN | ruff clean; format clean; ≤150 lines |
+| T2A.5 | `docs/MEASUREMENT_DESIGN.md` (metrics + result schema + repro rules) | P0 | DONE | R-MEAS-* | 9-section design; no data |
+| T2A.6 | `config/experiment.example.toml` (placeholder model id) | P0 | DONE | R-CONFIG-ARCH,R-VERSION | Versioned template; no real model id |
+| T2A.7 | Update PLAN/QUALITY/DECISIONS/audit; log Prompt 009 | P0 | DONE | R-PROMPTLOG | ADR-0012; gates table; Prompt 009 |
+
+> Stage 2A is skeleton + design only — **no model selected, no download, no inference, no
+> benchmark.** No experimental requirement marked DONE.
+
+## Stage 2B — Model shortlist & selection plan  *(planning complete)*
+
+| id | task | pri | status | req | DoD |
+| --- | --- | --- | --- | --- | --- |
+| T2.1 | Write `PRD_measurement.md` (metric defs + timing method) | P0 | DONE | R-DOC-PRD-MECH,R-MEAS-* | Schema + metrics + no-manual-metrics rule |
+| T2.2 | Write `PRD_airllm_pipeline.md` | P0 | DONE | R-DOC-PRD-MECH | CPU device, shard path, Stage 3 acceptance |
+| T2.3 | Model shortlist matrix (metadata-verified, no download) | P0 | DONE | R-MODEL-01 | `MODEL_SELECTION.md` + `config/model_candidates.example.toml` |
+| T2.4 | Record model-selection strategy (ADR-0101a) | P0 | DONE | R-MODEL-01 | ADR with criteria; ADR-0101 → SHORTLISTED |
+| T2.5 | Update RISKS/PLAN/audit; log Prompt 010 | P0 | DONE | R-PROMPTLOG | Model risks; Prompt 010 |
+| T2.6 | **Final model pick + download approval** | P0 | BLOCKED | R-MODEL-01 | User approves a candidate; download only then |
+| T2.7 | Add `.env-example` when a token is first needed | P1 | TODO | R-CONFIG-ARCH | Placeholders only (primary picks are ungated → may not be needed) |
+| T2.8 | Finalize CPU quantization route (GGUF Q4/Q8 vs none) | P1 | TODO | R-QUANT-CPU | Route decided in an ADR |
+
+> Shortlist is **metadata-verified only** (no weights downloaded). **No final model selected,
+> no download, no inference, no benchmark.** T2.6 is user-gated. No experimental requirement DONE.
 
 ## Stage 3 — Small pipeline proof (TDD)
 

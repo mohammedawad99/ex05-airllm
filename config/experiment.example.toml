@@ -1,0 +1,43 @@
+# Example experiment configuration (Stage 2A) — TEMPLATE ONLY.
+#
+# This is an illustrative template, not a runnable experiment config. The model id is a
+# PLACEHOLDER on purpose: model selection happens in Stage 2B (ADR-0101) and no model is
+# downloaded before that decision is approved. Copy this file to a real config (e.g.
+# `config/experiment.toml`, git-ignored if it ever holds anything sensitive) once a model
+# is chosen. Secrets (e.g. Hugging Face tokens) are NEVER stored here — use environment
+# variables at runtime (ADR-0003).
+
+version = "1.0.0"
+
+[run]
+environment = "wsl2-ubuntu"      # one of: wsl2-ubuntu | windows-native
+seed = 0                          # fixed for reproducibility
+results_dir = "results"
+raw_results_subdir = "raw"        # results/raw/ is git-ignored
+
+[model]
+# PLACEHOLDER — replaced with the Stage 2B choice; do not download before approval.
+model_id = "PLACEHOLDER/model-id-pending-stage-2b"
+model_size_label = "pending"      # e.g. tiny | ~7B | ~70B
+# Where AirLLM writes per-layer shards (NVMe-backed WSL disk; ample free space).
+layer_shards_saving_path = "results/raw/layer_shards"
+
+[backend]
+# one of: baseline-hf | baseline-ollama | airllm-cpu | directml-gpu
+name = "airllm-cpu"
+device = "cpu"                     # AirLLM device param; 'cpu' is the main path (ADR-0011)
+dtype = "float16"
+quantization = "none"             # none | fp16 | q8 | q4 (CPU quant route = GGUF; R-QUANT-CPU)
+
+[generation]
+max_new_tokens = 64               # keep small during feasibility/proof stages
+max_seq_len = 512
+
+[[prompts]]
+prompt_id = "smoke-001"
+text = "Explain what an operating system page fault is, in two sentences."
+
+[energy]
+# Estimation assumptions only (labelled estimates in COSTS.md). Fill from documented sources.
+avg_power_watts = 0.0             # 0 = unset; provide a sourced value before estimating
+electricity_price_per_kwh = 0.0   # NEEDED_USER_INPUT (region tariff) before cost model

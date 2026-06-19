@@ -28,6 +28,15 @@
 | R-WSL-DISK | **Virtualized disk I/O uncertainty** — host media is now known to be an **NVMe SSD**, but it is reached via the WSL2 VHDX/9p layer, so AirLLM's per-token I/O cost is still unpredictable until measured | Med | Med | Host `Get-PhysicalDisk` = NVMe SSD; WSL `lsblk` = "Virtual Disk" (overhead opaque) | **Measure** disk throughput/latency during runs; attribute the bottleneck from data, not from the media type | Report measured I/O behavior; do not claim a speed from "NVMe" alone | AI |
 | R-EVID-GAP | **Incomplete in-WSL enumeration** — `lspci` unavailable in Ubuntu; partly mitigated by host-side CIM (Stage 1B) which enumerates CPU/GPU/disk | Low | Low | `which lspci` empty in Ubuntu | Use host CIM as the authoritative enumeration; avoid absolute claims that rely only on the missing tool | Re-probe with `lspci` after a user-approved `pciutils` install if needed | Human |
 
+### Added in Stage 2B (model selection)
+
+| id | risk | L | I | trigger / signal | mitigation (preventive) | contingency (if it happens) | owner |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| R-MODEL-LICENSE | **License/terms** — a candidate (e.g. Qwen2-72B = `other`) may restrict use | Low | Med | non-permissive license field | Prefer apache-2.0 primary picks (Qwen2-0.5B/7B); review terms before any non-permissive model | Drop to a permissive candidate; document rationale | Human |
+| R-MODEL-GATED | **Gated repo / token need** — gated models would force token handling (against no-secrets policy) | Low | Med | `gated=True` in metadata | Choose **ungated** apache-2.0 models (all primary picks verified ungated) | Stay ungated; never store a token (env-var only if ever unavoidable) | Human |
+| R-MODEL-QWEN25 | **Qwen2.5 vs AirLLM class** — `AirLLMQWen2` may need a tweak for Qwen2.5 | Low | Med | class-mismatch at load (Stage 3) | Prefer plain `Qwen2-7B` for the main run; treat Qwen2.5-Instruct as alt pending a class check | Use Qwen2-7B or `AutoModel`; record in DECISIONS | AI/Human |
+| R-MODEL-72B-TIME | **Stretch model runtime** — 72B CPU layer-streaming likely exceeds the time budget | Med | Med | impractically slow per-token time | Keep 72B DEFERRED; main run is 7B | Report 72B as a documented infeasibility (a valid negative result) | Human |
+
 ---
 
 ## Cross-cutting controls
@@ -51,3 +60,4 @@
 | 2026-06-19 | 1C-C | Compatible-Python retest: no Python 3.10–3.12 installed; `winget` could install one but that persistent host change was **not** auto-performed (stop-and-report). DirectML retest deferred to a user-gated Python install; Windows-native DirectML stays `BLOCKED` under current setup; CPU/AirLLM remains main path. |
 | 2026-06-19 | 1C-D | **User-authorized** Python 3.11.9 install (user-scope, no admin); DirectML smoke test **succeeded** on the Radeon 890M (matmul on `privateuseone:0`); `transformers` imports. R-NOGPU downgraded: GPU is now a *verified optional* baseline/extension lane, but AirLLM-on-DirectML is UNKNOWN and CPU/AirLLM stays the main path (iGPU shares RAM → no extra memory budget). |
 | 2026-06-19 | 1D | AirLLM CPU feasibility: `airllm 2.11.0` installs+imports on CPU with a **pinned matrix** (transformers 4.44.2 + optimum 1.23.3 + sentencepiece + torch cpu); latest deps break import → added **R-AIRLLM-DEPS**. `device='cpu'` is a first-class API param and `bitsandbytes` is optional → CPU path EVIDENCED at API level (runtime check deferred to Stage 3). R-QUANT-CPU refined. |
+| 2026-06-20 | 2B | Model shortlist metadata-verified (no downloads); added R-MODEL-LICENSE, R-MODEL-GATED, R-MODEL-QWEN25, R-MODEL-72B-TIME. Primary picks (Qwen2-0.5B/7B) are apache-2.0 + ungated, sized to force AirLLM; final pick deferred to download approval + Stage 3. |

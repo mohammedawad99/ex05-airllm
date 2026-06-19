@@ -108,16 +108,27 @@ Detailed tasks live in `TODO.md`. The requirements audit is re-checked at every 
 
 ### Stage 2 — Measurement architecture & model selection
 - **Entry:** Hardware known ✅ (Stage 1A complete; `docs/HARDWARE.md`).
-- **Work:** Write `PRD_measurement.md` (precise metric definitions & timing method) and
-  `PRD_airllm_pipeline.md`; **select & justify the model** (ADR) against the measured profile
-  (~11.24 GiB RAM, CPU-only, 933 GB disk; AirLLM families verified in 1D: Llama2/Mistral/
-  Mixtral/QWen2); **resolve the CPU quantization route** (AirLLM `bitsandbytes` needs CUDA →
-  likely GGUF Q4/Q8 on CPU — R-QUANT-CPU); define `config/` schema (versioned), `.env-example`;
-  set up `pyproject.toml` + `uv` + `ruff` + coverage config — **pinning the AirLLM dependency
-  matrix** evidenced in 1D (`transformers==4.44.2`, `optimum==1.23.3`, `sentencepiece`, CPU
-  `torch` wheel; R-AIRLLM-DEPS).
-- **DoD:** Measurement design + model choice approved as ADRs; tooling configured; still no
-  experiment code beyond config.
+
+**Stage 2A — Dependency skeleton & measurement design ✅ (done):**
+- Created `pyproject.toml` + `uv.lock` (reproducible env), **pinning the AirLLM matrix** from
+  1D (`airllm==2.11.0`, `transformers==4.44.2`, `optimum==1.23.3`, `sentencepiece`, CPU `torch`
+  wheel via the `pytorch-cpu` index; R-AIRLLM-DEPS); minimal `src/ex05_airllm` package
+  (`version.py`, `constants.py`) + version-consistency test; `ruff`/`pytest`/coverage configured;
+  `docs/MEASUREMENT_DESIGN.md` (metrics, result schema, reproducibility rules); versioned
+  `config/experiment.example.toml` (placeholder model id). DoD met: `uv sync` resolves, tests
+  pass, `ruff` clean, coverage ≥85%, all files ≤150 lines — **no model, no inference, no benchmark.**
+
+**Stage 2B — Model shortlist & selection plan ✅ (planning done):**
+- Built the **metadata-verified** shortlist (`docs/MODEL_SELECTION.md`,
+  `config/model_candidates.example.toml`) — no weights downloaded. Recommended for
+  verification: tiny `Qwen/Qwen2-0.5B`, main + direct baseline `Qwen/Qwen2-7B` (fp16 ~15.24 GB
+  > ~11.24 GiB RAM), both apache-2.0 + ungated; Mistral-7B-Instruct-v0.2 deferred backup,
+  Qwen2-72B deferred stretch. Wrote `PRD_measurement.md` and `PRD_airllm_pipeline.md`; recorded
+  model-selection strategy (ADR-0101a); ADR-0101 → SHORTLISTED.
+- **Remaining (user-gated):** final model pick + **download approval** (T2.6), then the
+  quantization-route ADR (R-QUANT-CPU) and `.env-example` only if a token is ever needed.
+- **DoD:** shortlist + strategy recorded as ADRs (✅); **final pick + any download await explicit
+  approval and the Stage 3 smoke run** — nothing downloaded in Stage 2.
 
 ### Stage 3 — Small pipeline proof (TDD)
 - **Entry:** Architecture & tooling ready.

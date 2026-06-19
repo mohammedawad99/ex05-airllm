@@ -64,8 +64,22 @@ fail_under = 85
 - Measurement methodology pinned in `docs/PRD_measurement.md` (Stage 2) so metrics are
   defined unambiguously before any number is produced.
 
-## 5. Current Stage 0 quality status
+## 5. Current quality status
 
-- **Active now:** Q7 (secrets policy via `.gitignore`), Q13 (docs presence).
-- **Not yet applicable:** Q1–Q6, Q8–Q12 — no code, dependencies, or measurements exist.
-  No pass/fail results are claimed for these.
+**Stage 0:** Q7 (secrets policy via `.gitignore`) and Q13 (docs presence) active.
+
+**Stage 2A (skeleton now exists — gates configured and passing on the skeleton):**
+
+| gate | Stage 2A result |
+| --- | --- |
+| Q1 Lint (`ruff check .`) | ✅ All checks passed |
+| Q2 Format (`ruff format --check`) | ✅ Clean (4 files formatted) |
+| Q3 Coverage (`fail_under=85`) | ✅ **100%** on `src/ex05_airllm` |
+| Q4 Tests (`pytest`) | ✅ 4 passed |
+| Q5 File length ≤150 code lines | ✅ All Python files pass |
+| Q9 Versioning starts `1.0.0` | ✅ `version.py` + `pyproject` = `1.0.0`, test-enforced |
+| Q10 Dep management (`uv`) | ✅ `pyproject.toml` + `uv.lock` present; `uv sync` resolves |
+
+> These results are for the **skeleton only** (version/constants modules + version test).
+> Q8 (full SDK/gatekeeper architecture), Q11 (reproducibility of real runs), and Q12 apply
+> from Stage 3+ when experiment code and measurements exist. No experiment results are claimed.
