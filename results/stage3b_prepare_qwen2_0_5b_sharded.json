@@ -1,0 +1,12 @@
+{
+  "stage": "3B-prepare",
+  "model_id": "Qwen/Qwen2-0.5B",
+  "max_shard_size": "50MB",
+  "sharded_dir": "/home/awad_moha/ex05-airllm/.local_models/qwen2_0_5b_sharded",
+  "untied_embeddings": true,
+  "lm_head_in_index": true,
+  "index_present": true,
+  "timestamp": "2026-06-19T22:09:20.735620+00:00",
+  "success": true,
+  "failure_reason": ""
+}

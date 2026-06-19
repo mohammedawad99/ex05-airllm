@@ -21,6 +21,10 @@
 | 008 | 1D | Stage 1D — AirLLM CPU feasibility check | airllm 2.11.0 installs+imports on CPU with a pinned matrix (transformers 4.44.2/optimum 1.23.3/sentencepiece/torch-cpu); `device='cpu'` first-class; CPU path EVIDENCED; `AIRLLM_FEASIBILITY.md` + R-AIRLLM-DEPS + ADR-0011 |
 | 009 | 2A | Stage 2A — Project dependency skeleton & measurement design | Created `pyproject.toml`+`uv.lock` (pinned matrix, CPU torch), `src/ex05_airllm` skeleton + version test, `MEASUREMENT_DESIGN.md`, `config/experiment.example.toml`; gates green (uv sync, 4 tests @100%, ruff, ≤150 lines); ADR-0012 |
 | 010 | 2B | Stage 2B — Model shortlist & selection matrix | Metadata-verified shortlist (no downloads): tiny Qwen2-0.5B, main Qwen2-7B (15.24 GB > 11 GiB), apache-2.0/ungated; `MODEL_SELECTION.md`, `PRD_measurement.md`, `PRD_airllm_pipeline.md`, candidate config; ADR-0101a; final pick deferred to approval |
+| 011 | 3A | Stage 3A — Tiny AirLLM CPU smoke probe | Ran `smoke_airllm.py` on Qwen2-0.5B (approved); **FAILED honestly** — AirLLM needs sharded safetensors+index (single-file model); `SMOKE_RUN.md` + R-AIRLLM-SHARD + ADR-0014; no 7B download, no benchmark, no fake results |
+| 012 | 3B | Stage 3B — Re-sharded tiny AirLLM CPU smoke | Re-shard + untie (download Qwen2-0.5B only) **fixed the format** → AirLLM loads & starts inference, but CPU forward pass **FAILED** with meta-device error (R-AIRLLM-META); ADR-0015 corrective (older torch) proposed; weights ignored; no 7B, no benchmark, no fake results |
+| 013 | 3C | Stage 3C — Torch-pin retest (torch 2.4.1) | Pinned `torch==2.4.1+cpu`, reran smoke on existing re-sharded model → **identical** meta-device error → **torch ruled out**. Root cause: AirLLM leaves Qwen2 `rotary_emb` on `meta`. Kept torch 2.4.1; recommend Stage 3D HF CPU fallback (ADR-0016). No new download, no benchmark, no fake results |
+| 014 | 3D | Stage 3D — Transformers CPU fallback smoke | Direct HF `transformers` CPU smoke on cached Qwen2-0.5B (offline) **SUCCEEDED** (coherent 16-token output) → measurement pipeline proven (R-REPRO partial; ADR-0016 EVIDENCED). NOT AirLLM, NOT a benchmark; AirLLM CPU stays blocked. No new download, no 7B, no fake results |
 
 ---
 
@@ -637,6 +641,234 @@
 - **Lessons / notes for next prompts:** final selection (T2.6) needs **user download approval**;
   then Stage 3 runs the tiny model end-to-end on `device='cpu'` to confirm the AirLLM path before
   the 7B run. Primary picks are ungated → no token expected (keeps the no-secrets posture).
+
+---
+
+## Prompt 011 — Stage 3A: Tiny AirLLM CPU smoke probe
+
+- **Stage:** 3A
+- **Date:** 2026-06-20
+- **Intent:** Run the smallest honest end-to-end AirLLM smoke probe using **Qwen/Qwen2-0.5B** on
+  CPU, collect raw evidence, and update docs. Not a benchmark. First stage permitted to download
+  a model — **only Qwen2-0.5B**.
+- **Context:** Stage 2 (env + measurement design + model shortlist) committed (`1cf2036`).
+  Explicit approval: only `Qwen/Qwen2-0.5B` may be downloaded for the smoke; **not** Qwen2-7B.
+- **Key constraints encoded:** create `src/ex05_airllm/smoke_airllm.py`; use the pinned env;
+  `Qwen/Qwen2-0.5B` only; `device="cpu"`; short prompt; `max_new_tokens<=16`; record timestamps/
+  runtime/success/failure_reason/peak RSS/model/backend/device/prompt/output; write raw JSON to
+  `results/stage3_smoke_airllm_qwen2_0_5b.json`; **never fake success**; on failure write a
+  failure JSON with exception + traceback; no HF token; add a unit test for the result helper
+  (no model load); files ≤150 lines. Forbidden: download Qwen2-7B or any other model, Ollama,
+  DirectML, benchmark, graphs, fake results, edit materials, store tokens, stage/commit/push.
+- **Verbatim prompt (condensed; full text retained in the conversation transcript):**
+
+  > **Stage 3A — Tiny AirLLM CPU Smoke Probe.** Run the smallest honest end-to-end AirLLM smoke
+  > using Qwen/Qwen2-0.5B on CPU; collect raw evidence; update docs. Not the final benchmark.
+  > Create `src/ex05_airllm/smoke_airllm.py` (pinned env; model id Qwen/Qwen2-0.5B only; AirLLM
+  > device="cpu"; short prompt; max_new_tokens<=16; measure start/end/runtime/success/
+  > failure_reason/peak RSS/model/backend/device/prompt/output; write raw JSON to
+  > results/stage3_smoke_airllm_qwen2_0_5b.json; never fake success; on failure write failure
+  > JSON with exception class/message + traceback summary; no HF token). Add a unit test for the
+  > schema writer/helper without loading a model; files ≤150 lines. Update SMOKE_RUN.md / TODO /
+  > PLAN / RISKS / DECISIONS / REQUIREMENTS_AUDIT (PARTIALLY_EVIDENCED not DONE) / PROMPTS /
+  > README. If success: mark Stage 3A AirLLM tiny smoke EVIDENCED, not a benchmark, don't
+  > generalize to 7B. If failure: preserve failure JSON, document exact category, propose
+  > corrective step. Forbidden: download Qwen2-7B / any other model, Ollama, DirectML, benchmark,
+  > graphs, fake results, materials, tokens, stage/commit/push. Only Qwen/Qwen2-0.5B may be
+  > downloaded.
+
+- **Outcome:** Probe ran; **success=False** (recorded honestly). Failure category: **AirLLM
+  input-format incompatibility** — `AssertionError: model.safetensors.index.json should exist`
+  in `split_and_save_layers`: AirLLM requires multi-shard safetensors + index, but Qwen2-0.5B is
+  a single `model.safetensors`. AirLLM checks the index **before** fetching weights, so only ~12
+  MB metadata/tokenizer files reached the **external** HF cache; the ~1 GB weights were **not**
+  downloaded and **no weights are in the repo**. Runtime 6.92 s, peak RSS 261.5 MB. Raw evidence:
+  `results/stage3_smoke_airllm_qwen2_0_5b.json` (+ `results/raw/stage3_smoke_console.log`).
+  Created `SMOKE_RUN.md`; added R-AIRLLM-SHARD + ADR-0014; updated TODO/PLAN/audit. AirLLM smoke
+  is **NOT** marked EVIDENCED (it failed). Tests 8/8 @100%, ruff/format clean, ≤150 lines.
+- **Iterations / corrections:** first launch's shell redirect failed (`results/raw/` didn't
+  exist; `>` doesn't mkdir) so Python never ran → `mkdir -p results/raw` and re-launched.
+- **Lessons / notes for next prompts:** Stage 3B applies ADR-0014: re-save Qwen2-0.5B sharded
+  (`save_pretrained(max_shard_size=...)`) for the tiny AirLLM proof; pre-confirm Qwen2-7B is
+  natively sharded (it has the index 0.5B lacks) so the limitation won't block the main run.
+
+---
+
+## Prompt 012 — Stage 3B: Re-sharded tiny AirLLM CPU smoke probe
+
+- **Stage:** 3B
+- **Date:** 2026-06-20
+- **Intent:** Create a local **sharded** copy of Qwen/Qwen2-0.5B so AirLLM receives the
+  `model.safetensors.index.json` format it expects (Stage 3A blocker), then rerun the tiny CPU
+  smoke honestly. Not a benchmark.
+- **Context:** 3A failed because the upstream tiny model is a single safetensors file. Explicit
+  approval: download **only Qwen/Qwen2-0.5B** full weights to build a local sharded copy; **not**
+  Qwen2-7B or any other model.
+- **Key constraints encoded:** add model-artifact ignore rules (`.local_models/`, `.hf_cache/`,
+  weight extensions, index files); use an **ignored** `.local_models/qwen2_0_5b_sharded/`;
+  `prepare_sharded_model.py` (download+`save_pretrained(max_shard_size)`+tokenizer save+verify
+  index+JSON record, honest success/failure, no HF token, no other model); smoke loads the local
+  path, `device="cpu"`, short prompt, `max_new_tokens<=16`, records full result; write
+  `results/stage3b_smoke_airllm_qwen2_0_5b_resharded.json`; on success say only "Tiny AirLLM CPU
+  smoke succeeded on a locally re-sharded Qwen2-0.5B"; on failure preserve+categorize+propose
+  (no extra downloads); files ≤150 lines. Forbidden: download 7B/other models, Ollama, DirectML,
+  benchmark, graphs, fake results, secrets, materials, stage/commit/push.
+- **Verbatim prompt (condensed; full text retained in the conversation transcript):**
+
+  > **Stage 3B — Re-sharded Tiny AirLLM CPU Smoke Probe.** Approved to download only Qwen/Qwen2-
+  > 0.5B full weights to create a local sharded copy and run the tiny AirLLM smoke; not approved
+  > for Qwen2-7B/any other model. Add ignore rules (`.local_models/`, `.hf_cache/`,
+  > `*.safetensors|bin|gguf|pt|pth`, `model.safetensors.index.json`,
+  > `pytorch_model.bin.index.json`). Use an ignored `.local_models/qwen2_0_5b_sharded/`. Create
+  > `src/ex05_airllm/prepare_sharded_model.py` (download/load Qwen2-0.5B via transformers;
+  > `save_pretrained(max_shard_size="50MB")`; `tokenizer.save_pretrained`; verify
+  > `model.safetensors.index.json`; write `results/stage3b_prepare_qwen2_0_5b_sharded.json`;
+  > honest success/failure; no HF token; no other model). Update the smoke script to load the
+  > local path; run AirLLM `device="cpu"`, short prompt, `max_new_tokens<=16`; record model_id/
+  > local_model_path/backend/device/success/failure_reason/traceback/start+end/runtime/peak RSS/
+  > prompt/output; write `results/stage3b_smoke_airllm_qwen2_0_5b_resharded.json` and console log.
+  > Update SMOKE_RUN/TODO/PLAN/RISKS/DECISIONS/REQUIREMENTS_AUDIT (PARTIALLY_EVIDENCED only if
+  > the smoke actually succeeds; never DONE)/PROMPTS/README. On success say only "Tiny AirLLM CPU
+  > smoke succeeded on a locally re-sharded Qwen2-0.5B" (no benchmark/7B/final-perf claims). On
+  > failure: preserve JSON/log, categorize (dependency/AirLLM API/CPU runtime/tokenizer/memory/
+  > architecture), propose next correction without more downloads. Forbidden: 7B/other downloads,
+  > Ollama, DirectML, benchmark, graphs, fake results, secrets, materials, stage/commit/push.
+
+- **Outcome:** **Tiny AirLLM CPU smoke did NOT succeed.** Three issues surfaced, fixed in order:
+  (1) re-shard produced the index; (2) **tied embeddings** → `IndexError` (no `lm_head`), fixed
+  by untying (clone embed weight → `lm_head.weight`, numerically identical); (3) AirLLM then
+  loaded all layers and **started** the CPU forward pass (peak RSS ≈ 2.7 GB) but failed with
+  `RuntimeError: Tensor on device cpu is not on the expected device meta!` — **AirLLM CPU
+  runtime issue (meta-device mismatch)**, likely aggravated by torch 2.12.1. Full weights for
+  **Qwen2-0.5B only** were downloaded (~954 MB, external HF cache); shards/layers live in the
+  git-ignored `.local_models/` (verified untracked). Evidence:
+  `results/stage3b_prepare_qwen2_0_5b_sharded.json`,
+  `results/stage3b_smoke_airllm_qwen2_0_5b_resharded.json`, `SMOKE_RUN.md` §6. Added
+  R-AIRLLM-TIED (resolved) + R-AIRLLM-META (confirmed); ADR-0015 (older-torch corrective,
+  proposed); R-AIR-01 stays PLANNED. Tests 11/11 @100%, ruff/format clean, ≤150 lines.
+- **Iterations / corrections (this stage):** (a) created `results/raw` before redirect; (b)
+  pre-create the AirLLM layers dir (AirLLM `check_space` stats it before creating); (c) untie
+  embeddings; then stopped at the meta-device error (deeper fix needs a torch change → ADR-0015).
+- **Lessons / notes for next prompts:** AirLLM 2.11 is GPU-oriented; its CPU path hits a
+  meta-device bug on torch 2.12. Stage 3C should pin an older torch (user-gated, alters lock) or
+  fall back to a direct HF CPU run to prove the pipeline. Don't attempt Qwen2-7B until the CPU
+  meta-device issue is resolved (same runtime path); note Qwen2-7B is already multi-shard +
+  untied, so issues #1/#2 won't recur there.
+
+---
+
+## Prompt 013 — Stage 3C: Torch-pin retest for the AirLLM CPU meta-device failure
+
+- **Stage:** 3C
+- **Date:** 2026-06-20
+- **Intent:** Test whether the Stage 3B AirLLM CPU **meta-device** failure is caused by the torch
+  version, by pinning an older CPU torch (`torch==2.4.1+cpu`) and rerunning the already-downloaded,
+  already-re-sharded Qwen2-0.5B smoke. Controlled dependency-compatibility test.
+- **Context:** 3B fixed the model format (re-shard + untie); AirLLM then loaded and started the CPU
+  forward pass but failed with `Tensor on device cpu ... meta!` under torch 2.12.1. This stage may
+  modify `pyproject.toml`/`uv.lock`. No new model download; preserve 3A/3B evidence.
+- **Key constraints encoded:** try `torch==2.4.1+cpu` first; keep AirLLM pins (airllm 2.11.0,
+  transformers 4.44.2, optimum 1.23.3, sentencepiece); `uv` only; Python >=3.12,<3.13; CPU index;
+  rerun the smoke on `.local_models/qwen2_0_5b_sharded/`; write
+  `results/stage3c_smoke_airllm_qwen2_0_5b_torch241.json` + console log; **do not overwrite 3A/3B
+  artifacts**; if 2.4.1 doesn't resolve → stop & record (don't try many versions); if it resolves
+  but AirLLM still fails → preserve, categorize, recommend ONE next step (AirLLM workaround or
+  Stage 3D HF fallback); if it succeeds → record a smoke success only (no benchmark/7B/perf
+  claims). Forbidden: 7B/other downloads, Ollama, DirectML, benchmark, graphs, fake results,
+  deleting 3A/3B artifacts, secrets, materials, stage/commit/push.
+- **Verbatim prompt (condensed; full text retained in the conversation transcript):**
+
+  > **Stage 3C — Torch Pin Retest for AirLLM CPU Meta-Device Failure.** Test whether the AirLLM CPU
+  > meta-device failure is caused by torch by pinning an older CPU torch and rerunning the
+  > already-resharded Qwen2-0.5B smoke. May modify pyproject/uv.lock (controlled test). Try
+  > `torch==2.4.1+cpu` first; keep AirLLM/transformers/optimum/sentencepiece pins; uv only; Python
+  > >=3.12,<3.13; CPU index. Inspect current torch pin; modify pyproject to `torch==2.4.1+cpu`;
+  > `uv sync --extra dev`; confirm torch version + cuda_available; rerun the 3B smoke on
+  > `.local_models/qwen2_0_5b_sharded/`; write `results/stage3c_smoke_airllm_qwen2_0_5b_torch241.json`
+  > and console log. If 2.4.1 doesn't resolve → stop & record (don't try many versions; may propose
+  > next candidate, don't execute). If it resolves but AirLLM still fails → preserve, categorize,
+  > don't claim AirLLM CPU works, recommend one next step (obvious AirLLM workaround from source, or
+  > Stage 3D Transformers CPU fallback). If AirLLM had passed → record a smoke-pass note only
+  > (re-sharded Qwen2-0.5B under torch 2.4.1+cpu), with no 7B/performance claims. [It did not pass.]
+  > Update SMOKE_RUN/TODO/PLAN/RISKS/DECISIONS/REQUIREMENTS_AUDIT/PROMPTS/README/QUALITY.
+  > Forbidden: 7B/other model downloads, Ollama, DirectML, benchmark, graphs, fake results, delete
+  > 3A/3B artifacts, secrets, materials, stage/commit/push.
+
+- **Outcome:** `torch==2.4.1` **resolved and synced** → installed **`torch 2.4.1+cpu`**
+  (`cuda_available=False`). Reran the smoke on the existing re-sharded model (no new download) →
+  **FAILED with the identical** `RuntimeError: Tensor on device cpu is not on the expected device
+  meta!` (runtime 9.55 s, peak RSS ≈ 3.4 GB). **Conclusion: torch version is NOT the cause** (3B
+  torch 2.12.1 and 3C torch 2.4.1 fail identically). **Root cause (source inspection):** AirLLM
+  builds the model on `meta` and streams only decoder layers; Qwen2's **top-level `rotary_emb`
+  (`inv_freq`)** stays on `meta` (AirLLM relocates a rotary buffer only for GLM) → meta/cpu
+  mismatch in the forward pass. **Kept `torch==2.4.1`** as the project pin (closer to AirLLM's era;
+  clean with transformers 4.44; fine for HF CPU). Recommended next step: **Stage 3D — direct HF
+  `transformers` CPU smoke** to prove the measurement pipeline (ADR-0016). Evidence:
+  `results/stage3c_smoke_airllm_qwen2_0_5b_torch241.json`, `SMOKE_RUN.md` §7. 3A/3B artifacts
+  preserved. Tests 11/11 @100%, ruff/format clean.
+- **Iterations / corrections:** added an `EX05_SMOKE_OUTPUT` env override to the smoke script so the
+  3C result writes to a new path **without overwriting** the 3B failure JSON.
+- **Lessons / notes for next prompts:** the AirLLM CPU blocker is a library-internal meta-device
+  bug (Qwen2 rotary), not a torch/version/model-format issue — a torch downgrade won't fix it.
+  Stage 3D (HF CPU) is the clean way to prove the pipeline; Qwen2-7B would hit the **same** rotary
+  path, so don't download 7B until AirLLM CPU is patched or the plan explicitly switches approach.
+
+---
+
+## Prompt 014 — Stage 3D: Transformers CPU fallback smoke
+
+- **Stage:** 3D
+- **Date:** 2026-06-20
+- **Intent:** Prove the measurement / result-writing pipeline end-to-end using **direct HF
+  `transformers` on CPU** with the already-downloaded Qwen2-0.5B, while keeping the AirLLM CPU
+  blocker documented honestly. A fallback smoke — **not** an AirLLM success and **not** a benchmark.
+- **Context:** AirLLM CPU is blocked by R-AIRLLM-META (Qwen2 rotary buffer on `meta`); 3C ruled out
+  the torch version. Per ADR-0016, prove the pipeline with plain transformers on CPU.
+- **Key constraints encoded:** `Qwen/Qwen2-0.5B` only; `AutoTokenizer`+`AutoModelForCausalLM`;
+  CPU only; `local_files_only=True`; short prompt; `max_new_tokens<=16`; `do_sample=False`; record
+  timestamps/runtime/load/gen seconds/success/failure/traceback/peak RSS/model/backend=
+  "transformers"/device="cpu"/prompt/output/output_tokens_est; write
+  `results/stage3d_smoke_transformers_qwen2_0_5b_cpu.json` + console log; run offline
+  (`HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1`); if cache missing → record failure honestly, do not
+  re-download; add a helper unit test (no model); files ≤150 lines; never fake success. Forbidden:
+  7B/any new download, AirLLM rerun, Ollama, DirectML, benchmark, graphs, fake results, delete
+  3A/3B/3C artifacts, secrets, materials, stage/commit/push.
+- **Verbatim prompt (condensed; full text retained in the conversation transcript):**
+
+  > **Stage 3D — Transformers CPU Fallback Smoke.** Prove the measurement/result-writing pipeline
+  > end-to-end using direct HF transformers on CPU with the already-downloaded Qwen/Qwen2-0.5B,
+  > keeping the AirLLM blocker documented. Create `src/ex05_airllm/smoke_transformers_cpu.py`
+  > (Qwen2-0.5B only; AutoTokenizer+AutoModelForCausalLM; CPU; `local_files_only=True`; short
+  > prompt; `max_new_tokens<=16`; `do_sample=False`; record start/end/runtime/load_seconds/
+  > generation_seconds/success/failure_reason/traceback/peak RSS/model_id/backend="transformers"/
+  > device="cpu"/prompt/output_text/output_tokens_est; write
+  > `results/stage3d_smoke_transformers_qwen2_0_5b_cpu.json` + console log; never fake success).
+  > Run `HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 uv run python -m ex05_airllm.smoke_transformers_cpu`.
+  > If the model isn't cached, don't re-download — record failure honestly. Add a helper unit test
+  > (no model load); files ≤150 lines. Fix doc path wording to `.local_models/qwen2_0_5b_sharded/`
+  > (no misleading absolute paths). Update SMOKE_RUN/TODO/PLAN/RISKS/DECISIONS/REQUIREMENTS_AUDIT
+  > (transformers fallback may be PARTIALLY_EVIDENCED only as a measurement-pipeline smoke; AirLLM
+  > stays not-evidenced; no experimental requirement DONE)/QUALITY/PROMPTS/README. On success say
+  > only "Transformers CPU fallback smoke succeeded on Qwen2-0.5B" (not AirLLM, not benchmark, no
+  > 7B, no final perf). On failure: preserve, categorize (cache missing/transformers load/
+  > tokenizer/CPU memory/generation/dependency), recommend next step without new downloads.
+  > Forbidden: 7B/new downloads, AirLLM rerun, Ollama, DirectML, benchmark, graphs, fake results,
+  > delete 3A/3B/3C artifacts, secrets, materials, stage/commit/push.
+
+- **Outcome: SUCCEEDED.** `smoke_transformers_cpu.py` ran **offline** (`local_files_only=True`,
+  `HF_HUB_OFFLINE=1`) → loaded Qwen2-0.5B from **cache only** (no download) and generated coherent
+  16-token output (*"An operating system is a software program that manages the hardware and
+  software resources of a"*). Schema-valid record written:
+  `results/stage3d_smoke_transformers_qwen2_0_5b_cpu.json` (`success=true`; `load_seconds≈4.6`,
+  `generation_seconds≈6.2`, `total≈14.9 s`, `peak_rss_mb≈4664`, `output_tokens_est=16`). **This is
+  not AirLLM and not a benchmark.** The **measurement pipeline is proven** (ADR-0016 EVIDENCED;
+  R-REPRO PARTIALLY_EVIDENCED). AirLLM CPU stays blocked (R-AIRLLM-META, R-AIR-01 PLANNED). 3A/3B/3C
+  artifacts preserved. Tests 15/15 @100%, ruff/format clean.
+- **Iterations / corrections:** one ruff E501 (a 101-char docstring line) → reflowed.
+- **Lessons / notes for next prompts:** the pipeline (timers/RSS/schema/writer) is validated, so
+  Stage 3 proper (SDK/MetricsCollector/gatekeeper, TDD) can build on it. AirLLM CPU remains a
+  separate, documented limitation; don't download Qwen2-7B until R-AIRLLM-META is resolved (same
+  rotary path) or the plan explicitly switches the AirLLM approach.
 
 ---
 

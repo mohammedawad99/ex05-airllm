@@ -62,6 +62,8 @@ coverage.xml
 models/
 model_cache/
 hf_cache/
+.hf_cache/
+.local_models/
 *.safetensors
 *.gguf
 *.ggml
@@ -71,6 +73,9 @@ hf_cache/
 *.onnx
 *.h5
 *.ckpt
+# Shard index files (small JSON, but tie to ignored weights — keep out of git)
+model.safetensors.index.json
+pytorch_model.bin.index.json
 splitted_model/          # AirLLM per-layer shard output
 layer_shards/
 *.tar

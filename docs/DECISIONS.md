@@ -177,6 +177,64 @@
   Resolution succeeded with **no version conflicts**; if the pins ever drift, re-resolve from
   `docs/AIRLLM_FEASIBILITY.md` §3. No model/inference/benchmark performed.
 
+## ADR-0014 — Handle AirLLM's pre-sharded-safetensors requirement
+- **Status:** ACCEPTED (corrective plan; implemented in Stage 3B)
+- **Context:** The Stage 3A smoke (`docs/SMOKE_RUN.md`) showed AirLLM's `split_and_save_layers`
+  requires a model published as **multi-shard safetensors with `model.safetensors.index.json`**.
+  Qwen2-0.5B ships as a **single** `model.safetensors` (no index) → `AssertionError` before any
+  weights are even downloaded. CPU mode itself was not the problem.
+- **Decision:**
+  1. For the **tiny AirLLM proof**, re-save Qwen2-0.5B locally as sharded safetensors via
+     `transformers` `save_pretrained(max_shard_size="50MB")` (produces the index), then point
+     AirLLM at that local path — staying within the approved tiny model.
+  2. For the **main run**, use `Qwen2-7B`, which is **already** published as multiple safetensors
+     shards **with** the index → AirLLM's requirement is satisfied natively (the single-file
+     issue is specific to very small models). No 7B download until separately approved.
+- **Evidence:** `results/stage3_smoke_airllm_qwen2_0_5b.json`, `docs/SMOKE_RUN.md`.
+- **Consequences:** The tiny smoke is unblocked in Stage 3B without new model approvals; the
+  finding de-risks the main run rather than blocking it. No fabrication — the failure stands as
+  recorded.
+
+## ADR-0015 — Corrective for the AirLLM CPU meta-device runtime failure (proposed)
+- **Status:** PROPOSED → needs user approval (changes the pinned env)
+- **Context:** Stage 3B (`SMOKE_RUN.md` §6) fixed the model-format issues (re-shard + untie), and
+  AirLLM then loaded and began the forward pass on CPU but failed with
+  `RuntimeError: Tensor on device cpu is not on the expected device meta!` (R-AIRLLM-META). Root
+  cause: AirLLM's `meta`-device lazy loading leaves a non-streamed buffer on `meta` during CPU
+  compute, likely aggravated by **torch 2.12.1** (AirLLM 2.11 predates it).
+- **Decision (proposed, not yet executed):**
+  1. **Pin an older AirLLM-compatible torch** (e.g. 2.3.x–2.4.x CPU) and re-test the tiny smoke.
+     This re-fetches *torch* (a dependency, not a model) and alters `uv.lock`, so it needs
+     explicit approval before execution.
+  2. If still failing, try AirLLM load options (`prefetching=False`, explicit buffer
+     materialization to CPU) and/or a documented AirLLM CPU recipe.
+  3. **Fallback:** prove the measurement pipeline with a **direct HF `transformers` CPU** run on
+     the tiny model (no AirLLM) so Stage 3 is not fully blocked, while AirLLM CPU is resolved.
+- **Evidence:** `results/stage3b_smoke_airllm_qwen2_0_5b_resharded.json`, `SMOKE_RUN.md` §6.
+- **Consequences:** Until resolved, the AirLLM-run requirement (R-AIR-01) stays **PLANNED** (not
+  evidenced). No 7B download should be attempted until the CPU meta-device issue is fixed (the
+  same runtime path would be used).
+- **Update (Stage 3C — torch ruled out):** Pinned `torch==2.4.1+cpu` and reran the smoke on the
+  existing re-sharded model → **identical** `meta`-device error (`SMOKE_RUN.md` §7). So the torch
+  version is **not** the cause; R-AIRLLM-META is an AirLLM 2.11 CPU-path limitation (it leaves
+  Qwen2's top-level `rotary_emb` on `meta`). **Torch 2.4.1 is kept** as the project pin (closer to
+  AirLLM's era, clean with transformers 4.44, fine for HF CPU). Corrective option #1 (torch pin)
+  is now **closed as ineffective**; the path forward is ADR-0016.
+
+## ADR-0016 — Stage 3D Transformers CPU fallback to prove the measurement pipeline
+- **Status:** ACCEPTED — **EVIDENCED** (executed in Stage 3D)
+- **Context:** AirLLM CPU is blocked by R-AIRLLM-META (rotary buffer on `meta`), and the torch
+  pin did not help (ADR-0015). The measurement pipeline (timers, RSS, result schema) should not
+  stay blocked on an AirLLM-internal bug.
+- **Decision:** add a **direct HF `transformers` CPU** smoke on the already-downloaded tiny
+  Qwen2-0.5B (no AirLLM, no meta-device streaming) to produce a real, schema-valid measurement
+  record and prove the pipeline end-to-end. AirLLM CPU remains a documented limitation.
+- **Evidence:** `results/stage3d_smoke_transformers_qwen2_0_5b_cpu.json` — `success=true`, coherent
+  16-token output, with load/generation/runtime/RSS/token metrics; `SMOKE_RUN.md` §8.
+- **Consequences:** Stage 3 pipeline proof is **done via the HF fallback** (R-REPRO partially
+  evidenced) **without claiming AirLLM works** — R-AIR-01 stays PLANNED until AirLLM itself runs.
+  No 7B until R-AIRLLM-META is resolved (same rotary path). Not a benchmark.
+
 ---
 
 ## Deferred decisions (evidence required first)

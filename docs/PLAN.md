@@ -132,10 +132,39 @@ Detailed tasks live in `TODO.md`. The requirements audit is re-checked at every 
 
 ### Stage 3 — Small pipeline proof (TDD)
 - **Entry:** Architecture & tooling ready.
-- **Work:** Implement SDK skeleton, HardwareProbe, MetricsCollector, FileStore, ConfigLoader,
-  ApiGatekeeper, and a runner — exercised end-to-end on a **tiny** model. TDD throughout.
-- **DoD:** End-to-end run on a small model produces a valid metrics JSON; tests pass; coverage
-  ≥85% on implemented modules; `ruff` clean; files ≤150 lines. **No claims about the big model.**
+
+**Stage 3A — tiny AirLLM CPU smoke probe (done; failed honestly):**
+- Ran `smoke_airllm.py` on the approved `Qwen/Qwen2-0.5B` (CPU). Result: **FAILED** at AirLLM's
+  layer-sharding step — `model.safetensors.index.json should exist` (R-AIRLLM-SHARD): AirLLM
+  needs a multi-shard safetensors checkpoint, but the tiny model ships as a single file. Only
+  ~12 MB metadata/tokenizer reached the external HF cache; **no weights in the repo**; no
+  Qwen2-7B download. Evidence: `docs/SMOKE_RUN.md`, `results/stage3_smoke_airllm_qwen2_0_5b.json`.
+**Stage 3B — re-sharded tiny AirLLM CPU smoke (done; format fixed, runtime failed):**
+- Re-sharded Qwen2-0.5B locally (37 shards + index, git-ignored) and **untied** its tied
+  embeddings (added `lm_head.weight`). AirLLM then **accepted** the model, split all layers, and
+  **started** the CPU forward pass — but failed with `RuntimeError: Tensor on device cpu ...
+  meta!` (R-AIRLLM-META: AirLLM's meta-device lazy loading on CPU, aggravated by torch 2.12.1).
+  Smoke **not** successful (no output). Evidence: `SMOKE_RUN.md` §6,
+  `results/stage3b_smoke_airllm_qwen2_0_5b_resharded.json`.
+**Stage 3C — torch-pin retest (done; torch ruled out):**
+- Pinned `torch==2.4.1+cpu` and reran the smoke on the existing re-sharded model → **identical**
+  meta-device error. Torch version is **not** the cause; AirLLM leaves Qwen2's top-level
+  `rotary_emb` on `meta` (R-AIRLLM-META). `torch==2.4.1` kept as the project pin. Evidence:
+  `SMOKE_RUN.md` §7, `results/stage3c_smoke_airllm_qwen2_0_5b_torch241.json`.
+**Stage 3D — Transformers CPU fallback smoke (done; SUCCEEDED):**
+- Direct HF `transformers` CPU `generate` on the cached Qwen2-0.5B (offline, `local_files_only`)
+  **succeeded** with coherent output → **measurement pipeline proven** (schema-valid record with
+  load/gen/runtime/RSS/token metrics; ADR-0016 EVIDENCED, R-REPRO partially evidenced). It is
+  **not** AirLLM and **not** a benchmark. Evidence: `SMOKE_RUN.md` §8,
+  `results/stage3d_smoke_transformers_qwen2_0_5b_cpu.json`.
+- **AirLLM CPU stays blocked** (R-AIRLLM-META, R-AIR-01 PLANNED). No 7B download until that is
+  resolved (same rotary path). The remaining Stage 3 work (full SDK/MetricsCollector/gatekeeper)
+  builds on this proven writer.
+
+**Stage 3 (full) — Work:** Implement SDK skeleton, HardwareProbe, MetricsCollector, FileStore,
+ConfigLoader, ApiGatekeeper, and the runner — exercised end-to-end on a **tiny** model, TDD.
+- **DoD:** End-to-end tiny-model run produces a valid metrics JSON; tests pass; coverage ≥85%;
+  `ruff` clean; files ≤150 lines. **No claims about the big model.**
 
 ### Stage 4 — Baseline experiment
 - **Entry:** Pipeline proven.

@@ -1,0 +1,20 @@
+{
+  "stage": "3D-transformers-cpu",
+  "model_id": "Qwen/Qwen2-0.5B",
+  "backend": "transformers",
+  "environment": "wsl2-ubuntu",
+  "device": "cpu",
+  "prompt": "Define an operating system in one short sentence.",
+  "max_new_tokens": 16,
+  "start_timestamp": "2026-06-19T22:47:44.474971+00:00",
+  "end_timestamp": "2026-06-19T22:47:59.419249+00:00",
+  "total_runtime_seconds": 14.94,
+  "load_seconds": 4.59,
+  "generation_seconds": 6.22,
+  "peak_rss_mb": 4663.8,
+  "success": true,
+  "failure_reason": "",
+  "output_text": " An operating system is a software program that manages the hardware and software resources of a",
+  "output_tokens_est": 16,
+  "note": "transformers CPU fallback smoke, not AirLLM and not a benchmark"
+}

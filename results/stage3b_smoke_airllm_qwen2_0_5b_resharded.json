@@ -1,0 +1,19 @@
+{
+  "stage": "3-smoke",
+  "model_id": "Qwen/Qwen2-0.5B",
+  "local_model_path": "/home/awad_moha/ex05-airllm/.local_models/qwen2_0_5b_sharded",
+  "backend": "airllm-cpu",
+  "environment": "wsl2-ubuntu",
+  "device": "cpu",
+  "prompt": "Define an operating system in one short sentence.",
+  "max_new_tokens": 16,
+  "start_timestamp": "2026-06-19T22:09:22.230071+00:00",
+  "end_timestamp": "2026-06-19T22:09:35.955879+00:00",
+  "total_runtime_seconds": 13.73,
+  "peak_rss_mb": 2717.4,
+  "success": false,
+  "failure_reason": "RuntimeError: Tensor on device cpu is not on the expected device meta!",
+  "output_text": null,
+  "note": "smoke probe, not a benchmark",
+  "traceback_summary": "         ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/awad_moha/ex05-airllm/.venv/lib/python3.12/site-packages/torch/_refs/__init__.py\", line 1175, in _ref\n    output = prim(a, b)\n             ^^^^^^^^^^\n  File \"/home/awad_moha/ex05-airllm/.venv/lib/python3.12/site-packages/torch/_refs/__init__.py\", line 1800, in mul\n    return prims.mul(a, b)\n           ^^^^^^^^^^^^^^^\n  File \"/home/awad_moha/ex05-airllm/.venv/lib/python3.12/site-packages/torch/_ops.py\", line 871, in __call__\n    return self._op(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/awad_moha/ex05-airllm/.venv/lib/python3.12/site-packages/torch/_library/fake_impl.py\", line 111, in meta_kernel\n    return fake_impl_holder.kernel(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/awad_moha/ex05-airllm/.venv/lib/python3.12/site-packages/torch/_library/utils.py\", line 23, in __call__\n    return self.func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/awad_moha/ex05-airllm/.venv/lib/python3.12/site-packages/torch/library.py\", line 1494, in inner\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/awad_moha/ex05-airllm/.venv/lib/python3.12/site-packages/torch/_library/custom_ops.py\", line 664, in fake_impl\n    return self._abstract_fn(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/awad_moha/ex05-airllm/.venv/lib/python3.12/site-packages/torch/_prims/__init__.py\", line 420, in _prim_elementwise_meta\n    utils.check_same_device(*args_, allow_cpu_scalar_tensors=True)\n  File \"/home/awad_moha/ex05-airllm/.venv/lib/python3.12/site-packages/torch/_prims_common/__init__.py\", line 917, in check_same_device\n    raise RuntimeError(msg)\nRuntimeError: Tensor on device cpu is not on the expected device meta!\n"
+}

@@ -182,6 +182,60 @@
 > Shortlist is **metadata-verified only** (no weights downloaded). **No final model selected,
 > no download, no inference, no benchmark.** T2.6 is user-gated. No experimental requirement DONE.
 
+## Stage 3A — Tiny AirLLM CPU smoke probe  *(attempted; failed honestly)*
+
+| id | task | pri | status | req | DoD |
+| --- | --- | --- | --- | --- | --- |
+| T3A.1 | Write `smoke_airllm.py` + helper unit tests | P0 | DONE | R-TDD | 8 tests pass, 100% cov, ruff clean, ≤150 lines |
+| T3A.2 | Run tiny AirLLM CPU probe on Qwen2-0.5B (approved) | P0 | DONE | R-AIR-01 | Ran; raw JSON written |
+| T3A.3 | Outcome | P0 | **FAILED (recorded)** | R-AIRLLM-SHARD | `AssertionError: model.safetensors.index.json should exist` — AirLLM needs pre-sharded safetensors |
+| T3A.4 | Document failure + corrective plan | P0 | DONE | — | `SMOKE_RUN.md`; R-AIRLLM-SHARD; ADR-0014 |
+| T3A.5 | Log Prompt 011 | P0 | DONE | R-PROMPTLOG | Prompt 011 |
+
+> Smoke **did not** succeed → AirLLM tiny smoke is **NOT** marked EVIDENCED. Only metadata/
+> tokenizer files (~12 MB) hit the external HF cache; **no weights in the repo**; **no Qwen2-7B
+> download**, no benchmark, no fake results.
+
+## Stage 3B — Re-sharded tiny AirLLM CPU smoke  *(format fixed; runtime FAILED)*
+
+| id | task | pri | status | req | DoD |
+| --- | --- | --- | --- | --- | --- |
+| T3B.1 | `prepare_sharded_model.py` — download Qwen2-0.5B, re-shard locally | P0 | DONE | R-AIRLLM-SHARD | 37 shards + `model.safetensors.index.json` (git-ignored) |
+| T3B.2 | Untie tied embeddings so index has `lm_head.weight` | P0 | DONE | R-AIRLLM-TIED | `untied_embeddings=true`, `lm_head_in_index=true` |
+| T3B.3 | Make smoke load local sharded path; pre-create layers dir | P0 | DONE | — | AirLLM accepts format, splits layers, loads |
+| T3B.4 | Run AirLLM CPU smoke on re-sharded model | P0 | **FAILED (recorded)** | R-AIRLLM-META | Forward pass → `Tensor on device cpu ... meta!` |
+| T3B.5 | Document outcome + correctives; tests/gates; log Prompt 012 | P0 | DONE | R-PROMPTLOG | `SMOKE_RUN.md` §6; R-AIRLLM-META; ADR-0015 |
+
+> Re-shard/untie **resolved** the format blockers; the AirLLM **CPU runtime** failed with a
+> meta-device error → AirLLM smoke **NOT** EVIDENCED. No 7B download; no benchmark; no fake
+> results; weights ignored & untracked.
+
+## Stage 3C — Torch-pin retest for the AirLLM meta-device failure  *(done; torch ruled out)*
+
+| id | task | pri | status | req | DoD |
+| --- | --- | --- | --- | --- | --- |
+| T3C.1 | Pin `torch==2.4.1` + `uv sync` | P0 | DONE | R-AIRLLM-META | Installed `torch 2.4.1+cpu`; resolves cleanly |
+| T3C.2 | Rerun smoke on existing re-sharded model (no new download) | P0 | DONE | R-AIRLLM-META | `results/stage3c_..._torch241.json` |
+| T3C.3 | Outcome | P0 | **FAILED (same error)** | R-AIRLLM-META | Identical meta-device error → **torch not the cause** |
+| T3C.4 | Root-cause via source; document; keep torch 2.4.1; log Prompt 013 | P0 | DONE | — | Qwen2 `rotary_emb` left on `meta`; `SMOKE_RUN.md` §7; ADR-0015/0016 |
+
+> Torch version **ruled out** (2.4.1 and 2.12.1 fail identically). AirLLM CPU smoke still **NOT**
+> EVIDENCED. `torch==2.4.1` kept as the project pin. No new download; no benchmark; no fake results.
+
+## Stage 3D — Transformers CPU fallback smoke  *(SUCCEEDED — pipeline proven)*
+
+| id | task | pri | status | req | DoD |
+| --- | --- | --- | --- | --- | --- |
+| T3D.1 | `smoke_transformers_cpu.py` (offline, cache-only) + helper tests | P0 | DONE | R-TDD | 15 tests, 100% cov, ruff clean, ≤150 lines |
+| T3D.2 | Run direct HF `transformers` CPU `generate` on Qwen2-0.5B | P0 | DONE | R-REPRO | **success=true**; coherent 16-token output |
+| T3D.3 | Schema-valid measurement record written | P0 | DONE | R-REPRO | `results/stage3d_..._cpu.json` (load/gen/runtime/RSS/tokens) |
+| T3D.4 | Document; tests/gates; log Prompt 014 | P0 | DONE | R-PROMPTLOG | `SMOKE_RUN.md` §8; ADR-0016 EVIDENCED; Prompt 014 |
+| T3D.5 | (Optional) AirLLM rotary-buffer materialization patch | P2 | TODO | R-AIRLLM-META | Only if AirLLM CPU is pursued; fragile |
+| T3D.6 | Confirm Qwen2-7B native sharding + untied (pre-7B-download) | P1 | TODO | R-AIRLLM-SHARD | Before any 7B request (note: same rotary/meta risk) |
+
+> **Pipeline PROVEN** via a direct HF CPU smoke — **not AirLLM, not a benchmark.** AirLLM CPU
+> stays **blocked/not evidenced** (R-AIRLLM-META). No new download, no 7B, no fake results.
+
 ## Stage 3 — Small pipeline proof (TDD)
 
 | id | task | pri | status | req | DoD |

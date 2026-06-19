@@ -1,0 +1,18 @@
+{
+  "stage": "3A-smoke",
+  "model_id": "Qwen/Qwen2-0.5B",
+  "backend": "airllm-cpu",
+  "environment": "wsl2-ubuntu",
+  "device": "cpu",
+  "prompt": "Define an operating system in one short sentence.",
+  "max_new_tokens": 16,
+  "start_timestamp": "2026-06-19T21:44:49.506996+00:00",
+  "end_timestamp": "2026-06-19T21:44:56.424459+00:00",
+  "total_runtime_seconds": 6.92,
+  "peak_rss_mb": 261.5,
+  "success": false,
+  "failure_reason": "AssertionError: model.safetensors.index.json should exist.",
+  "output_text": null,
+  "note": "smoke probe, not a benchmark",
+  "traceback_summary": "Traceback (most recent call last):\n  File \"/home/awad_moha/ex05-airllm/src/ex05_airllm/smoke_airllm.py\", line 71, in _run\n    model = AutoModel.from_pretrained(\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/awad_moha/ex05-airllm/.venv/lib/python3.12/site-packages/airllm/auto_model.py\", line 56, in from_pretrained\n    return class_(pretrained_model_name_or_path, *inputs, ** kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/awad_moha/ex05-airllm/.venv/lib/python3.12/site-packages/airllm/airllm_qwen2.py\", line 15, in __init__\n    super(AirLLMQWen2, self).__init__(*args, **kwargs)\n  File \"/home/awad_moha/ex05-airllm/.venv/lib/python3.12/site-packages/airllm/airllm_base.py\", line 108, in __init__\n    self.model_local_path, self.checkpoint_path = find_or_create_local_splitted_path(model_local_path_or_repo_id,\n                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/awad_moha/ex05-airllm/.venv/lib/python3.12/site-packages/airllm/utils.py\", line 401, in find_or_create_local_splitted_path\n    return Path(hf_cache_path), split_and_save_layers(hf_cache_path, layer_shards_saving_path,\n                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/awad_moha/ex05-airllm/.venv/lib/python3.12/site-packages/airllm/utils.py\", line 213, in split_and_save_layers\n    assert os.path.exists(checkpoint_path / 'model.safetensors.index.json'), f'model.safetensors.index.json should exist.'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: model.safetensors.index.json should exist.\n"
+}

@@ -17,7 +17,9 @@ dependencies = [
     "transformers==4.44.2",
     "optimum==1.23.3",
     "sentencepiece",
-    "torch",
+    # Pinned to 2.4.1 (Stage 3C): newer torch (2.12) triggered an AirLLM CPU meta-device
+    # error; 2.4.x is closer to AirLLM 2.11's supported range. CPU wheel via pytorch-cpu index.
+    "torch==2.4.1",
     # Measurement / analysis support (used from later stages):
     "psutil",
     "pandas",
