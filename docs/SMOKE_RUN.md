@@ -203,3 +203,15 @@ writer/runner mechanism; R-REPRO PARTIALLY_EVIDENCED).
 R-AIRLLM-META); **not** a benchmark; **not** generalized to Qwen2-7B; **no** final performance is
 claimed. The numbers above are incidental to one smoke run, recorded to demonstrate the pipeline
 captures metrics — not as performance results.
+
+---
+
+## 9. Stage 4A — patched AirLLM smoke (still FAILED; see patch-feasibility doc)
+
+A Stage 4A attempt applied an experimental, local Qwen2 rotary shim (`EX05_AIRLLM_PATCH=1`) to the
+AirLLM CPU smoke on the local re-sharded model (no download). It **still failed** with the same
+meta-device error: `results/stage4a_smoke_airllm_qwen2_0_5b_patched.json` (`patched=true`,
+`success=false`). A no-download diagnostic showed the rotary was **not** the cause — the meta
+tensor is a running decoder layer's `input_layernorm.weight` (AirLLM's core CPU param streaming).
+**A minimal safe shim is infeasible**; full analysis and the decision (documented limitation + HF
+baseline) are in **`docs/AIRLLM_PATCH_FEASIBILITY.md`** (ADR-0017). AirLLM CPU remains not evidenced.

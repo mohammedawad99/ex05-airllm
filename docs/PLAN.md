@@ -157,9 +157,18 @@ Detailed tasks live in `TODO.md`. The requirements audit is re-checked at every 
   load/gen/runtime/RSS/token metrics; ADR-0016 EVIDENCED, R-REPRO partially evidenced). It is
   **not** AirLLM and **not** a benchmark. Evidence: `SMOKE_RUN.md` §8,
   `results/stage3d_smoke_transformers_qwen2_0_5b_cpu.json`.
-- **AirLLM CPU stays blocked** (R-AIRLLM-META, R-AIR-01 PLANNED). No 7B download until that is
-  resolved (same rotary path). The remaining Stage 3 work (full SDK/MetricsCollector/gatekeeper)
-  builds on this proven writer.
+- **AirLLM CPU stays blocked** (R-AIRLLM-META, R-AIR-01 PLANNED). The remaining Stage 3 work
+  (full SDK/MetricsCollector/gatekeeper) builds on this proven writer.
+
+### Stage 4A — AirLLM Qwen2 CPU patch feasibility (done; minimal shim infeasible)
+- Implemented + tested a local, fail-closed Qwen2 rotary shim (`src/ex05_airllm/airllm_compat.py`,
+  no site-packages edits) and ran a patched smoke on the local model → **still failed**. A
+  no-download diagnostic **disproved the rotary hypothesis** and showed the meta tensor is a
+  running decoder layer's **parameter** (`input_layernorm.weight`) — AirLLM's *core* per-layer
+  meta→CPU streaming. A minimal safe shim is **infeasible** (ADR-0017).
+- **Decision:** AirLLM CPU (Qwen2) is a **documented limitation**; the experiment proceeds on the
+  proven **HF `transformers` CPU** pipeline (Stage 3D). AirLLM remains not evidenced; no Qwen2-7B
+  download (same core CPU path). Evidence: `docs/AIRLLM_PATCH_FEASIBILITY.md`, `results/stage4a_*`.
 
 **Stage 3 (full) — Work:** Implement SDK skeleton, HardwareProbe, MetricsCollector, FileStore,
 ConfigLoader, ApiGatekeeper, and the runner — exercised end-to-end on a **tiny** model, TDD.

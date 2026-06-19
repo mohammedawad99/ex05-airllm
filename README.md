@@ -52,7 +52,7 @@ tables, graphs, an evidence map, reproduction instructions, and honest limitatio
 | Dependency skeleton & measurement design | ✅ Stage 2A — `pyproject.toml` + `uv.lock` (pinned matrix, CPU torch), `src/ex05_airllm` + version test, `docs/MEASUREMENT_DESIGN.md` |
 | Model shortlist | 🟡 Stage 2B — metadata-verified shortlist (`docs/MODEL_SELECTION.md`): tiny `Qwen2-0.5B`, main `Qwen2-7B`; **no download** |
 | Final model choice | ⛔ Shortlisted, not finalized — final pick + download await approval & Stage 3 smoke run |
-| Stage 3A/3B/3C AirLLM smoke (Qwen2-0.5B) | 🟥 **Not succeeded** — format fixed (3B re-shard+untie); CPU run hits an AirLLM meta-device error (Qwen2 `rotary_emb` on `meta`); 3C ruled out torch (`docs/SMOKE_RUN.md` §6–§7). Still blocked / not evidenced |
+| Stage 3A–4A AirLLM smoke (Qwen2-0.5B) | 🟥 **Not succeeded / blocked** — format fixed (3B); CPU run hits an AirLLM meta-device error. 3C ruled out torch; **4A** ruled out rotary (a tested local shim didn't help) — root cause is AirLLM's core CPU param streaming (`docs/AIRLLM_PATCH_FEASIBILITY.md`). Documented limitation; not evidenced |
 | Stage 3D Transformers CPU fallback (Qwen2-0.5B) | 🟩 **Succeeded** — direct HF CPU smoke proves the **measurement pipeline** (schema-valid result JSON; `docs/SMOKE_RUN.md` §8). Not AirLLM, not a benchmark |
 | Baseline experiment | ⛔ Not started (Stage 4) |
 | AirLLM + quantization experiment | ⛔ Not started (Stage 5) |

@@ -84,9 +84,10 @@ fail_under = 85
 > Q8 (full SDK/gatekeeper architecture), Q11 (reproducibility of real runs), and Q12 apply
 > from Stage 3+ when experiment code and measurements exist. No experiment results are claimed.
 
-**Stage 3A–3D update:** gates stay green with the smoke/prepare modules added and the torch pin
-changed to `torch==2.4.1+cpu` — **15 tests pass, coverage 100%, ruff/format clean, files ≤150
-lines** (`uv run pytest` / `ruff check .`). Model-loading code paths are `# pragma: no cover`
-(they need real weights/network); their behaviour is evidenced instead by the raw run JSONs
-under `results/`. These are smoke probes, not benchmarks. Stage 3D's HF CPU smoke succeeded and
-proves the result-writing pipeline (R-REPRO partially evidenced).
+**Stage 3A–4A update:** gates stay green with the smoke/prepare/compat modules added and the torch
+pin `torch==2.4.1+cpu` — **21 tests pass, coverage ~98%, ruff/format clean, files ≤150 lines**
+(`uv run pytest` / `ruff check .`). Model-loading code paths are `# pragma: no cover` (they need
+real weights/network); their behaviour is evidenced instead by the raw run JSONs under `results/`.
+These are smoke probes, not benchmarks. Stage 3D's HF CPU smoke succeeded and proves the
+result-writing pipeline (R-REPRO partially evidenced); Stage 4A's `airllm_compat.py` shim is unit-
+tested (no model) but did **not** unblock AirLLM CPU (ADR-0017).

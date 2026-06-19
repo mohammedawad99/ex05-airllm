@@ -236,6 +236,20 @@
 > **Pipeline PROVEN** via a direct HF CPU smoke — **not AirLLM, not a benchmark.** AirLLM CPU
 > stays **blocked/not evidenced** (R-AIRLLM-META). No new download, no 7B, no fake results.
 
+## Stage 4A — AirLLM Qwen2 CPU patch feasibility  *(patch attempted; infeasible)*
+
+| id | task | pri | status | req | DoD |
+| --- | --- | --- | --- | --- | --- |
+| T4A.1 | Read-only inspection of AirLLM + transformers Qwen2 source | P0 | DONE | R-AIRLLM-META | Root-cause traced (`AIRLLM_PATCH_FEASIBILITY.md` §3) |
+| T4A.2 | Implement local, fail-closed Qwen2 rotary shim + tests | P0 | DONE | R-AIRLLM-META | `airllm_compat.py` + `test_airllm_compat.py` (no site-packages edit) |
+| T4A.3 | Run patched AirLLM CPU smoke (local model, no download) | P0 | DONE | R-AIRLLM-META | `results/stage4a_*` (`patched=true`) |
+| T4A.4 | Outcome | P0 | **FAILED (recorded)** | R-AIRLLM-META | Same meta error; diagnostic shows layer-param (RMSNorm) on meta, not rotary |
+| T4A.5 | Decide path; document; log Prompt 015 | P0 | DONE | — | ADR-0017 (limitation + HF baseline); Prompt 015 |
+
+> Minimal safe shim **infeasible** (blocker is AirLLM's core CPU param streaming). AirLLM CPU
+> **not evidenced**; proceed with the HF CPU pipeline (3D). No site-packages edits, no new
+> download, no 7B, no benchmark, no fake results.
+
 ## Stage 3 — Small pipeline proof (TDD)
 
 | id | task | pri | status | req | DoD |

@@ -25,6 +25,7 @@
 | 012 | 3B | Stage 3B — Re-sharded tiny AirLLM CPU smoke | Re-shard + untie (download Qwen2-0.5B only) **fixed the format** → AirLLM loads & starts inference, but CPU forward pass **FAILED** with meta-device error (R-AIRLLM-META); ADR-0015 corrective (older torch) proposed; weights ignored; no 7B, no benchmark, no fake results |
 | 013 | 3C | Stage 3C — Torch-pin retest (torch 2.4.1) | Pinned `torch==2.4.1+cpu`, reran smoke on existing re-sharded model → **identical** meta-device error → **torch ruled out**. Root cause: AirLLM leaves Qwen2 `rotary_emb` on `meta`. Kept torch 2.4.1; recommend Stage 3D HF CPU fallback (ADR-0016). No new download, no benchmark, no fake results |
 | 014 | 3D | Stage 3D — Transformers CPU fallback smoke | Direct HF `transformers` CPU smoke on cached Qwen2-0.5B (offline) **SUCCEEDED** (coherent 16-token output) → measurement pipeline proven (R-REPRO partial; ADR-0016 EVIDENCED). NOT AirLLM, NOT a benchmark; AirLLM CPU stays blocked. No new download, no 7B, no fake results |
+| 015 | 4A | Stage 4A — AirLLM Qwen2 CPU patch feasibility | Implemented + tested a local fail-closed rotary shim (`airllm_compat.py`, no site-packages edit); patched smoke **still FAILED**; diagnostic disproved rotary → meta culprit is a layer param (RMSNorm `weight`) in AirLLM's core CPU streaming. Minimal shim **infeasible** → ADR-0017 (documented limitation + HF baseline). No new download, no 7B, no benchmark, no fake results |
 
 ---
 
@@ -869,6 +870,69 @@
   Stage 3 proper (SDK/MetricsCollector/gatekeeper, TDD) can build on it. AirLLM CPU remains a
   separate, documented limitation; don't download Qwen2-7B until R-AIRLLM-META is resolved (same
   rotary path) or the plan explicitly switches the AirLLM approach.
+
+---
+
+## Prompt 015 — Stage 4A: AirLLM Qwen2 CPU patch feasibility
+
+- **Stage:** 4A
+- **Date:** 2026-06-20
+- **Intent:** Determine whether the AirLLM Qwen2 CPU meta-device blocker can be fixed with a
+  minimal, local, project-owned compatibility shim — **without** editing site-packages,
+  downloading new models, or running the main experiment. Patch feasibility only.
+- **Context:** 3B/3C established the meta-device error; torch was ruled out; 3D's HF CPU fallback
+  proved the pipeline. This stage investigates a targeted AirLLM patch.
+- **Key constraints encoded:** read-only inspection of `.venv` AirLLM/transformers; optional
+  repo-local `airllm_compat.py` (no site-packages edits; Qwen2 CPU-scoped; **fail closed**;
+  documented experimental; no upstream-correctness claim); focused unit tests (not model-heavy);
+  allowed runtime probe = rerun the existing tiny **local** re-sharded Qwen2-0.5B AirLLM smoke
+  only (`device=cpu`, `max_new_tokens<=16`, no download) → write
+  `results/stage4a_smoke_airllm_qwen2_0_5b_patched.json` + console log; if no safe patch, don't run
+  model code — document + recommend next path. Forbidden: 7B/any new download, edit
+  site-packages/AirLLM files, Ollama, DirectML, benchmark, graphs, fake results, delete Stage 3
+  artifacts, secrets, materials, stage/commit/push.
+- **Verbatim prompt (condensed; full text retained in the conversation transcript):**
+
+  > **Stage 4A — AirLLM Qwen2 CPU Patch Feasibility.** Determine whether the AirLLM Qwen2 CPU
+  > meta-device blocker can be fixed with a minimal local project-owned shim, without modifying
+  > site-packages, without new model downloads, without the main experiment. Inspect installed
+  > AirLLM + transformers Qwen2 source read-only; create `src/ex05_airllm/airllm_compat.py` only if
+  > needed (local, Qwen2-CPU-scoped, fail-closed, documented experimental, no upstream claim); add
+  > focused unit tests. Patch options to evaluate: materialize/move non-streamed Qwen2 rotary
+  > buffers to CPU after init; instance-scope monkeypatch; disable prefetching only if source
+  > confirms; smallest explainable+tested patch. If small/local, rerun the existing tiny local
+  > re-sharded Qwen2-0.5B AirLLM smoke (`device=cpu`, `max_new_tokens<=16`, local
+  > `.local_models/qwen2_0_5b_sharded/`, no download) → write
+  > `results/stage4a_smoke_airllm_qwen2_0_5b_patched.json` + `results/raw/stage4a_smoke_console.log`.
+  > If no safe patch → don't run model code; document why; recommend next path (alternate family,
+  > or documented limitation + Transformers baseline). Create `docs/AIRLLM_PATCH_FEASIBILITY.md`
+  > (status/failure recap/source findings/options/shim/probe/next decision) and update
+  > SMOKE_RUN/RISKS/DECISIONS/TODO/PLAN/REQUIREMENTS_AUDIT/QUALITY/PROMPTS/README. Forbidden: 7B/new
+  > downloads, modify site-packages/AirLLM, Ollama, DirectML, benchmark, graphs, fake results,
+  > delete Stage 3 artifacts, stage/commit/push, secrets, materials.
+
+- **Outcome:** A minimal local shim was implemented (`src/ex05_airllm/airllm_compat.py`:
+  `rebuild_qwen2_rotary_on_cpu` + instance-scoped `patch_airllm_qwen2_cpu`, fail-closed, unit-
+  tested with no download) and the patched smoke was **attempted** on the local model
+  (`EX05_AIRLLM_PATCH=1`). It **FAILED** with the same meta error
+  (`results/stage4a_smoke_airllm_qwen2_0_5b_patched.json`, `patched=true`, `success=false`). A
+  **throwaway no-download diagnostic** (outside the repo; removed afterwards) reported
+  `REBUILT_ROTARY=0` and no meta buffers — **disproving the rotary hypothesis** — and the full
+  traceback showed the meta tensor is a running decoder layer's **`input_layernorm.weight`**
+  (RMSNorm) reached from `airllm_base.forward` → `Qwen2DecoderLayer.forward`. So the blocker is
+  AirLLM's **core** per-layer meta→CPU parameter streaming, **not** rotary. A minimal safe shim is
+  therefore **infeasible** → **ADR-0017**: document the AirLLM CPU limitation and use the proven HF
+  `transformers` CPU pipeline (3D). `airllm_compat.py` is kept (env-gated off) as a tested artifact.
+  Created `docs/AIRLLM_PATCH_FEASIBILITY.md`; updated SMOKE_RUN/RISKS/DECISIONS/TODO/PLAN/QUALITY/
+  README. **No site-packages edits, no new download, no 7B, no benchmark, no fake results.** Tests
+  21/21 (~98% cov), ruff/format clean.
+- **Iterations / corrections:** one ruff E501/format on the new test (reflowed). The targeted
+  rotary shim was the natural first hypothesis; the diagnostic redirected the root cause to layer-
+  param streaming, leading to the infeasibility decision.
+- **Lessons / notes for next prompts:** AirLLM's CPU path leaves *layer parameters* on `meta` for
+  Qwen2 on this stack — a core-library issue, not a peripheral buffer; a safe minimal patch can't
+  fix it. Proceed on the HF CPU pipeline; AirLLM CPU stays not evidenced; no Qwen2-7B (same core
+  path). Future AirLLM use would need a GPU env or an alternate supported family.
 
 ---
 

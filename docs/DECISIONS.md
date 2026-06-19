@@ -235,6 +235,25 @@
   evidenced) **without claiming AirLLM works** — R-AIR-01 stays PLANNED until AirLLM itself runs.
   No 7B until R-AIRLLM-META is resolved (same rotary path). Not a benchmark.
 
+## ADR-0017 — AirLLM CPU for Qwen2 is a documented limitation; use the HF CPU baseline
+- **Status:** ACCEPTED — **EVIDENCED** (Stage 4A)
+- **Context:** Stage 4A tested whether a **minimal, local, project-owned** shim could fix the
+  AirLLM Qwen2 CPU meta-device error. A scoped, tested rotary shim (`airllm_compat.py`) was
+  implemented and probed; the patched smoke still failed, and a no-download diagnostic showed the
+  rotary was **not** the cause (0 rebuilt, no meta buffers) — the meta tensor is a running decoder
+  layer's **parameter** (`input_layernorm.weight`), i.e. AirLLM's core per-layer meta→CPU
+  parameter streaming. Fixing that would require patching AirLLM's core (large, fragile, version-
+  coupled) — outside a minimal safe shim, and forbidden (no site-packages edits).
+- **Decision:** Do **not** pursue a large AirLLM core patch. **Record AirLLM CPU (Qwen2) as a
+  documented limitation** and proceed with the **HF `transformers` CPU pipeline** (proven in
+  Stage 3D, ADR-0016) as the working measurement path. Keep `airllm_compat.py` as a tested,
+  env-gated, off-by-default artifact of the investigation (not a working fix).
+- **Evidence:** `docs/AIRLLM_PATCH_FEASIBILITY.md`,
+  `results/stage4a_smoke_airllm_qwen2_0_5b_patched.json` (`patched=true`, `success=false`).
+- **Consequences:** R-AIR-01 (AirLLM run) stays **PLANNED / not evidenced**. No Qwen2-7B download
+  (the same AirLLM core CPU path would fail). Future AirLLM use would need a GPU environment or an
+  alternate supported family — not attempted now.
+
 ---
 
 ## Deferred decisions (evidence required first)

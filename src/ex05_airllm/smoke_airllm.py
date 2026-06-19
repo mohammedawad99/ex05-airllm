@@ -75,6 +75,7 @@ def write_json(path: Path, result: dict[str, Any]) -> None:
 def _run(model_source: str, local_model_path: str | None) -> dict[str, Any]:  # pragma: no cover
     start = time.perf_counter()
     started_at = datetime.now(UTC).isoformat()
+    patched = bool(os.environ.get("EX05_AIRLLM_PATCH"))  # experimental Qwen2 CPU shim
     try:
         from airllm import AutoModel
 
@@ -83,11 +84,16 @@ def _run(model_source: str, local_model_path: str | None) -> dict[str, Any]:  # 
         model = AutoModel.from_pretrained(
             model_source, device=DEVICE, layer_shards_saving_path=str(_AIRLLM_LAYERS)
         )
+        if patched:
+            from ex05_airllm.airllm_compat import patch_airllm_qwen2_cpu
+
+            patch_airllm_qwen2_cpu(model)
         tokens = model.tokenizer(PROMPT, return_tensors="pt")
         out = model.generate(tokens["input_ids"], max_new_tokens=MAX_NEW_TOKENS)
         text = model.tokenizer.decode(out[0], skip_special_tokens=True)
         return build_smoke_result(
             local_model_path=local_model_path,
+            patched=patched,
             start_timestamp=started_at,
             end_timestamp=datetime.now(UTC).isoformat(),
             total_runtime_seconds=round(time.perf_counter() - start, 2),
@@ -98,6 +104,7 @@ def _run(model_source: str, local_model_path: str | None) -> dict[str, Any]:  # 
     except Exception as exc:
         return build_smoke_result(
             local_model_path=local_model_path,
+            patched=patched,
             start_timestamp=started_at,
             end_timestamp=datetime.now(UTC).isoformat(),
             total_runtime_seconds=round(time.perf_counter() - start, 2),
