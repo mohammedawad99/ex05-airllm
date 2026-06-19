@@ -254,6 +254,28 @@
   (the same AirLLM core CPU path would fail). Future AirLLM use would need a GPU environment or an
   alternate supported family — not attempted now.
 
+## ADR-0018 — Revised experiment direction: Transformers CPU is the measurement path; AirLLM is a documented analysis
+- **Status:** ACCEPTED (Stage 4B revision)
+- **Context:** Stages 3–4A proved AirLLM CPU for Qwen2 is blocked by a core meta→CPU
+  parameter-streaming defect (torch-ruled-out, rotary-ruled-out, minimal shim infeasible —
+  ADR-0017). The project needs a coherent, honest path that still satisfies the assignment.
+- **Decision (see `docs/EXPERIMENT_REVISION.md`):**
+  1. **Do NOT download Qwen2-7B** under the current AirLLM CPU path (same defect would fail
+     identically); `download_approved=false` retained.
+  2. **Do NOT** patch AirLLM core / edit site-packages.
+  3. **The Transformers CPU pipeline is the runnable measurement path** (Stage 3D proven) — real,
+     repeatable CPU inference on the local Qwen2-0.5B, feeding the metrics schema/writer.
+  4. **AirLLM is retained as an investigated local-memory-management method** with feasibility +
+     failure analysis and structured evidence — a valid negative result, never claimed as success.
+  5. **Optional future paths (documented only):** GPU/CUDA AirLLM env; an alternate AirLLM-supported
+     family; an upstream AirLLM core streaming fix; Windows DirectML as a non-AirLLM extension.
+- **Evidence:** `docs/EXPERIMENT_REVISION.md`, `docs/SMOKE_RUN.md`, `docs/AIRLLM_PATCH_FEASIBILITY.md`,
+  the `results/stage3*`/`stage4a*` JSONs.
+- **Consequences:** Stage 5 = measurement SDK (MetricsCollector/ResultWriter) + repeatable
+  Transformers CPU measurement on Qwen2-0.5B, **not** a Qwen2-7B download. R-AIR-01 stays
+  PLANNED/blocked. Supersedes the AirLLM-centric framing of ADR-0101a's main run; the model
+  shortlist's 7B remains a *deferred* candidate (only if the AirLLM blocker is resolved).
+
 ---
 
 ## Deferred decisions (evidence required first)

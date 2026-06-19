@@ -6,6 +6,13 @@
 
 ## 1. Status
 
+> **⚠️ Stage 4B revision (ADR-0018):** AirLLM CPU/Qwen2 is **blocked** in this environment
+> (`docs/EXPERIMENT_REVISION.md`). Therefore **`Qwen/Qwen2-7B` remains the main candidate ONLY if
+> the AirLLM blocker is resolved** (GPU/CUDA env or upstream fix); under the current CPU path it is
+> **deferred** and **not downloaded/not approved** (`download_approved=false`). The runnable
+> measurement path is now **HF `transformers` CPU on Qwen2-0.5B** (Stage 3D proven). The shortlist
+> below is retained as the original plan; statuses are superseded by this revision where noted.
+
 - **Stage 2B planning only** — a shortlist + recommendation, not a completed experiment.
 - **Planning-level choices lead-approved** (tiny = `Qwen/Qwen2-0.5B`; main + direct baseline =
   `Qwen/Qwen2-7B`; optional DirectML = `Qwen/Qwen2-1.5B`; backup = Mistral-7B-Instruct-v0.2;

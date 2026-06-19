@@ -79,10 +79,11 @@ Every run emits one record with these columns (authoritative copy:
 | **Main AirLLM candidate** | the "larger-than-memory" stress model | larger than ~11 GiB RAM; shards fit in 933 GB | **shortlist in Stage 2B** |
 | **Optional DirectML small model** | GPU-vs-CPU baseline on Windows Py3.11 | small enough for the iGPU/shared-RAM path | optional |
 
-> Concrete model IDs now have a **metadata-verified shortlist** in `docs/MODEL_SELECTION.md`
-> (Stage 2B) — e.g. tiny `Qwen/Qwen2-0.5B`, main `Qwen/Qwen2-7B` — but the **final pick and any
-> download still await approval** and the Stage 3 smoke run (ADR-0101/0101a). No weights
-> downloaded.
+> Concrete model IDs have a **metadata-verified shortlist** in `docs/MODEL_SELECTION.md`
+> (Stage 2B). **Stage 4B revision (ADR-0018):** AirLLM CPU/Qwen2 is blocked, so the **runnable
+> measurement path is HF `transformers` CPU on the local `Qwen/Qwen2-0.5B`** (Stage 3D proven).
+> The `Qwen/Qwen2-7B` AirLLM main run is **deferred** (`download_approved=false`); AirLLM appears
+> as structured **failure evidence**, not a successful run. See `docs/EXPERIMENT_REVISION.md`.
 
 ## 6. Measurement tools
 

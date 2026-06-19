@@ -1,7 +1,13 @@
 # PRD — AirLLM Pipeline
 
-> Per-mechanism PRD (guidelines §2.3) for the AirLLM layer-streaming inference pipeline — the
-> project's main execution path (ADR-0011). Design only; no runtime/model loading in Stage 2.
+> Per-mechanism PRD (guidelines §2.3) for the AirLLM layer-streaming inference pipeline.
+>
+> **⚠️ Stage 4B revision (ADR-0017/0018):** AirLLM CPU for Qwen2 is **blocked** in this
+> environment (core meta→CPU parameter-streaming defect; see `docs/AIRLLM_PATCH_FEASIBILITY.md`,
+> `docs/EXPERIMENT_REVISION.md`). This PRD now documents the **intended** pipeline + the
+> investigated **failure analysis** — AirLLM is **not** the runnable main path here (that is the
+> HF `transformers` CPU pipeline, `PRD_measurement.md`). It would apply on a GPU/CUDA env or after
+> an upstream fix. No AirLLM run is claimed; no Qwen2-7B download.
 
 ## 1. Purpose
 

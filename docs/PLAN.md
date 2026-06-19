@@ -182,12 +182,22 @@ ConfigLoader, ApiGatekeeper, and the runner — exercised end-to-end on a **tiny
 - **DoD:** Baseline results stored in `results/baseline/`; behavior (incl. failure mode)
   documented in `reports/baseline.md` with evidence.
 
-### Stage 5 — AirLLM + quantization
-- **Entry:** Baseline documented.
-- **Work:** Run the same task via AirLLM; sweep ≥2 quantization levels; collect all metrics
-  and qualitative samples per configuration.
-- **DoD:** `results/airllm/` and `results/quant/` populated; per-config metrics + samples
-  captured; raw vs summary results separated (raw git-ignored).
+### Stage 5 — Measurement SDK + repeatable Transformers CPU measurement  *(revised per ADR-0018)*
+- **Entry:** Stage 4B revision approved. AirLLM CPU/Qwen2 is a documented limitation, not the
+  main run.
+- **Work:** Implement **MetricsCollector** + **ResultWriter** (TDD, SDK-fronted, files ≤150
+  lines) emitting `RESULT_SCHEMA_COLUMNS` records; run a **repeatable HF `transformers` CPU
+  measurement** on the local **Qwen2-0.5B** (TTFT/TPOT/throughput/peak-RAM/runtime, fixed seeds);
+  fold the **AirLLM failure JSONs** in as structured evidence (not success); *optionally* a
+  DirectML tiny GPU-vs-CPU baseline. **No Qwen2-7B download** (deferred; `download_approved=false`).
+- **DoD:** `results/` has repeatable Transformers-CPU measurement records (schema-valid) + the
+  AirLLM failure evidence; tests pass, coverage ≥85%, `ruff` clean, files ≤150 lines; raw vs
+  summary separated (raw git-ignored). **No AirLLM success claimed; no benchmark of a model we
+  didn't run.**
+
+> *(Former Stage 5 "Run via AirLLM + quantization sweep" is superseded: AirLLM CPU is blocked
+> here — see `docs/EXPERIMENT_REVISION.md`. AirLLM compression/quantization is GPU/bitsandbytes-
+> bound and out of scope on this CPU path; quantization, if shown, uses GGUF via the baseline.)*
 
 ### Stage 6 — Analysis, graphs, costs & extension
 - **Entry:** All runs complete.

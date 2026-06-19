@@ -26,6 +26,7 @@
 | 013 | 3C | Stage 3C — Torch-pin retest (torch 2.4.1) | Pinned `torch==2.4.1+cpu`, reran smoke on existing re-sharded model → **identical** meta-device error → **torch ruled out**. Root cause: AirLLM leaves Qwen2 `rotary_emb` on `meta`. Kept torch 2.4.1; recommend Stage 3D HF CPU fallback (ADR-0016). No new download, no benchmark, no fake results |
 | 014 | 3D | Stage 3D — Transformers CPU fallback smoke | Direct HF `transformers` CPU smoke on cached Qwen2-0.5B (offline) **SUCCEEDED** (coherent 16-token output) → measurement pipeline proven (R-REPRO partial; ADR-0016 EVIDENCED). NOT AirLLM, NOT a benchmark; AirLLM CPU stays blocked. No new download, no 7B, no fake results |
 | 015 | 4A | Stage 4A — AirLLM Qwen2 CPU patch feasibility | Implemented + tested a local fail-closed rotary shim (`airllm_compat.py`, no site-packages edit); patched smoke **still FAILED**; diagnostic disproved rotary → meta culprit is a layer param (RMSNorm `weight`) in AirLLM's core CPU streaming. Minimal shim **infeasible** → ADR-0017 (documented limitation + HF baseline). No new download, no 7B, no benchmark, no fake results |
+| 016 | 4B | Stage 4B — Formal experiment direction revision | `EXPERIMENT_REVISION.md` + ADR-0018: HF `transformers` CPU is the runnable measurement path; AirLLM kept as documented failure analysis; Qwen2-7B deferred (`download_approved=false`). Stage 5 = measurement SDK + repeatable Transformers CPU run. Added R-GRADE-AIRLLM. Docs-only; no model run, no download, no benchmark, no fake results |
 
 ---
 
@@ -933,6 +934,58 @@
   Qwen2 on this stack — a core-library issue, not a peripheral buffer; a safe minimal patch can't
   fix it. Proceed on the HF CPU pipeline; AirLLM CPU stays not evidenced; no Qwen2-7B (same core
   path). Future AirLLM use would need a GPU env or an alternate supported family.
+
+---
+
+## Prompt 016 — Stage 4B: Formal experiment direction revision
+
+- **Stage:** 4B
+- **Date:** 2026-06-20
+- **Intent:** Revise the experiment plan formally and honestly after AirLLM CPU/Qwen2 was proven
+  blocked (Stages 3–4A), so the project keeps a coherent path that still satisfies the assignment
+  **without any fake AirLLM success**. Documentation-only.
+- **Context:** AirLLM CPU is blocked by a core meta→CPU param-streaming defect (ADR-0017); the HF
+  `transformers` CPU smoke (3D) succeeded and proves the measurement pipeline.
+- **Core decision to document:** do NOT download Qwen2-7B under the current AirLLM CPU path; do NOT
+  patch AirLLM core / edit site-packages; continue with the proven Transformers CPU measurement
+  pipeline; treat AirLLM as an investigated local-memory-management method whose CPU feasibility
+  failed here (with detailed evidence); keep optional future paths documented only (GPU/CUDA AirLLM,
+  alternate family, upstream fix, DirectML extension).
+- **Key constraints encoded:** docs-only (no new code unless a doc-reference fix needs it); no model
+  run, no Transformers generation, no AirLLM, no Ollama, no DirectML, no benchmark, no graphs, no
+  downloads, no fake results; keep AirLLM-run requirement PLANNED/BLOCKED/PARTIAL (not DONE); keep
+  `download_approved=false`; don't delete prior evidence; no stage/commit/push; no course materials, no secrets.
+- **Verbatim prompt (condensed; full text retained in the conversation transcript):**
+
+  > **Stage 4B — Formal Experiment Direction Revision.** Revise the plan honestly after AirLLM
+  > CPU/Qwen2 was proven blocked. Decision: do NOT download Qwen2-7B under the current AirLLM CPU
+  > path; do NOT modify site-packages / fragile core patch; continue with the proven Transformers
+  > CPU measurement pipeline; treat AirLLM as an investigated method whose CPU feasibility failed,
+  > with evidence; keep optional future paths documented (GPU AirLLM/CUDA; alternate family;
+  > upstream fix; DirectML non-AirLLM extension). Create `docs/EXPERIMENT_REVISION.md`
+  > (status/original plan/evidence/decision/assignment-impact/revised Stage 5/risks/exit criteria)
+  > and update PLAN/DECISIONS/RISKS/TODO/REQUIREMENTS_AUDIT/MEASUREMENT_DESIGN/MODEL_SELECTION/
+  > PRD_measurement/PRD_airllm_pipeline/README/PROMPTS and config (keep `download_approved=false`).
+  > README must say AirLLM CPU/Qwen2 is blocked; Transformers CPU is the runnable measurement path.
+  > Keep AirLLM generation PLANNED/BLOCKED/PARTIAL not DONE; mark only reproducibility/tooling/
+  > pipeline smoke as PARTIALLY_EVIDENCED where justified; Qwen2-7B main only if blocker resolved
+  > else deferred; Stage 5 = measurement SDK + repeatable Transformers CPU run (not 7B download);
+  > add ADR for revised direction; include grading-risk mitigation. Forbidden: download 7B/any
+  > model, run AirLLM/Transformers/Ollama/DirectML, benchmark, graphs, fake results, delete prior
+  > evidence, stage/commit/push, materials, secrets.
+
+- **Outcome:** Created `docs/EXPERIMENT_REVISION.md` (8-section structure). Added **ADR-0018**
+  (Transformers CPU = measurement path; AirLLM = documented analysis; Qwen2-7B deferred). Revised
+  **PLAN/TODO Stage 5** to measurement SDK + repeatable Transformers CPU on Qwen2-0.5B (no 7B
+  download). Added **R-GRADE-AIRLLM** + R-SCOPE-AIRLLM with mitigation. Updated MODEL_SELECTION
+  (7B deferred unless blocker resolved), MEASUREMENT_DESIGN, both PRDs (revision banners),
+  REQUIREMENTS_AUDIT (R-AIR-01 PLANNED/BLOCKED), README (banner + status + tree), config
+  (`download_approved=false` reaffirmed). **No model run, no download, no benchmark, no fake
+  results, no commit/push.** Tests 21/21, ruff/format clean (no code changed).
+- **Iterations / corrections:** none.
+- **Lessons / notes for next prompts:** Stage 5 implements the measurement SDK
+  (MetricsCollector/ResultWriter, TDD) and a repeatable Transformers CPU measurement; AirLLM stays
+  failure evidence; no Qwen2-7B until the AirLLM blocker is resolved on a viable backend.
 
 ---
 

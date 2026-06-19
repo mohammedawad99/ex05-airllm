@@ -269,14 +269,19 @@
 | T4.2 | Run direct baseline; capture behavior incl. failure | P0 | TODO | R-BASE-01 | results/baseline/*.json + reports/baseline.md |
 | T4.3 | Persist sample outputs for quality | P1 | TODO | R-MEAS-QUAL | Samples stored |
 
-## Stage 5 — AirLLM + quantization
+## Stage 5 — Measurement SDK + repeatable Transformers CPU measurement  *(revised — ADR-0018)*
 
 | id | task | pri | status | req | DoD |
 | --- | --- | --- | --- | --- | --- |
-| T5.1 | Run task via AirLLM (layer-wise) | P0 | TODO | R-AIR-01 | results/airllm/*.json |
-| T5.2 | Quantization sweep (≥2 precisions) | P0 | TODO | R-QUANT-01 | results/quant/*.json per precision |
-| T5.3 | Capture peak RAM/VRAM, TTFT, TPOT, throughput, runtime | P0 | TODO | R-MEAS-* | All metrics per config |
-| T5.4 | Qualitative samples per precision | P1 | TODO | R-MEAS-QUAL | Samples stored |
+| T5.1 | Implement MetricsCollector + ResultWriter (TDD, SDK-fronted) | P0 | TODO | R-MEAS-*,R-ARCH-SDK | Schema-valid records; tests; ≤150 lines |
+| T5.2 | Repeatable HF `transformers` CPU measurement on Qwen2-0.5B | P0 | TODO | R-BASE-01,R-MEAS-* | TTFT/TPOT/throughput/peak-RAM/runtime, fixed seeds |
+| T5.3 | Fold AirLLM failure JSONs in as structured evidence | P0 | TODO | R-AIR-01 | Negative result presented honestly (not success) |
+| T5.4 | (Optional) DirectML tiny GPU-vs-CPU baseline | P2 | TODO | R-EXT-01 | Optional extension; Windows-native |
+| T5.5 | Qualitative output samples (Transformers CPU) | P1 | TODO | R-MEAS-QUAL | Samples stored |
+
+> **No AirLLM run** (blocked, ADR-0017/0018) and **no Qwen2-7B download** (`download_approved=false`).
+> AirLLM compression/quantization is GPU/bitsandbytes-bound → out of scope on CPU; any quantization
+> shown uses GGUF via the baseline. AirLLM appears as failure evidence, not a successful run.
 
 ## Stage 6 — Analysis, graphs, costs, extension
 

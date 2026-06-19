@@ -1,7 +1,12 @@
 # PRD — Measurement Subsystem
 
 > Per-mechanism PRD (guidelines §2.3) for the component that records every experiment metric.
-> Design only — no runner is implemented in Stage 2. Companion to `docs/MEASUREMENT_DESIGN.md`.
+> Companion to `docs/MEASUREMENT_DESIGN.md`.
+>
+> **Stage 4B revision (ADR-0018):** this subsystem now backs the **runnable** measurement path —
+> the HF `transformers` CPU pipeline on the local Qwen2-0.5B (Stage 3D proven) — and also records
+> the **AirLLM failure runs** as structured evidence. Implemented in Stage 5 (MetricsCollector +
+> ResultWriter, TDD).
 
 ## 1. Purpose
 

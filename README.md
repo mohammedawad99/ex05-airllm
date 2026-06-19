@@ -1,14 +1,16 @@
 # EX05 — Running a Massive LLM Locally: AirLLM, Quantization & Performance Benchmarking
 
-> **⚠️ STAGE 2A — DOCS + HARDWARE/FEASIBILITY EVIDENCE + DEPENDENCY SKELETON.**
-> This repository currently contains planning/requirements documentation, measured hardware
-> & backend-feasibility evidence (`docs/HARDWARE.md`, `docs/GPU_FEASIBILITY.md`,
-> `docs/AIRLLM_FEASIBILITY.md`), and a **reproducible `uv` project skeleton** (`pyproject.toml`
-> + `uv.lock`, a minimal `src/ex05_airllm` package with a version test, and
-> `docs/MEASUREMENT_DESIGN.md`). There are **no experiment results, no benchmarks, no figures,
-> no runner/AirLLM/DirectML code yet**. A model **shortlist** is metadata-verified
-> (`docs/MODEL_SELECTION.md`), but **no model has been finally selected or downloaded**.
-> **This repository is NOT submission-ready.** It is the audited foundation for the experiment.
+> **⚠️ STAGE 4B — EXPERIMENT DIRECTION REVISED (honest, post-AirLLM-blocker).**
+> Planning/requirements docs, measured hardware & backend-feasibility evidence, a reproducible
+> `uv` project skeleton, and Stage-3 smoke probes are committed. **Key finding:** the
+> **AirLLM CPU path for Qwen2 is BLOCKED in this environment** (a core meta→CPU
+> parameter-streaming defect — torch-ruled-out, rotary-ruled-out, a minimal local shim proven
+> insufficient; see `docs/AIRLLM_PATCH_FEASIBILITY.md`). **The runnable measurement path is the
+> proven HF `transformers` CPU pipeline** on the local `Qwen2-0.5B`; AirLLM is kept as a
+> documented feasibility/failure analysis, **not** a successful run. **Qwen2-7B has NOT been
+> downloaded** and is **deferred** (`download_approved=false`). There are **no benchmarks/figures
+> yet** and **no fake AirLLM success**. Full revision: `docs/EXPERIMENT_REVISION.md`.
+> **This repository is NOT submission-ready.**
 
 ---
 
@@ -48,11 +50,12 @@ tables, graphs, an evidence map, reproduction instructions, and honest limitatio
 | Planning (PRD / PLAN / TODO) | ✅ Stage 0 drafts in `docs/` |
 | Risks, decisions, AI workflow, prompts logged | ✅ Done in `docs/` |
 | Hardware specification | 🟡 Captured & verified (Stage 1A/1B) — `docs/HARDWARE.md` (host ≈24 GB/iGPU/NVMe vs experiment ~11 GiB CPU-only; GPU/VRAM partial) |
-| Backend feasibility | 🟡 GPU DirectML works (optional); CPU + AirLLM is main path (`docs/GPU_FEASIBILITY.md`, `docs/AIRLLM_FEASIBILITY.md`) |
+| Backend feasibility | 🟡 GPU DirectML works (optional, `docs/GPU_FEASIBILITY.md`); AirLLM imports on CPU (`docs/AIRLLM_FEASIBILITY.md`) but its **CPU run is blocked** (see below) |
 | Dependency skeleton & measurement design | ✅ Stage 2A — `pyproject.toml` + `uv.lock` (pinned matrix, CPU torch), `src/ex05_airllm` + version test, `docs/MEASUREMENT_DESIGN.md` |
 | Model shortlist | 🟡 Stage 2B — metadata-verified shortlist (`docs/MODEL_SELECTION.md`): tiny `Qwen2-0.5B`, main `Qwen2-7B`; **no download** |
 | Final model choice | ⛔ Shortlisted, not finalized — final pick + download await approval & Stage 3 smoke run |
 | Stage 3A–4A AirLLM smoke (Qwen2-0.5B) | 🟥 **Not succeeded / blocked** — format fixed (3B); CPU run hits an AirLLM meta-device error. 3C ruled out torch; **4A** ruled out rotary (a tested local shim didn't help) — root cause is AirLLM's core CPU param streaming (`docs/AIRLLM_PATCH_FEASIBILITY.md`). Documented limitation; not evidenced |
+| Experiment direction (Stage 4B) | 🟦 **Revised honestly** (`docs/EXPERIMENT_REVISION.md`, ADR-0018) — **HF `transformers` CPU is the runnable measurement path**; AirLLM kept as documented failure analysis; **Qwen2-7B deferred / not downloaded** |
 | Stage 3D Transformers CPU fallback (Qwen2-0.5B) | 🟩 **Succeeded** — direct HF CPU smoke proves the **measurement pipeline** (schema-valid result JSON; `docs/SMOKE_RUN.md` §8). Not AirLLM, not a benchmark |
 | Baseline experiment | ⛔ Not started (Stage 4) |
 | AirLLM + quantization experiment | ⛔ Not started (Stage 5) |
@@ -63,7 +66,7 @@ There are **no results to report yet**, and none are claimed.
 
 ---
 
-## Repository layout (Stage 2A)
+## Repository layout (Stage 4B)
 
 ```
 ex05-airllm/
@@ -76,7 +79,12 @@ ex05-airllm/
 │   ├── HARDWARE.md               # Stage 1A/1B hardware evidence (host vs WSL2)
 │   ├── GPU_FEASIBILITY.md        # Stage 1C GPU/DirectML feasibility
 │   ├── AIRLLM_FEASIBILITY.md     # Stage 1D AirLLM CPU feasibility (pinned matrix)
-│   ├── MEASUREMENT_DESIGN.md     # Stage 2A metrics + result schema + repro rules
+│   ├── MEASUREMENT_DESIGN.md     # Metrics + result schema + repro rules
+│   ├── MODEL_SELECTION.md        # Stage 2B metadata-verified shortlist
+│   ├── PRD_measurement.md  PRD_airllm_pipeline.md   # Per-mechanism PRDs
+│   ├── SMOKE_RUN.md              # Stage 3A–4A smoke probes (AirLLM fail, HF CPU success)
+│   ├── AIRLLM_PATCH_FEASIBILITY.md  # Stage 4A patch infeasibility analysis
+│   ├── EXPERIMENT_REVISION.md    # Stage 4B revised direction (honest)
 │   ├── PRD.md  PLAN.md  TODO.md  # Requirements / architecture / task ledger
 │   ├── AI_WORKFLOW.md  PROMPTS.md  DECISIONS.md  RISKS.md
 │   ├── QUALITY.md  COSTS.md  SUBMISSION_CHECKLIST.md
