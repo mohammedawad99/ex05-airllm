@@ -88,9 +88,20 @@ performance values are produced later and are **not** asserted here.
 
 ## 7. Constraints & assumptions
 
-- C1. Hardware is fixed and currently **unknown** (`NEEDED_USER_INPUT`); see audit §C.
-- C2. The model must exceed local memory — deliberately a "stress" configuration.
-- C3. Slow runs and even direct-baseline failure are acceptable and expected outcomes.
+- C1. Hardware is fixed and now **measured on both layers** (Stage 1A WSL + Stage 1B host,
+  `docs/HARDWARE.md`). **Physical host:** Windows 11, ASUS Vivobook S 14, Ryzen AI 9 HX 370,
+  ≈ 24 GB RAM, AMD Radeon 890M iGPU (no NVIDIA), ~1 TB NVMe SSD. **Experiment env (WSL2 —
+  the binding constraint, ADR-0009):** AMD CPU with 24 threads (AVX-512/VNNI), **≈ 11.24 GiB
+  RAM** (WSL2 cap) + 3 GiB swap, **933 GB** free ext4 on an NVMe-backed VHDX, and **no
+  compute-capable GPU** usable inside WSL2 (CPU-only; no measurable VRAM).
+- C1a. Because RAM is ~11 GiB, the "larger than memory" target is sized against ~11 GiB, and
+  the **execution path is CPU-only** unless a GPU compute stack is deliberately enabled.
+- C1b. The peak-VRAM metric is expected `N/A_WITH_RATIONALE` (no usable GPU compute in WSL2;
+  the host iGPU shares system RAM — see `GPU_FEASIBILITY.md`); the physical disk
+  type is hidden by WSL2, so I/O behavior must be measured, not assumed.
+- C2. The model must exceed local memory (~11 GiB) — deliberately a "stress" configuration.
+- C3. Slow runs and even direct-baseline failure are acceptable and expected outcomes
+  (an FP16 7–8B model is expected to OOM/thrash in ~11 GiB — a documentable baseline result).
 - C4. No model weights or secrets are committed.
 - C5. Network access to Hugging Face / the chosen API provider is available at run time.
 - A1. The user can authenticate to Hugging Face without storing a token in the repo.

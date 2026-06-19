@@ -3,7 +3,27 @@
 > **STATUS: STAGE 0.** This is the plan and proposed architecture. No implementation
 > exists yet. Concrete interfaces are sketched as design intent, not committed code.
 
-- **Related:** `PRD.md`, `TODO.md`, `REQUIREMENTS_AUDIT.md`, `DECISIONS.md`, `RISKS.md`
+- **Related:** `PRD.md`, `TODO.md`, `REQUIREMENTS_AUDIT.md`, `DECISIONS.md`, `RISKS.md`, `HARDWARE.md`
+
+---
+
+## 0. Hardware-calibrated constraints (Stage 1A WSL + Stage 1B host — measured)
+
+Captured 2026-06-19 (`docs/HARDWARE.md`). Per **ADR-0009**, the plan is calibrated to the
+**execution environment**, not the larger host. Evidence boundary:
+
+- **Physical host (context only):** Windows 11, ASUS Vivobook S 14, Ryzen AI 9 HX 370,
+  ≈ 24 GB RAM, AMD Radeon 890M iGPU (no NVIDIA), ~1 TB **NVMe SSD**.
+- **Execution environment (binding):** Ubuntu 24.04 on **WSL2**.
+  - **CPU:** 24 threads, AVX-512 + VNNI (good CPU-inference ISA).
+  - **RAM:** ≈ **11.24 GiB** (WSL2 cap of ~24 GB host) + 3 GiB swap → the "larger-than-memory"
+    target is sized against ~11 GiB.
+  - **GPU:** host iGPU exists (DX12_2) but **no compute path usable in WSL2** (no CUDA/ROCm;
+    OpenGL = `llvmpipe`; 0 MB dedicated VRAM) → **CPU-only** working assumption; peak-VRAM
+    likely `N/A`. DirectML feasibility under review (`GPU_FEASIBILITY.md`, ADR-0010).
+  - **Disk:** 933 GB free ext4 on an **NVMe-backed** WSL VHDX → media is favorable, but the
+    VHDX/9p overhead means I/O must be **measured**, not assumed (suspected AirLLM bottleneck).
+- **Tooling:** Python 3.12.3, `uv` 0.11.9 available.
 
 ---
 
@@ -87,11 +107,15 @@ Detailed tasks live in `TODO.md`. The requirements audit is re-checked at every 
   recorded; group code, repo URL, HF-access confirmation captured.
 
 ### Stage 2 — Measurement architecture & model selection
-- **Entry:** Hardware known.
+- **Entry:** Hardware known ✅ (Stage 1A complete; `docs/HARDWARE.md`).
 - **Work:** Write `PRD_measurement.md` (precise metric definitions & timing method) and
-  `PRD_airllm_pipeline.md`; **select & justify the model** (ADR) against the hardware; define
-  `config/` schema (versioned), `.env-example`; set up `pyproject.toml` + `uv` + `ruff` +
-  coverage config.
+  `PRD_airllm_pipeline.md`; **select & justify the model** (ADR) against the measured profile
+  (~11.24 GiB RAM, CPU-only, 933 GB disk; AirLLM families verified in 1D: Llama2/Mistral/
+  Mixtral/QWen2); **resolve the CPU quantization route** (AirLLM `bitsandbytes` needs CUDA →
+  likely GGUF Q4/Q8 on CPU — R-QUANT-CPU); define `config/` schema (versioned), `.env-example`;
+  set up `pyproject.toml` + `uv` + `ruff` + coverage config — **pinning the AirLLM dependency
+  matrix** evidenced in 1D (`transformers==4.44.2`, `optimum==1.23.3`, `sentencepiece`, CPU
+  `torch` wheel; R-AIRLLM-DEPS).
 - **DoD:** Measurement design + model choice approved as ADRs; tooling configured; still no
   experiment code beyond config.
 
@@ -146,10 +170,12 @@ Detailed tasks live in `TODO.md`. The requirements audit is re-checked at every 
 
 ## 6. Key trade-offs (to be recorded as ADRs in `DECISIONS.md`)
 
-- Model size vs feasibility (large enough to be meaningful, small enough to finish).
-- Quantization precision vs output quality.
+- Model size vs feasibility (large enough to exceed ~11 GiB, small enough to finish on CPU).
+- Quantization precision vs output quality — **and** the CPU route itself (GGUF Q4/Q8 vs
+  `bitsandbytes`/CUDA, R-QUANT-CPU).
 - Ollama vs HF `transformers` for the baseline.
-- GPU vs CPU execution path (depends on hardware).
+- ~~GPU vs CPU execution path~~ → **resolved by Stage 1A evidence toward CPU-only** (no
+  compute GPU detected); revisit only if a GPU stack is later enabled.
 - Measurement granularity vs runtime overhead (instrumentation must not distort timings).
 
 ## 7. Time estimates (planning aid, not measurements)

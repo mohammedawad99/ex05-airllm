@@ -1,10 +1,11 @@
 # EX05 — Running a Massive LLM Locally: AirLLM, Quantization & Performance Benchmarking
 
-> **⚠️ STAGE 0 — DOCUMENTATION ONLY.**
-> This repository currently contains **planning and requirements documentation only**.
-> There are **no experimental results, no benchmarks, no figures, and no implementation
-> code yet**. **This repository is NOT submission-ready.** It is the audited foundation
-> on which the experiment will later be built.
+> **⚠️ STAGE 1A/1B — DOCUMENTATION & HARDWARE INTAKE ONLY.**
+> This repository currently contains **planning/requirements documentation plus measured
+> hardware evidence** for both the Windows host and the Ubuntu WSL2 execution environment
+> (`docs/HARDWARE.md`). There are **no experimental results, no benchmarks, no figures, and
+> no implementation code yet**, and **no model has been selected**. **This repository is NOT
+> submission-ready.** It is the audited foundation on which the experiment will later be built.
 
 ---
 
@@ -43,8 +44,8 @@ tables, graphs, an evidence map, reproduction instructions, and honest limitatio
 | Requirements captured & audited | ✅ Done (`docs/REQUIREMENTS_AUDIT.md`) |
 | Planning (PRD / PLAN / TODO) | ✅ Stage 0 drafts in `docs/` |
 | Risks, decisions, AI workflow, prompts logged | ✅ Done in `docs/` |
-| Hardware specification | ❌ `NEEDED_USER_INPUT` |
-| Final model choice | ⛔ Intentionally deferred (post-hardware) |
+| Hardware specification | 🟡 Captured & verified (Stage 1A/1B) — `docs/HARDWARE.md` (host ≈24 GB/iGPU/NVMe vs experiment ~11 GiB CPU-only; GPU/VRAM partial) |
+| Final model choice | ⛔ Intentionally deferred (Stage 2, against measured hardware) |
 | Baseline experiment | ⛔ Not started (Stage 4) |
 | AirLLM + quantization experiment | ⛔ Not started (Stage 5) |
 | Measurements / figures / cost analysis | ⛔ Not started (Stages 5–6) |
@@ -62,6 +63,7 @@ ex05-airllm/
 ├── .gitignore                    # Excludes secrets, model weights, caches, large artifacts
 ├── docs/                         # Mandatory documentation (audited)
 │   ├── REQUIREMENTS_AUDIT.md     # Traceability: requirement → status → evidence
+│   ├── HARDWARE.md               # Stage 1A hardware evidence (measured, not benchmarks)
 │   ├── PRD.md                    # Product Requirements Document (Stage 0 draft)
 │   ├── PLAN.md                   # Architecture & staged plan (Stage 0..7)
 │   ├── TODO.md                   # Staged task ledger with definition-of-done
@@ -86,25 +88,37 @@ ex05-airllm/
 
 ---
 
-## ⛔ Next required input: hardware specifications
+## Hardware: captured & verified (Stage 1A WSL + Stage 1B host)
 
-The very next step (Stage 1 → Stage 2) is **blocked** until the local hardware is
-documented. Please provide the following (see `docs/REQUIREMENTS_AUDIT.md` for the full
-`NEEDED_USER_INPUT` list):
+Hardware is **measured on both layers** and documented in
+[`docs/HARDWARE.md`](docs/HARDWARE.md) — no specs are invented. We keep a strict **evidence
+boundary** between the physical host and what the experiment can actually use (per ADR-0009,
+model selection is calibrated to the *execution environment*):
 
-- **OS** — distribution and version (e.g., `cat /etc/os-release`, `uname -a`).
-- **CPU** — model and core/thread count (`lscpu`).
-- **RAM** — total physical memory (`free -h`).
-- **GPU** — model, if any (`nvidia-smi` / `lspci | grep -i vga`).
-- **VRAM** — total GPU memory, if a GPU exists (`nvidia-smi`).
-- **Disk** — type (NVMe / SSD / HDD) and **free space** (`df -h .`, `lsblk -d -o name,rota`).
+- **Physical host (context):** Windows 11, ASUS Vivobook S 14, Ryzen AI 9 HX 370, **≈ 24 GB**
+  RAM, AMD Radeon 890M iGPU (no NVIDIA), ~1 TB **NVMe SSD**.
+- **Experiment env (binding — Ubuntu WSL2):** 24 CPU threads (AVX-512/VNNI), **≈ 11.24 GiB**
+  RAM (WSL2 cap) + 3 GiB swap, **933 GB** free ext4 on an NVMe-backed VHDX.
+- **GPU for compute:** **none usable in WSL2** — the host iGPU is detected by Windows, but
+  CUDA/ROCm compute inside Ubuntu is **not** evidenced → **CPU-only**; peak-VRAM `N/A`.
+- **Tooling:** Python 3.12.3, `uv` 0.11.9.
+
+> NVMe media is favorable for AirLLM's layer streaming, but **I/O speed is not claimed** —
+> it is reached through the WSL VHDX/9p layer and must be benchmarked (see `docs/HARDWARE.md`
+> §A/§B, `docs/RISKS.md` R-WSL-DISK).
+
+## ⛔ Still required from the user (not measurable)
+
+These do **not** block Stage 2 model selection but are tracked as `NEEDED_USER_INPUT` (see
+`docs/REQUIREMENTS_AUDIT.md` §C) and are **not** invented:
+
 - **Group code** — your course group identifier.
-- **GitHub repo URL** — the destination remote (no push happens until you ask).
 - **Hugging Face access** — confirm you can authenticate **without** storing any token in
-  this repo (token via environment variable / interactive login only).
+  this repo (environment variable / interactive login only).
+- **Electricity tariff** (per kWh) and **hardware cost / depreciation** — for the Stage 6
+  cost model only.
 
-A documentation-only helper to *collect* these specs may be added in Stage 2; until then,
-the fields are tracked explicitly as `NEEDED_USER_INPUT` and **not** invented.
+> GitHub repo URL is set: `https://github.com/mohammedawad99/ex05-airllm` (`origin`, `main`).
 
 ---
 

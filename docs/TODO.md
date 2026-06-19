@@ -26,12 +26,128 @@
 | T0.12 | Create Stage 0 README (requirements-oriented) | P0 | DONE | R-README-01 | States Stage 0/no results/not submission-ready/next input |
 | T0.13 | Validate: file listing, placeholder grep, status | P0 | DONE | R-NOFAKE | Greps clean; no forbidden phrases |
 
-## Stage 1 — Approval & hardware capture
+## Stage 1A — Hardware intake & planning calibration  *(documentation tasks complete)*
 
 | id | task | pri | status | req | DoD |
 | --- | --- | --- | --- | --- | --- |
-| T1.1 | Collect hardware specs from user/machine | P0 | BLOCKED | R-HW-01 | OS/CPU/RAM/GPU/VRAM/disk/free recorded |
-| T1.2 | Capture group code, repo URL, HF-access confirmation | P0 | BLOCKED | R-GIT-HISTORY,U-HF-ACCESS | All three recorded; no token stored |
+| T1A.1 | Run read-only hardware discovery probes | P0 | DONE | R-HW-01 | Real outputs captured (OS/CPU/RAM/GPU/disk/python/uv) |
+| T1A.2 | Create `docs/HARDWARE.md` from terminal evidence | P0 | DONE | R-HW-01 | Evidence doc with quoted outputs; no invented specs |
+| T1A.3 | Update audit: hardware items → PARTIALLY_EVIDENCED | P0 | DONE | R-HW-01 | Legend + R-HW-01 + §C updated to evidence |
+| T1A.4 | Calibrate PRD/PLAN to measured constraints | P0 | DONE | R-DOC-PRD,R-DOC-PLAN | PRD C1/PLAN §0 reflect ~11 GiB/CPU-only |
+| T1A.5 | Add hardware-revealed risks | P0 | DONE | — | R-NOGPU/WSL-MEM/QUANT-CPU/WSL-DISK/EVID-GAP added |
+| T1A.6 | Record evidence-backed decision (ADR) | P0 | DONE | — | ADR-0007/0008 in DECISIONS.md |
+| T1A.7 | Point README to HARDWARE.md; keep status honest | P0 | DONE | R-README-01 | README links + status updated |
+| T1A.8 | Log this prompt in PROMPTS.md | P0 | DONE | R-PROMPTLOG | Prompt 002 recorded |
+
+> Note: hardware is captured but **not complete** — group code (U-GROUP), HF access
+> (U-HF-ACCESS), and cost assumptions (U-ELEC/U-HWCOST) remain `NEEDED_USER_INPUT`.
+> No experimental requirement is marked DONE.
+
+## Stage 1B — Host hardware verification  *(documentation tasks complete)*
+
+| id | task | pri | status | req | DoD |
+| --- | --- | --- | --- | --- | --- |
+| T1B.1 | Collect host-side Windows evidence via PowerShell/CIM | P0 | DONE | R-HW-01 | OS/CPU/RAM/GPU/disk + wsl status captured; failures recorded honestly |
+| T1B.2 | Add host/WSL/experiment boundary sections to `HARDWARE.md` | P0 | DONE | R-HW-01 | §0 boundary, §A host, §B experiment availability, §7 consequences |
+| T1B.3 | Resolve U-DISK-TYPE from host (NVMe SSD) | P1 | DONE | R-HW-01 | Host `Get-PhysicalDisk` evidence recorded; I/O still to be measured |
+| T1B.4 | Audit: set EVIDENCED vs PARTIALLY_EVIDENCED per layer | P0 | DONE | R-HW-01 | §C host/experiment columns; GPU/VRAM stay PARTIALLY_EVIDENCED |
+| T1B.5 | Update RISKS (host-vs-execution mismatch, host-GPU-unusable) | P0 | DONE | — | R-NOGPU/WSL-MEM/WSL-DISK reconciled |
+| T1B.6 | Record ADR-0009 (select against execution env, not host) | P0 | DONE | — | ADR in DECISIONS.md |
+| T1B.7 | Update README + log Prompt 003 | P0 | DONE | R-README-01,R-PROMPTLOG | README host/exec distinction; Prompt 003 |
+
+> Stage 1B confirms the evidence boundary. **No model selected; no experimental requirement
+> marked DONE.** U-DISK-TYPE is now host-EVIDENCED (NVMe SSD); actual I/O speed is still a
+> Stage 4/5 measurement, not a claim.
+
+## Stage 1C-A — GPU feasibility diagnostics  *(diagnostic tasks complete)*
+
+| id | task | pri | status | req | DoD |
+| --- | --- | --- | --- | --- | --- |
+| T1C.1 | Run read-only GPU diagnostics (host CIM/dxdiag + WSL dxg/rocm/torch) | P1 | DONE | R-HW-01 | Evidence captured; no installs |
+| T1C.2 | Create `docs/GPU_FEASIBILITY.md` (status/evidence/paths/questions) | P1 | DONE | R-HW-01 | Required 6-section structure present |
+| T1C.3 | Record candidate backend paths with status | P1 | DONE | — | PLANNED/POSSIBLE/BLOCKED/NEEDS_INSTALL_CHECK assigned |
+| T1C.4 | Reference feasibility from HARDWARE/RISKS/DECISIONS | P1 | DONE | — | HARDWARE §4 link; R-NOGPU re-opened; ADR-0010 |
+| T1C.5 | Log Prompt 004 | P1 | DONE | R-PROMPTLOG | Prompt 004 recorded |
+| T1C.6 | **Resolve §5 compatibility questions** (AirLLM CPU/DirectML; torch-directml; quant) | P1 | TODO | R-AIR-01,R-QUANT-CPU | Documented research findings before backend ADR |
+| T1C.7 | Make final execution-backend decision (ADR) | P0 | TODO | — | Evidence-backed backend ADR (revisits ADR-0008) |
+
+> Diagnostics only — **no installs, no benchmarks, no backend decision, no model selected, no
+> experimental requirement DONE.** T1C.6/T1C.7 remain open and gate the backend choice.
+
+## Stage 1C-B — Isolated DirectML compatibility probe  *(probe complete)*
+
+| id | task | pri | status | req | DoD |
+| --- | --- | --- | --- | --- | --- |
+| T1CB.1 | Enumerate Windows Python versions for torch-directml | P1 | DONE | — | `py -0p` recorded (3.13, 3.9) |
+| T1CB.2 | Build throwaway Windows venv **outside repo** (Py 3.9) | P1 | DONE | — | venv in `%TEMP%`, project env untouched |
+| T1CB.3 | Install + smoke-test torch-directml (device + matmul) | P1 | DONE | — | Install OK; **import fails** (3.9<3.10); 0.2.4 retried, same |
+| T1CB.4 | Avoid model download; gate transformers on DirectML success | P1 | DONE | — | transformers not tested (DirectML failed); no model fetched |
+| T1CB.5 | Tear down throwaway env | P1 | DONE | — | venv removed; WSL env re-verified torch-free |
+| T1CB.6 | Record results + update backend statuses | P1 | DONE | — | GPU_FEASIBILITY §3b; Windows DirectML → BLOCKED |
+| T1CB.7 | Update RISKS/DECISIONS; log Prompt 005 | P1 | DONE | — | R-NOGPU/ADR-0010 updated; Prompt 005 |
+
+> Isolated probe only — **no project deps changed, no project code, no model download, no
+> AirLLM/Ollama, no benchmark, no commit.** Practical backend direction = CPU/AirLLM; final
+> backend ADR still gated on T1C.6 (AirLLM CPU mode / quantization route). No experimental
+> requirement marked DONE.
+
+## Stage 1C-C — DirectML retest with compatible Python  *(check complete; retest user-gated)*
+
+| id | task | pri | status | req | DoD |
+| --- | --- | --- | --- | --- | --- |
+| T1CC.1 | Check for installed Python 3.10–3.12 | P1 | DONE | — | `py -0p`: none (only 3.13, 3.9) |
+| T1CC.2 | Check non-invasive install route | P1 | DONE | — | `winget` present; `Python.Python.3.11` 3.11.9 available |
+| T1CC.3 | Decide install vs stop-and-report | P0 | DONE | — | **Stopped & reported** — persistent host change is user-gated |
+| T1CC.4 | Record 1C-C results + backend status | P1 | DONE | — | GPU_FEASIBILITY §3c; statuses updated |
+| T1CC.5 | Log Prompt 006 | P1 | DONE | R-PROMPTLOG | Prompt 006 recorded |
+| T1CC.6 | **(User-gated)** Install Python 3.10–3.12 → run DirectML smoke test | P2 | DONE | — | Authorized in 1C-D; see below |
+
+> No compatible Python installed; DirectML retest deferred to a user-authorized install.
+> **No project deps changed, no code, no model download, no AirLLM/Ollama, no benchmark, no
+> commit.** Windows-native DirectML stays BLOCKED under current setup; CPU/AirLLM main path.
+
+## Stage 1C-D — DirectML retest on compatible Python  *(user-authorized; SUCCESS)*
+
+| id | task | pri | status | req | DoD |
+| --- | --- | --- | --- | --- | --- |
+| T1CD.1 | Install Python 3.11 (winget, user-scope, no admin) | P1 | DONE | — | Python **3.11.9** installed; no admin/UAC issues |
+| T1CD.2 | Throwaway Py3.11 venv outside repo + `torch-directml` | P1 | DONE | — | venv in `%TEMP%`; torch-directml 0.2.5 + torch 2.4.1 |
+| T1CD.3 | DirectML smoke test (import/device/64×64 matmul) | P1 | DONE | — | **SUCCESS** — `privateuseone:0`, shape (64,64), finite |
+| T1CD.4 | transformers import (no model download) | P1 | DONE | — | transformers 5.12.1 imported; no model fetched |
+| T1CD.5 | Tear down throwaway venv | P1 | DONE | — | venv removed; WSL project env re-verified clean |
+| T1CD.6 | Update GPU_FEASIBILITY/RISKS/DECISIONS; log Prompt 007 | P1 | DONE | — | §3d added; Windows DirectML → POSSIBLE; Prompt 007 |
+| T1C.7 | Final execution-backend ADR | P0 | TODO | — | Gated on §5: AirLLM CPU mode / AirLLM-DirectML / quant route |
+
+> **GPU verified usable via DirectML** (optional baseline/extension), but **CPU + AirLLM is
+> the main path** (AirLLM-on-DirectML UNKNOWN; iGPU shares RAM). Python 3.11.9 remains on the
+> host (authorized). **No project deps changed, no project code, no model download, no
+> AirLLM/Ollama, no benchmark, no commit/push.** No experimental requirement marked DONE.
+
+## Stage 1D — AirLLM CPU feasibility check  *(feasibility complete; runtime check deferred)*
+
+| id | task | pri | status | req | DoD |
+| --- | --- | --- | --- | --- | --- |
+| T1D.1 | Confirm WSL python/uv; discover `airllm` on PyPI | P1 | DONE | R-AIR-01 | `airllm` 2.11.0 discoverable; `air-llm` n/a |
+| T1D.2 | Throwaway uv venv in `/tmp` (outside repo) | P1 | DONE | — | venv created; repo untouched |
+| T1D.3 | Install airllm (CPU torch) + import probe | P1 | DONE | R-AIR-01 | Install OK; **import OK** with pinned matrix |
+| T1D.4 | Resolve dependency-matrix breakage | P0 | DONE | R-AIRLLM-DEPS | Pinned transformers 4.44.2 + optimum 1.23.3 + sentencepiece |
+| T1D.5 | Introspect CPU-mode support (no model download) | P1 | DONE | R-AIR-01 | `device='cpu'` is first-class; bitsandbytes optional |
+| T1D.6 | Create `AIRLLM_FEASIBILITY.md` + update RISKS/DECISIONS | P1 | DONE | — | Doc + R-AIRLLM-DEPS + ADR-0011 |
+| T1D.7 | Tear down throwaway env; log Prompt 008 | P1 | DONE | R-PROMPTLOG | env removed; Prompt 008 |
+| T1D.8 | **Stage 3 runtime check** — small model on `device='cpu'` (one forward pass) | P0 | TODO | R-AIR-01 | Confirms no CUDA-only code path at run time |
+
+> CPU + AirLLM feasibility **EVIDENCED at install+import+API level** (ADR-0011); runtime
+> confirmation is a Stage 3 small-model check (T1D.8). **No model download, no inference, no
+> benchmark, no project deps/code changes, no commit.** No experimental requirement marked DONE.
+
+## Stage 1 — Approval & remaining intake
+
+| id | task | pri | status | req | DoD |
+| --- | --- | --- | --- | --- | --- |
+| T1.1 | Collect hardware specs from machine | P0 | DONE | R-HW-01 | Captured in `HARDWARE.md` (GPU/disk-type partial; CPU-only WSL2) |
+| T1.2a | Capture GitHub repo URL | P1 | DONE | R-GIT-HISTORY | `github.com/mohammedawad99/ex05-airllm` recorded; `origin` set |
+| T1.2b | Capture group code + HF-access confirmation | P0 | BLOCKED | U-GROUP,U-HF-ACCESS | Both recorded; no token stored |
+| T1.2c | Capture cost assumptions (electricity tariff, hardware cost) | P1 | BLOCKED | U-ELEC,U-HWCOST | Recorded for Stage 6 cost model |
 | T1.3 | Resolve hardware-independent open questions (PRD §10) | P1 | TODO | R-DOC-PRD | OQ-1..4 dispositioned |
 | T1.4 | Freeze PRD v1.0 after user approval | P0 | BLOCKED | R-DOC-PRD | User sign-off; version bumped |
 
