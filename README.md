@@ -1,189 +1,304 @@
 # EX05 — Running a Massive LLM Locally: AirLLM, Quantization & Performance Benchmarking
 
-> **⚠️ STAGE 4B — EXPERIMENT DIRECTION REVISED (honest, post-AirLLM-blocker).**
-> Planning/requirements docs, measured hardware & backend-feasibility evidence, a reproducible
-> `uv` project skeleton, and Stage-3 smoke probes are committed. **Key finding:** the
-> **AirLLM CPU path for Qwen2 is BLOCKED in this environment** (a core meta→CPU
-> parameter-streaming defect — torch-ruled-out, rotary-ruled-out, a minimal local shim proven
-> insufficient; see `docs/AIRLLM_PATCH_FEASIBILITY.md`). **The runnable measurement path is the
-> proven HF `transformers` CPU pipeline** on the local `Qwen2-0.5B`; AirLLM is kept as a
-> documented feasibility/failure analysis, **not** a successful run. **Qwen2-7B has NOT been
-> downloaded** and is **deferred** (`download_approved=false`). There are **no benchmarks/figures
-> yet** and **no fake AirLLM success**. Full revision: `docs/EXPERIMENT_REVISION.md`.
-> **This repository is NOT submission-ready.**
+> **Technical report (final draft).** This README is the submission-facing report. It documents a
+> reproducible engineering experiment in running a language model on memory-constrained local
+> hardware. The headline finding is an **honest negative result**: AirLLM's CPU layer-streaming
+> path for Qwen2 is **blocked in this environment** by a core meta-device parameter-streaming
+> defect, so a working Hugging Face `transformers` **CPU measurement path** on `Qwen2-0.5B` is used
+> as the real, repeatable evidence base. Every number here regenerates from committed data; nothing
+> is fabricated. A longer companion write-up lives in [`reports/final_report.md`](reports/final_report.md).
 
----
+## 1. Abstract
 
-## What this project will be
+This project investigates how to run a model on **local (On-Premises) hardware whose memory budget
+is small** (~11 GiB inside WSL2), the regime that motivates disk-backed layer-wise loading tools
+such as **AirLLM**. AirLLM installs and imports correctly here, and a local re-sharding step fixes
+its model-format requirement — but its actual CPU forward pass **fails** with a meta-device error
+that was traced to AirLLM's own parameter streaming (PyTorch version and rotary embeddings were both
+ruled out). Because reproducing that same failure on a ~15 GB `Qwen2-7B` download is not justified,
+the experiment pivots to a **proven, reproducible Hugging Face `transformers` CPU path** on the
+already-cached `Qwen/Qwen2-0.5B`, measured over **6 runs**. The report presents those measurements
+(runtime, throughput, peak RAM, output tokens), an **assumption-based** (not market-verified)
+cost/energy estimate, a mapping from the evidence to the lecture concepts, and a strict limitations
+section. The guiding principle, stated in the assignment, is that **a well-analyzed negative result
+outscores an unsupported positive claim**.
 
-A deep-dive engineering experiment that demonstrates, in a measured and reproducible way,
-how to run a model that is **deliberately larger than this machine's memory** on local
-(On-Premises) hardware. The work follows a single throughline:
+## 2. Project status summary
 
-1. Document the exact local hardware and justify a Hugging Face model against it.
-2. Attempt a **direct baseline** (Ollama / Hugging Face `transformers`) and document what
-   happens — including the expected failure or slowdown.
-3. Run the same task with **AirLLM + quantization** (layer-wise loading from disk).
-4. **Measure** TTFT, TPOT/ITL, throughput, peak RAM/VRAM, total runtime, estimated energy,
-   and qualitative output quality.
-5. **Analyze** On-Prem vs external-API cost, including the break-even point.
-6. **Explain** the lecture concepts (CPU/GPU, VRAM, Prefill/Decode, KV cache, quantization,
-   SafeTensors/GGUF, virtual memory, paging, mmap, AirLLM layer-wise loading).
-7. Deliver an **original extension** (e.g., bottleneck-shift map / quantization Pareto
-   frontier / AirLLM decision matrix / API-vs-local break-even simulator).
-
-The final deliverable is this README evolved into a **readable technical report** with
-tables, graphs, an evidence map, reproduction instructions, and honest limitations.
-
-> The grading philosophy of this assignment is explicit: **the goal is not output quality
-> of the model, nor "fastest" inference.** It is a correct, honest, well-documented
-> experiment. A negative result that is well analyzed scores higher than an unsupported
-> positive claim. This repository is built to that standard.
-
----
-
-## Current status
-
-| Aspect | Status |
+| Dimension | Status |
 | --- | --- |
-| Requirements captured & audited | ✅ Done (`docs/REQUIREMENTS_AUDIT.md`) |
-| Planning (PRD / PLAN / TODO) | ✅ Stage 0 drafts in `docs/` |
-| Risks, decisions, AI workflow, prompts logged | ✅ Done in `docs/` |
-| Hardware specification | 🟡 Captured & verified (Stage 1A/1B) — `docs/HARDWARE.md` (host ≈24 GB/iGPU/NVMe vs experiment ~11 GiB CPU-only; GPU/VRAM partial) |
-| Backend feasibility | 🟡 GPU DirectML works (optional, `docs/GPU_FEASIBILITY.md`); AirLLM imports on CPU (`docs/AIRLLM_FEASIBILITY.md`) but its **CPU run is blocked** (see below) |
-| Dependency skeleton & measurement design | ✅ Stage 2A — `pyproject.toml` + `uv.lock` (pinned matrix, CPU torch), `src/ex05_airllm` + version test, `docs/MEASUREMENT_DESIGN.md` |
-| Model shortlist | 🟡 Stage 2B — metadata-verified shortlist (`docs/MODEL_SELECTION.md`): tiny `Qwen2-0.5B`, main `Qwen2-7B`; **no download** |
-| Final model choice | ⛔ Shortlisted, not finalized — final pick + download await approval & Stage 3 smoke run |
-| Stage 3A–4A AirLLM smoke (Qwen2-0.5B) | 🟥 **Not succeeded / blocked** — format fixed (3B); CPU run hits an AirLLM meta-device error. 3C ruled out torch; **4A** ruled out rotary (a tested local shim didn't help) — root cause is AirLLM's core CPU param streaming (`docs/AIRLLM_PATCH_FEASIBILITY.md`). Documented limitation; not evidenced |
-| Experiment direction (Stage 4B) | 🟦 **Revised honestly** (`docs/EXPERIMENT_REVISION.md`, ADR-0018) — **HF `transformers` CPU is the runnable measurement path**; AirLLM kept as documented failure analysis; **Qwen2-7B deferred / not downloaded** |
-| Stage 3D Transformers CPU fallback (Qwen2-0.5B) | 🟩 **Succeeded** — direct HF CPU smoke proves the **measurement pipeline** (schema-valid result JSON; `docs/SMOKE_RUN.md` §8). Not AirLLM, not a benchmark |
-| Baseline experiment | ⛔ Not started (Stage 4) |
-| AirLLM + quantization experiment | ⛔ Not started (Stage 5) |
-| Implementation code & tests | 🟢 Stage 5A/5B — **measurement SDK** + **runner**; 44 unit tests, ~97% coverage |
-| Measurement runs (Transformers CPU, Qwen2-0.5B) | 🟢 Stage 5B — **6/6 runs succeeded** (`docs/MEASUREMENT_RUNS.md`): runtime ~5.2–6.6 s, ~4.4–5.3 tok/s, peak RAM ~4.0 GB. Small repeatable measurement, **not** a benchmark; not AirLLM |
-| Analysis, figures & cost/energy | 🟢 Stage 6A — tables/figures from committed data + **assumption-based** cost/energy estimate (`docs/ANALYSIS.md`, `figures/`, `results/analysis/`). Not verified pricing; not a benchmark |
-| Measurements / figures / cost analysis | 🟢 Stage 5B/6A — measured + analyzed (Transformers CPU). Final-report integration pending (Stage 6B/7) |
+| **What works** | HF `transformers` **CPU** inference on `Qwen2-0.5B` (6/6 runs); the measurement SDK (typed schema, metrics collector, result writer); the analysis + figure + cost pipeline; pinned `uv` env; tests/lint/coverage gates. |
+| **What failed** | AirLLM's **CPU forward pass for Qwen2** — meta-device error at its core parameter streaming (3B/3C/4A); a minimal local shim was shown infeasible. |
+| **What was measured** | Wall-clock runtime, throughput (tok/s), peak RAM (RSS), output-token counts — Transformers CPU, `Qwen2-0.5B`, offline. |
+| **What was not attempted** | A successful AirLLM generation; any GPU/DirectML *measurement*; a quantized inference *run*; a streaming TTFT hook. |
+| **Larger model** | **`Qwen2-7B` was not downloaded** and is **not approved** (`download_approved=false`). No large-model performance is claimed. |
 
-There are **no results to report yet**, and none are claimed.
+## 3. Hardware and environment
 
----
+Hardware is measured on both layers (host + WSL2) in [`docs/HARDWARE.md`](docs/HARDWARE.md); no
+specs are invented. A strict **evidence boundary** separates the physical host from what the
+experiment can actually use.
 
-## Repository layout (Stage 4B)
+- **Physical host (context):** Windows 11, ASUS Vivobook S 14, Ryzen AI 9 HX 370 (12c/24t),
+  **≈ 24 GB** RAM, AMD **Radeon 890M iGPU** (no NVIDIA), ~1 TB **NVMe SSD**.
+- **Experiment env (binding — Ubuntu 24.04 WSL2):** 24 CPU threads (AVX-512/VNNI), **≈ 11.24 GiB**
+  RAM (WSL2 cap) + 3 GiB swap, 933 GB free ext4 on an NVMe-backed VHDX. Python 3.12, `uv`.
+- **GPU for compute:** **none usable inside WSL2** — the host iGPU is detected by Windows but
+  CUDA/ROCm compute is not available in Ubuntu ⇒ **CPU-only**; peak VRAM is `N/A`.
+- **DirectML (optional, not the main path):** a Windows-native Python 3.11 **DirectML PyTorch tensor
+  smoke succeeded** on the iGPU (`docs/GPU_FEASIBILITY.md`). It proves the device is reachable for
+  tensor ops, but it is **not** used for any model measurement in this report and is kept as an
+  optional future lane.
+- **Measurement path:** **CPU + Hugging Face `transformers`**, the runnable, reproducible lane.
+
+## 4. Model selection
+
+- **Measured:** `Qwen/Qwen2-0.5B` — small, openly available, already cached locally; used for all
+  real measurements here.
+- **Originally the main candidate:** `Qwen/Qwen2-7B` (fp16 ≈ 15.24 GB > 11.24 GiB RAM), chosen
+  precisely to be *larger than memory* for the AirLLM layer-streaming demonstration. It was
+  **deferred** once the AirLLM CPU path was shown blocked — downloading ~15 GB to reproduce a known
+  failure is not justified (`docs/MODEL_SELECTION.md`, ADR-0101a/0018). **Qwen2-7B was not
+  downloaded and not tested**; no large-model performance is claimed.
+- **No gated/private models** and **no Hugging Face token** are required; everything runs from a
+  local cache, offline.
+
+## 5. Methodology
+
+A staged, documentation-first engineering process; each stage leaves committed evidence and is
+re-audited (`docs/REQUIREMENTS_AUDIT.md`, `docs/PLAN.md`):
+
+1. **Requirement audit** → PRD / PLAN / TODO (traceability before code).
+2. **Hardware feasibility** (Stage 1A/1B) — host vs WSL2, CPU-only determination.
+3. **Backend feasibility** (Stage 1C/1D) — DirectML reachable (optional); AirLLM imports on CPU.
+4. **Smoke probes** (Stage 3A–3D, 4A) — AirLLM format fix + CPU failure; HF CPU smoke success.
+5. **Measurement SDK** (Stage 5A) — typed `MeasurementResult` schema, injectable-clock
+   `MetricsCollector`, `ResultWriter` (stable CSV header), deterministic prompts.
+6. **Measurement run** (Stage 5B) — 6 repeatable Transformers CPU runs on `Qwen2-0.5B`, offline.
+7. **Analysis** (Stage 6A) — stats, figures, and an assumption-based cost/energy estimate computed
+   **from committed data only**.
+
+Engineering discipline throughout: **`uv`-locked** dependencies (`pyproject.toml` + `uv.lock`),
+**TDD** with `pytest`, **ruff** lint+format, **coverage ≥ 85%**, every Python file **≤ 150 code
+lines**, and reproducibility (fixed prompts/seeds, raw JSON per run, regenerable analysis).
+
+## 6. AirLLM investigation (negative result)
+
+AirLLM is the assignment's local-memory-management mechanism. It was investigated thoroughly and
+**did not succeed** on CPU/Qwen2 here. The evidence chain (raw JSONs under `results/`, analysis in
+[`docs/AIRLLM_PATCH_FEASIBILITY.md`](docs/AIRLLM_PATCH_FEASIBILITY.md) /
+[`docs/SMOKE_RUN.md`](docs/SMOKE_RUN.md); direction recorded in
+[`docs/EXPERIMENT_REVISION.md`](docs/EXPERIMENT_REVISION.md)):
+
+| Stage | What was tried | Outcome |
+| --- | --- | --- |
+| 1D | Install + import AirLLM (pinned matrix) | **OK** — imports on CPU; `device='cpu'` is first-class |
+| 3A | Upstream single-file safetensors | **FAIL** — needs `model.safetensors.index.json` (sharded format) |
+| 3B | Local re-shard + untie weights | Format **fixed** → AirLLM loads & starts, then **FAIL** (meta-device) |
+| 3C | Re-test under `torch==2.4.1+cpu` | **FAIL** identically → **torch ruled out** |
+| 4A | Local rotary shim (no site-packages edit) | **FAIL** — diagnostic disproved rotary; meta tensor is a **layer parameter** in AirLLM's core CPU streaming ⇒ minimal safe patch infeasible (ADR-0017) |
+
+The recurring runtime error is `RuntimeError: Tensor on device cpu is not on the expected device
+meta!`. Aggregated evidence: `results/analysis/airllm_failure_summary.json` →
+**`any_success: false`, 4 attempts, all `success=false`**.
+
+**Final interpretation:** AirLLM CPU/Qwen2 is **blocked in this environment** — a documented,
+root-caused limitation, **not a success**. This is reported as a valid negative result, not hidden.
+
+## 7. Transformers CPU measurement
+
+The runnable measurement path: direct Hugging Face `transformers` **CPU** inference on the local
+`Qwen/Qwen2-0.5B` (offline, cache-only). **6 runs** across **3 deterministic prompts × 2 repeats**
+(`os_definition`, `ai_agent_short`, `memory_management_short`). Details:
+[`docs/MEASUREMENT_RUNS.md`](docs/MEASUREMENT_RUNS.md); full analysis:
+[`docs/ANALYSIS.md`](docs/ANALYSIS.md); authoritative numbers:
+`results/analysis/transformers_cpu_qwen2_0_5b_summary_stats.json`. This is a small, repeatable
+measurement — descriptive, **not** a competitive benchmark.
+
+| metric | min | mean | max |
+| --- | --- | --- | --- |
+| total runtime (s) | 5.16 | 5.68 | 6.57 |
+| throughput (tokens/s) | 4.42 | 5.07 | 5.31 |
+| peak RAM — RSS (MB) | 3985.4 | 4015.6 | 4029.1 |
+| output tokens | 27 | 28.7 | 30 |
+
+Per-prompt means:
+
+| prompt_id | runs | mean runtime (s) | mean tok/s | mean peak RAM (MB) |
+| --- | --- | --- | --- | --- |
+| os_definition | 2 | 6.06 | 4.83 | 4007.2 |
+| ai_agent_short | 2 | 5.76 | 5.21 | 4010.5 |
+| memory_management_short | 2 | 5.23 | 5.16 | 4029.1 |
+
+**Caveats (honest):**
+- **TTFT = None.** `generate()` was not token-streamed in this runner, so there is no first-token
+  hook; TTFT is recorded as `None`, never estimated (R-MEAS-TTFT).
+- **TPOT is approximate** = `generation_seconds / output_tokens` (no TTFT to subtract prefill);
+  consistent with the measured mean throughput (~5.07 tok/s ⇒ ≈ 0.20 s/token). Labelled approximate.
+- **Peak RAM is process RSS**; **peak VRAM is `N/A`** (no usable GPU compute).
+
+Figures (plain matplotlib, generated from the committed data):
+
+![Mean runtime by prompt](figures/transformers_cpu_runtime_by_prompt.png)
+![Mean throughput by prompt](figures/transformers_cpu_throughput_by_prompt.png)
+![Mean peak RAM by prompt](figures/transformers_cpu_peak_ram_by_prompt.png)
+
+## 8. Cost and energy estimate
+
+An **assumption-based, illustrative** estimate (`src/ex05_airllm/cost_model.py`;
+`results/analysis/cost_energy_estimate.json`; method in [`docs/COSTS.md`](docs/COSTS.md)). It is
+**not** market-verified pricing.
+
+- **Assumptions:** CPU power **45 W** (assumed, not metered), electricity **$0.20/kWh**, assumed
+  external API **$0.50 / $1.50** per 1M input / output tokens, `hardware_cost_usd = 0` (CAPEX
+  excluded — sensitivity only). Marked `pricing_status = assumption_not_live_verified`.
+- **Formulas:** `energy_kWh = runtime_s/3600 × W/1000`; `local_cost = energy_kWh × price`;
+  `api_cost = in/1e6×in_price + out/1e6×out_price`;
+  `break_even_N = hardware_cost / (api_per_req − local_per_req)`.
+- **Result (per run, mean runtime ~5.68 s, ~9 input / ~29 output tokens):** energy ≈ **7.1×10⁻⁵
+  kWh**; local electricity ≈ **$1.4×10⁻⁵**; assumed API ≈ **$4.9×10⁻⁵**.
+- **Break-even caveat:** with `hardware_cost = 0` the break-even is **0 requests** — On-Prem looks
+  cheaper *per request* only because CAPEX is excluded. This is the dominant sensitivity: any
+  realistic hardware cost pushes break-even far to the right. The figure
+  (`figures/cost_break_even_estimate.png`) is illustrative under the assumptions above.
+
+![Illustrative break-even under assumed pricing](figures/cost_break_even_estimate.png)
+
+> **Firm caveat:** real provider prices and a metered wattage must be sourced and dated before any
+> quantitative cost claim. No live/market pricing is asserted here.
+
+## 9. Course concept mapping
+
+Each concept is tied to *this* evidence, with an explicit measured-vs-discussed marker:
+
+- **Prefill vs Decode** — *Discussed + partially measured.* Prefill processes the prompt in one
+  compute-heavy pass; decode emits tokens autoregressively. Our runner times the whole
+  `generate()`, so prefill and decode are not separated; the measured throughput (~5 tok/s) is
+  dominated by the decode loop on CPU.
+- **TTFT vs TPOT / ITL** — *Discussed; TTFT not measured, TPOT approximate.* TTFT needs a first-token
+  hook we did not implement (recorded `None`); TPOT/ITL is approximated as time-per-output-token.
+- **Decode is memory-sensitive / memory-bound locally** — *Discussed, consistent with evidence.* On
+  CPU, per-token decode is throughput-limited by moving weights + KV cache through memory, not by
+  raw FLOPs — matching the modest, stable ~5 tok/s and ~4 GB RSS we observe for a 0.5B model.
+- **RAM / VRAM constraints** — *Measured (RAM) / N-A (VRAM).* Peak RSS ~4 GB on an ~11 GiB budget
+  for 0.5B shows why a 7B fp16 model (~15 GB) cannot fit in memory — the core motivation for
+  layer streaming. No VRAM (CPU-only).
+- **Virtual memory / paging / layer streaming** — *Discussed; this is AirLLM's premise.* AirLLM
+  streams layers from disk to keep resident memory small (an explicit alternative to OS paging of a
+  too-large model). Our NVMe disk is favorable for this, but the path is blocked at AirLLM's CPU
+  parameter streaming (§6).
+- **Quantization as a memory-reduction route** — *Discussed, not a completed run.* Lower precision
+  (Q8/Q4) would shrink the resident footprint, but AirLLM's `bitsandbytes` path is CUDA-oriented
+  (unavailable) and a CPU GGUF route was not executed. **No quantized inference result is claimed.**
+- **On-Prem vs API trade-off** — *Discussed + illustrative estimate.* §8 sketches the trade-off
+  under explicit assumptions; the honest takeaway is methodological (CAPEX dominates break-even),
+  not a verified price comparison.
+
+## 10. Reproducibility
+
+Everything regenerates from committed data; **no model weights are committed**.
+
+```bash
+# Set up the locked environment (uv only; no pip)
+uv sync --extra dev
+
+# Run the test suite and quality gates
+uv run pytest
+uv run ruff check .
+
+# Regenerate the analysis tables, figures, and cost estimate from committed measurement data
+uv run python -m ex05_airllm.analyze_measurements
+```
+
+- **Inspect committed measurement data:** `results/measurements/transformers_cpu_qwen2_0_5b/`
+  (`summary.csv` + 6 per-run JSONs) and the AirLLM failure JSONs `results/stage3*`, `results/stage4a*`.
+- **Generated analysis** lands in `results/analysis/`, `figures/`, and
+  [`reports/measurement_summary.md`](reports/measurement_summary.md) — the analysis step above reads
+  only committed data, so **no model is needed** to regenerate tables/figures.
+- **Re-running the measurement itself is optional.** The runner
+  `ex05_airllm.run_transformers_cpu_measurement` expects a **local/cached `Qwen2-0.5B`** and is
+  **not** required to inspect the committed results; the report stands on the data already in
+  `results/`.
+- **Do not download `Qwen2-7B`** to reproduce this report — none of the committed results depend on
+  it. The measured path uses the already-cached `Qwen2-0.5B`, offline.
+
+## 11. Limitations
+
+- **AirLLM did not generate** on CPU/Qwen2 — blocked at its core parameter streaming (§6).
+- **No `Qwen2-7B` experiment** — not downloaded, not approved; no large-model performance claimed.
+- **No quantized inference result** — quantization is discussed, not executed/measured here.
+- **No DirectML measurement** — only a tensor smoke succeeded (Windows-native); no model was run on
+  the iGPU.
+- **Cost/API pricing is assumption-based**, not live/market-verified; the energy figure uses an
+  assumed wattage, not a meter.
+- **TTFT is unavailable** — the non-streaming `generate()` path exposes no first-token hook; TPOT is
+  therefore approximate.
+
+## 12. Repository structure
 
 ```
 ex05-airllm/
-├── README.md                     # This file (the evolving technical report)
-├── .gitignore                    # Excludes secrets, model weights, caches, large artifacts
-├── pyproject.toml                # uv project: pinned AirLLM matrix + CPU torch, ruff/pytest/coverage
-├── uv.lock                       # Locked, reproducible dependency set
-├── docs/                         # Mandatory documentation (audited)
-│   ├── REQUIREMENTS_AUDIT.md     # Traceability: requirement → status → evidence
-│   ├── HARDWARE.md               # Stage 1A/1B hardware evidence (host vs WSL2)
-│   ├── GPU_FEASIBILITY.md        # Stage 1C GPU/DirectML feasibility
-│   ├── AIRLLM_FEASIBILITY.md     # Stage 1D AirLLM CPU feasibility (pinned matrix)
-│   ├── MEASUREMENT_DESIGN.md     # Metrics + result schema + repro rules
-│   ├── MODEL_SELECTION.md        # Stage 2B metadata-verified shortlist
-│   ├── PRD_measurement.md  PRD_airllm_pipeline.md   # Per-mechanism PRDs
-│   ├── SMOKE_RUN.md              # Stage 3A–4A smoke probes (AirLLM fail, HF CPU success)
-│   ├── MEASUREMENT_RUNS.md       # Stage 5B Transformers CPU measurement (6 runs)
-│   ├── ANALYSIS.md               # Stage 6A analysis, figures, cost/energy (from committed data)
-│   ├── AIRLLM_PATCH_FEASIBILITY.md  # Stage 4A patch infeasibility analysis
-│   ├── EXPERIMENT_REVISION.md    # Stage 4B revised direction (honest)
-│   ├── PRD.md  PLAN.md  TODO.md  # Requirements / architecture / task ledger
-│   ├── AI_WORKFLOW.md  PROMPTS.md  DECISIONS.md  RISKS.md
-│   ├── QUALITY.md  COSTS.md  SUBMISSION_CHECKLIST.md
-├── config/
-│   └── experiment.example.toml   # Versioned config template (placeholder model id)
-├── src/ex05_airllm/              # Package skeleton: version.py, constants.py (no runners yet)
-├── tests/unit/                   # test_version.py (version/schema consistency)
-├── experiments/                  # Experiment runners (Stage 4+) — not started
-├── results/                      # Measured data: CSV/JSON (Stage 5+) — none yet
-├── figures/                      # Generated graphs (Stage 6) — none yet
-└── reports/                      # Long-form reports linked from README (Stage 6)
+├── README.md                  # This technical report
+├── pyproject.toml  uv.lock    # uv-locked, pinned dependency matrix (CPU torch)
+├── src/ex05_airllm/           # Measurement SDK + runners (schema, metrics, writer, prompts,
+│                              #   cost_model, analysis, smoke/prepare/compat) — all ≤150 lines
+├── tests/unit/                # pytest suite (TDD; mirrors src/)
+├── docs/                      # Audited documentation (requirements, ADRs, analysis, gap audit)
+├── results/
+│   ├── measurements/transformers_cpu_qwen2_0_5b/  # Raw Stage 5B data (CSV + 6 JSONs)
+│   ├── analysis/              # Generated stats / cost JSON (from committed data)
+│   └── stage3*/stage4a*.json  # AirLLM failure evidence (negative result)
+├── figures/                   # Generated plots (runtime/throughput/RAM/break-even)
+├── reports/                   # final_report.md + generated measurement_summary.md
+└── config/                    # Versioned config templates (no secrets)
 ```
 
-> `experiments/`, `results/`, `figures/`, and `reports/` are scaffolding for later stages and
-> hold no project artifacts yet. `src/`/`tests/` contain only the Stage 2A skeleton + version
-> test — no runner, AirLLM, DirectML, plotting, or cost code exists yet.
+**Ignored local artifacts (never committed):** model weights/caches (`.local_models/`, `.hf_cache/`),
+raw run logs (`results/raw/`), the virtual env (`.venv/`), tool caches, and local reference
+material. `.gitignore` enforces this; the audits below confirm no model weights are tracked.
+
+## 13. Conclusion
+
+This project delivers an **honest negative AirLLM result** alongside a **working, reproducible
+measurement pipeline**. AirLLM was installed, format-corrected, and driven to the point of a
+root-caused CPU failure; rather than fabricate a success or burn a ~15 GB download to reproduce a
+known blocker, the experiment measured a real, repeatable Transformers CPU path on `Qwen2-0.5B` and
+analyzed it transparently — with cost/energy clearly marked as assumption-based. The work
+deliberately prioritizes **reproducible engineering evidence over fabricated success**, in line with
+the assignment's stated grading philosophy.
 
 ---
-
-## Hardware: captured & verified (Stage 1A WSL + Stage 1B host)
-
-Hardware is **measured on both layers** and documented in
-[`docs/HARDWARE.md`](docs/HARDWARE.md) — no specs are invented. We keep a strict **evidence
-boundary** between the physical host and what the experiment can actually use (per ADR-0009,
-model selection is calibrated to the *execution environment*):
-
-- **Physical host (context):** Windows 11, ASUS Vivobook S 14, Ryzen AI 9 HX 370, **≈ 24 GB**
-  RAM, AMD Radeon 890M iGPU (no NVIDIA), ~1 TB **NVMe SSD**.
-- **Experiment env (binding — Ubuntu WSL2):** 24 CPU threads (AVX-512/VNNI), **≈ 11.24 GiB**
-  RAM (WSL2 cap) + 3 GiB swap, **933 GB** free ext4 on an NVMe-backed VHDX.
-- **GPU for compute:** **none usable in WSL2** — the host iGPU is detected by Windows, but
-  CUDA/ROCm compute inside Ubuntu is **not** evidenced → **CPU-only**; peak-VRAM `N/A`.
-- **Tooling:** Python 3.12.3, `uv` 0.11.9.
-
-> NVMe media is favorable for AirLLM's layer streaming, but **I/O speed is not claimed** —
-> it is reached through the WSL VHDX/9p layer and must be benchmarked (see `docs/HARDWARE.md`
-> §A/§B, `docs/RISKS.md` R-WSL-DISK).
-
-## ⛔ Still required from the user (not measurable)
-
-These do **not** block Stage 2 model selection but are tracked as `NEEDED_USER_INPUT` (see
-`docs/REQUIREMENTS_AUDIT.md` §C) and are **not** invented:
-
-- **Group code** — your course group identifier.
-- **Hugging Face access** — confirm you can authenticate **without** storing any token in
-  this repo (environment variable / interactive login only).
-- **Electricity tariff** (per kWh) and **hardware cost / depreciation** — for the Stage 6
-  cost model only.
-
-> GitHub repo URL is set: `https://github.com/mohammedawad99/ex05-airllm` (`origin`, `main`).
-
----
-
-## Reproduction (current stage)
-
-There is nothing to *run* yet. To validate the Stage 0 deliverables:
-
-```bash
-# 1. List all tracked files
-find . -maxdepth 3 -type f | sort
-
-# 2. Confirm there are no forbidden placeholder phrases
-grep -RniE "will contain|coming soon|lorem|placeholder|fake result|TODO later" \
-    README.md docs .gitignore || echo "clean"
-```
-
-Package management for later stages will use **`uv`** exclusively (no `pip`,
-no `python -m`). No dependencies are installed in Stage 0.
-
----
-
-## Honest limitations (Stage 0)
-
-- No hardware profile yet → no model can be responsibly selected → no experiment can run.
-- All performance, cost, and quality sections are **planned methodology only**; they
-  contain **no numbers** and make **no claims**.
-- Time estimates in `docs/PLAN.md` are estimates, not measured durations.
 
 ## Security & data handling
 
-- **No secrets are stored in this repository.** Hugging Face tokens and API keys are
-  provided only via environment variables or interactive login at runtime.
-- `.gitignore` excludes `.env`, key/credential files, model weights, and large artifacts.
-- A committed `.env-example` (placeholders only) will be added when secrets are first
-  needed (Stage 4).
+- **No secrets in the repository.** Any Hugging Face token / API key is provided via environment
+  variable or interactive login only; none is committed.
+- `.gitignore` excludes `.env`, credentials, model weights, caches, and large artifacts.
+- **No model weights or shards are tracked** (verified by audit).
 
-## License & credits
+## Status & required user input
 
-- Course-provided materials (assignment brief, lecture 08 guidance, course software
-  guidelines) are kept **local only** for reference and are not part of this repository or
-  redistributed.
-- This project is coursework for Assignment 05 (L08). A project license will be declared in
-  `docs/DECISIONS.md` before the repository is made public.
+- **Repo:** `https://github.com/mohammedawad99/ex05-airllm` (`origin`, `main`).
+- Still `NEEDED_USER_INPUT` (never invented; see `docs/REQUIREMENTS_AUDIT.md` §C): course **group
+  code**, **HF access** confirmation (token-free), and real **electricity tariff** / **hardware
+  cost** if the cost estimate is to move beyond assumptions.
 
----
+## Evidence map & key documents
 
-*Stage 0 generated as a requirements-and-planning baseline. See `docs/` for the full
-audit trail. Nothing in this repository should be read as a result.*
+Every claim above is backed by a committed document; the primary links:
+
+- **Extended report:** [`reports/final_report.md`](reports/final_report.md) ·
+  generated summary [`reports/measurement_summary.md`](reports/measurement_summary.md)
+- **Requirement audits:** [`docs/FINAL_GAP_AUDIT.md`](docs/FINAL_GAP_AUDIT.md) ·
+  [`docs/REQUIREMENTS_AUDIT.md`](docs/REQUIREMENTS_AUDIT.md) ·
+  [`docs/SUBMISSION_CHECKLIST.md`](docs/SUBMISSION_CHECKLIST.md)
+- **Measurement & analysis:** [`docs/MEASUREMENT_RUNS.md`](docs/MEASUREMENT_RUNS.md) ·
+  [`docs/ANALYSIS.md`](docs/ANALYSIS.md) · [`docs/COSTS.md`](docs/COSTS.md)
+- **AirLLM negative result:** [`docs/SMOKE_RUN.md`](docs/SMOKE_RUN.md) ·
+  [`docs/AIRLLM_PATCH_FEASIBILITY.md`](docs/AIRLLM_PATCH_FEASIBILITY.md) ·
+  [`docs/EXPERIMENT_REVISION.md`](docs/EXPERIMENT_REVISION.md)
+- **Hardware & selection:** [`docs/HARDWARE.md`](docs/HARDWARE.md) ·
+  [`docs/GPU_FEASIBILITY.md`](docs/GPU_FEASIBILITY.md) ·
+  [`docs/MODEL_SELECTION.md`](docs/MODEL_SELECTION.md)
+- **Decisions & risks:** [`docs/DECISIONS.md`](docs/DECISIONS.md) ·
+  [`docs/RISKS.md`](docs/RISKS.md) · [`docs/PLAN.md`](docs/PLAN.md)

@@ -1,70 +1,111 @@
 # Submission Checklist (Final Audit)
 
-> **STATUS: STAGE 0.** This is the gate the project must pass before submission. In Stage 0
-> only the foundation items are checkable; the rest are listed so the bar is known from day
-> one. Mark `[x]` only with a real evidence path. Nothing is pre-checked as passing.
+> **STATUS: STAGE 7B — pre-submission audit.** This is the gate the project must pass before
+> submission. Each item carries an explicit status with an evidence path. **Honesty rules:** AirLLM
+> generation is **not** marked DONE (blocked); quantization is **not** marked DONE (not a measured
+> run); `Qwen2-7B` is **not** marked DONE (not downloaded/approved); the overall submission is
+> **not** marked DONE until the final audit + user-controlled push are complete.
 
-Legend: `[ ]` not done · `[~]` in progress · `[x]` done (with evidence) · `[N/A]` justified.
-
----
-
-## A. Repository foundation (Stage 0)
-- [x] `README.md` present, states Stage 0 / no results / not submission-ready / next input = hardware — *evidence: README.md*
-- [x] `.gitignore` excludes secrets, model weights, caches, `.coverage`, `htmlcov`, large artifacts — *evidence: .gitignore*
-- [x] `docs/REQUIREMENTS_AUDIT.md` with full traceability table + all `NEEDED_USER_INPUT` — *evidence: docs/REQUIREMENTS_AUDIT.md*
-- [x] `docs/PRD.md`, `docs/PLAN.md` (stages 0–7), `docs/TODO.md` present — *evidence: docs/*
-- [x] `docs/AI_WORKFLOW.md`, `docs/PROMPTS.md` (Prompt 001), `docs/DECISIONS.md` present — *evidence: docs/*
-- [x] `docs/RISKS.md` (incl. all 8 required risks), `docs/QUALITY.md`, `docs/COSTS.md` present — *evidence: docs/*
-- [x] No forbidden placeholder phrases in README/docs/.gitignore — *evidence: validation grep*
-- [x] No implementation code, no model downloads, no dependencies installed, no secrets, no commit/push in Stage 0
-
-## B. Documentation completeness (final)
-- [ ] README is a full technical report: hardware, experiment, baseline vs AirLLM/quant summary, cost summary, concept↔result links, tables, graphs, reproduction, limitations, links to reports
-- [ ] Per-mechanism PRDs present (`PRD_airllm_pipeline.md`, `PRD_measurement.md`)
-- [ ] All ADRs recorded with rationale; deferred decisions resolved
-- [ ] Prompt log covers all significant prompts; decisions log current
-- [ ] License & credits declared
-
-## C. Experiment evidence (final)
-- [ ] Hardware documented from the real machine (OS/CPU/RAM/GPU/VRAM/disk/free) — *evidence: reports/hardware.md*
-- [ ] Model selected & justified vs hardware (ADR)
-- [ ] Direct baseline run; behavior incl. any failure documented — *evidence: results/baseline/, reports/baseline.md*
-- [ ] AirLLM run completed — *evidence: results/airllm/*
-- [ ] Quantization sweep (≥2 levels) — *evidence: results/quant/*
-- [ ] Metrics captured per config: TTFT, TPOT/ITL, throughput, peak RAM, peak VRAM*, runtime, energy estimate — *evidence: results/**/metrics.json*
-- [ ] Qualitative output samples per config — *evidence: reports/quality_samples.md*
-
-## D. Analysis (final)
-- [ ] Tables + figures generated from real data — *evidence: figures/*
-- [ ] Compute- vs memory-bound (Roofline) classification — *evidence: reports/concepts.md*
-- [ ] Cost model: API vs On-Prem + break-even graph (+ optional cloud GPU) — *evidence: figures/breakeven.*, reports/costs.md*
-- [ ] All required concepts explained and tied to evidence
-- [ ] Research Questions explicitly answered
-- [ ] ≥1 original extension delivered — *evidence: reports/extension.md*
-
-## E. Quality gates (final — see QUALITY.md)
-- [ ] `ruff check` zero errors; `ruff format --check` clean
-- [ ] Tests pass (happy + error paths); coverage ≥85% (`fail_under=85`)
-- [ ] Every source file ≤150 lines
-- [ ] No hardcoded config values; secrets via `os.environ`
-- [ ] Layered/SDK architecture; all API calls via gatekeeper; OOP/DRY
-- [ ] Versioning starts at `1.00`
-- [ ] `uv` only; `pyproject.toml` + `uv.lock` committed
-
-## F. Integrity & security (every stage)
-- [ ] No fabricated specs, numbers, or graphs anywhere
-- [ ] Estimates labelled as estimates; assumptions explicit
-- [ ] No secrets/tokens committed; `.env-example` placeholders only
-- [ ] All numbers reproducible from documented commands
-- [ ] `REQUIREMENTS_AUDIT.md` fully re-audited: every requirement `DONE`/`N/A_WITH_RATIONALE` with evidence
-
-## G. Submission mechanics (Stage 7 — user-controlled)
-- [ ] Group code recorded — *NEEDED_USER_INPUT*
-- [ ] GitHub repo URL set; clean, meaningful git history — *NEEDED_USER_INPUT*
-- [ ] Hugging Face access confirmed without storing a token — *NEEDED_USER_INPUT*
-- [ ] Final push performed **only on explicit user request**
+Status legend: **DONE** (complete, evidenced) · **PARTIAL** (real evidence, not complete) ·
+**BLOCKED** (investigated, cannot complete in this environment) · **TODO** (not started) ·
+**N/A** (justified out of scope).
 
 ---
 
-*Stage 0 status: Section A complete; Sections B–G open by design (work not yet started).
-No item outside Section A is checked, and none is claimed as passing.*
+## A. Repository foundation
+- **DONE** — `README.md` is the submission-facing technical report (13 sections, tables, embedded
+  figures, reproduction, limitations) — *evidence: README.md*
+- **DONE** — `.gitignore` excludes secrets, model weights, caches, `.coverage`, `htmlcov`, large
+  artifacts — *evidence: .gitignore*
+- **DONE** — `docs/REQUIREMENTS_AUDIT.md` full traceability table incl. all `NEEDED_USER_INPUT` —
+  *evidence: docs/REQUIREMENTS_AUDIT.md*
+- **DONE** — Planning/process docs present (`PRD.md`, `PLAN.md`, `TODO.md`, `AI_WORKFLOW.md`,
+  `PROMPTS.md`, `DECISIONS.md`, `RISKS.md`, `QUALITY.md`, `COSTS.md`) — *evidence: docs/*
+- **DONE** — No forbidden placeholder/self-defeating phrases in README/docs — *evidence: text audit*
+
+## B. Documentation completeness
+- **DONE** — README is a full technical report: hardware, baseline-vs-AirLLM summary, cost summary,
+  concept↔result links, tables, figures, reproduction, limitations, links to reports — *evidence:
+  README.md, reports/final_report.md, docs/FINAL_GAP_AUDIT.md*
+- **PARTIAL** — Per-mechanism design docs: `docs/MEASUREMENT_DESIGN.md` present; formal
+  `PRD_measurement.md` / `PRD_airllm_pipeline.md` still to finalize — *evidence: docs/*
+- **PARTIAL** — ADRs recorded with rationale (through ADR-0019); some deferred decisions
+  (license/extension/provider) remain open — *evidence: docs/DECISIONS.md*
+- **DONE** — Prompt log covers all significant prompts (through Prompt 021); decisions log current —
+  *evidence: docs/PROMPTS.md, docs/DECISIONS.md*
+- **TODO** — License & credits formally declared (ADR-0106 open) — *evidence: docs/DECISIONS.md*
+
+## C. Experiment evidence
+- **DONE** — Hardware documented from the real machine (OS/CPU/RAM/GPU/VRAM/disk/free), host + WSL2
+  — *evidence: docs/HARDWARE.md*
+- **PARTIAL** — Model selected & justified vs hardware; final large pick deferred (ADR-0101a/0018) —
+  *evidence: docs/MODEL_SELECTION.md*
+- **PARTIAL** — Direct local baseline run (HF `transformers` CPU on `Qwen2-0.5B`, 6/6); baseline on
+  a larger/selected model not done — *evidence: results/measurements/transformers_cpu_qwen2_0_5b/,
+  docs/MEASUREMENT_RUNS.md*
+- **BLOCKED** — AirLLM run completed → **not achieved**; investigated and root-caused (meta-device
+  defect), structured failure evidence kept — *evidence: results/stage3*, results/stage4a*,
+  results/analysis/airllm_failure_summary.json, docs/AIRLLM_PATCH_FEASIBILITY.md*
+- **TODO** — Quantization sweep (≥2 levels) → **not a measured run** (CUDA `bitsandbytes`
+  unavailable; CPU GGUF route not executed) — *evidence: docs/TODO.md, R-QUANT-01*
+- **PARTIAL** — Metrics captured: runtime/throughput/peak-RAM **measured**; TPOT **approximate**;
+  TTFT **None** (no streaming hook); peak VRAM **N/A** (no GPU); energy **estimated** — *evidence:
+  results/measurements/..., results/analysis/..., docs/ANALYSIS.md*
+- **TODO** — Qualitative output samples per config preserved — *evidence: reports/quality_samples.md
+  (not yet created)*
+
+## D. Analysis
+- **DONE** — Tables + 4 figures generated from real committed data — *evidence: figures/,
+  docs/ANALYSIS.md*
+- **PARTIAL** — Compute- vs memory-bound (Roofline) argument made in prose; not a separate figure —
+  *evidence: README.md §9, reports/final_report.md §5*
+- **PARTIAL** — Cost model: API vs On-Prem + break-even figure under **assumed** pricing
+  (`pricing_status=assumption_not_live_verified`); not market-verified — *evidence:
+  results/analysis/cost_energy_estimate.json, figures/cost_break_even_estimate.png, docs/COSTS.md*
+- **PARTIAL** — Required concepts explained and tied to evidence (measured-vs-discussed markers) —
+  *evidence: README.md §9, reports/final_report.md §5*
+- **PARTIAL** — Research Questions explicitly answered with honest gaps — *evidence:
+  reports/final_report.md §6*
+- **TODO** — ≥1 original extension delivered (candidate: break-even simulator, ADR-0105) —
+  *evidence: reports/extension.md (not yet created)*
+
+## E. Quality gates (see QUALITY.md)
+- **DONE** — `ruff check .` zero errors; `ruff format --check .` clean — *evidence: run log*
+- **DONE** — Tests pass (happy + error paths); coverage ≥85% — *evidence: pytest (54 passed, ~97%)*
+- **DONE** — Every source file ≤150 code lines — *evidence: line-count audit*
+- **PARTIAL** — No hardcoded config; secrets via `os.environ` (labels/schema centralized) —
+  *evidence: src/constants.py, config/*
+- **PARTIAL** — Layered/SDK-fronted, OOP/DRY; central API gatekeeper not needed yet (no live API
+  calls made) — *evidence: src/ex05_airllm/*
+- **DONE** — Versioning starts at `1.0.0` (code + config, test-enforced) — *evidence:
+  src/ex05_airllm/version.py*
+- **DONE** — `uv` only; `pyproject.toml` + `uv.lock` committed — *evidence: repo root*
+
+## F. Integrity & security
+- **DONE** — No fabricated specs, numbers, or graphs anywhere — *evidence: text audit, every number
+  traces to committed data*
+- **DONE** — Estimates labelled as estimates; assumptions explicit (cost/energy/TPOT/TTFT) —
+  *evidence: README §7–8, docs/ANALYSIS.md*
+- **DONE** — No secrets/tokens committed; no model weights/shards tracked — *evidence: .gitignore,
+  model-artifact audit*
+- **DONE** — All reported numbers reproducible from documented commands — *evidence: README §10*
+- **PARTIAL** — `REQUIREMENTS_AUDIT.md` re-audited each stage; final transition to DONE/N-A pending
+  remaining experiment gaps — *evidence: docs/REQUIREMENTS_AUDIT.md, docs/FINAL_GAP_AUDIT.md*
+
+## G. Submission mechanics (user-controlled)
+- **TODO** — Group code recorded — *NEEDED_USER_INPUT*
+- **DONE** — GitHub repo URL set; history clean/meaningful (per-stage commits, no `git add .`) —
+  *evidence: git log, origin/main*
+- **TODO** — Hugging Face access confirmed without storing a token — *NEEDED_USER_INPUT*
+- **TODO** — Final push performed **only on explicit user request** (Stage 7A/7B drafts uncommitted
+  until instructed)
+
+---
+
+## Overall submission readiness: **PARTIAL (not DONE)**
+
+The repository is internally consistent, honest, and reproducible for the **measured Transformers
+CPU path**, with AirLLM presented as a structured **negative result**. It is **not** marked
+submission-DONE: the AirLLM generation is blocked, quantization and a larger-model run are not done,
+and license/extension/qualitative-samples plus user-controlled submission items remain open. No item
+above overstates: no AirLLM success, no `Qwen2-7B` run, no market-verified pricing.

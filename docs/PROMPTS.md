@@ -1175,6 +1175,78 @@
 
 ---
 
+## Prompt 020 — Stage 7A: Final technical report draft & requirement gap audit
+
+- **Stage:** 7A
+- **Date:** 2026-06-20
+- **Intent:** Integrate the project into a strong final README/report and perform a strict
+  requirement **gap audit** — **without** running models, downloading anything, or making fake
+  claims. Keep it honest: AirLLM failed/blocked; Transformers CPU is the measured runnable path.
+- **Context:** Stage 6A analysis/figures/cost are committed. The README was still a Stage-4B
+  planning placeholder; it needed to become the submission-facing technical report.
+- **Key constraints encoded:** rewrite `README.md` as a 13-section technical report (abstract,
+  status, hardware/env, model selection, methodology, AirLLM investigation, Transformers CPU
+  measurement with the committed min/mean/max tables + embedded figures + TTFT-None/TPOT-approx
+  caveats, assumption-based cost/energy with CAPEX=0 break-even caveat, concept mapping with
+  measured-vs-discussed markers, reproducibility, limitations, repo structure, conclusion); create
+  `reports/final_report.md` (longer companion, no new measurements) and `docs/FINAL_GAP_AUDIT.md`
+  (satisfied/partial/blocked/missing + blockers + grading-risk + pre-submission actions). Allowed
+  doc edits only; do not edit raw/generated result JSON/CSV or figures. Forbidden: download any
+  model/Qwen2-7B, run Transformers/AirLLM/Ollama/DirectML, benchmark/measurement rerun, fake
+  results, hand-edit raw results, create new measured values, edit site-packages, stage/commit/push,
+  local course materials, secrets, or naming local material/document paths in GitHub-facing docs.
+- **Outcome:** Rewrote `README.md` into the 13-section report (committed tables + 4 embedded
+  figures + honest caveats); created `reports/final_report.md` (AirLLM forensics, concept mapping,
+  Research-Question answers — cites committed data only) and `docs/FINAL_GAP_AUDIT.md`. Refreshed
+  `reports/README.md`; moved R-README-01/R-CONCEPT-01/R-RQ-01 → `PARTIALLY_EVIDENCED`; updated
+  `TODO` (Stage 7A block, T6.5/T6.6 IN_PROGRESS, gap-audit DONE); added **ADR-0019** (README =
+  technical report; companion + gap audit). AirLLM stays **blocked/not evidenced**; `Qwen2-7B` not
+  downloaded/approved; cost/energy assumption-based. **No model run/download, no benchmark rerun, no
+  raw-result edits, no fake results, no commit/push.** Validation: `uv run pytest` + `ruff check`/
+  `format --check` green; text audit only honest/negated/meta matches.
+- **Iterations / corrections:** (pre-stage) aligned generated-artifact field names to the
+  acceptance schema (`run_count`, `attempt_count`, `pricing_status`) before this stage; none needed
+  in the doc draft itself.
+- **Lessons / notes for next prompts:** Stage 7B = README polish + end-to-end `SUBMISSION_CHECKLIST`
+  + final requirements re-audit; keep AirLLM a negative result; no `Qwen2-7B`; replace cost
+  assumptions with sourced/dated prices only if a verified claim is wanted.
+
+---
+
+## Prompt 021 — Stage 7B: Final report polish & submission-checklist audit
+
+- **Stage:** 7B
+- **Date:** 2026-06-20
+- **Intent:** Strict final polish + submission-readiness audit of the README/report/checklist —
+  **no** model runs/downloads, **no** raw-result/analysis/figure edits, **no** experimental evidence
+  changes. Make the README strong as a standalone first read; keep the tone honest but **not**
+  self-defeating.
+- **Context:** Stage 7A produced the README report + `reports/final_report.md` +
+  `docs/FINAL_GAP_AUDIT.md`. The submission checklist was still a Stage-0 placeholder.
+- **Key constraints encoded:** README standalone audit (all 13 sections present, figures embedded
+  with correct relative paths, evidence links resolve); tone audit (prefer "investigated and
+  blocked / structured negative result / runnable path is Transformers CPU / no unsupported AirLLM
+  success", avoid "project failed / could not do the assignment / nothing works"); figure/link
+  audit; rewrite `docs/SUBMISSION_CHECKLIST.md` with real DONE/PARTIAL/BLOCKED/TODO (AirLLM
+  generation **not** DONE, quantization **not** DONE, `Qwen2-7B` **not** DONE, submission **not**
+  DONE); align `docs/FINAL_GAP_AUDIT.md`; reproducibility-command audit (note the measurement runner
+  expects a local `Qwen2-0.5B` cache and is not needed to inspect committed results; never instruct
+  downloading `Qwen2-7B`); text-safety audit. Allowed doc edits only; do not touch raw/generated
+  results, figures, source, tests, `pyproject.toml`, `uv.lock`.
+- **Outcome:** Polished `README.md` (converted key cross-refs to clickable links; added an **Evidence
+  map** section linking all required docs; added the optional-runner / cache note in Reproducibility).
+  Rewrote `docs/SUBMISSION_CHECKLIST.md` to real statuses (overall **PARTIAL, not DONE**). Refined
+  `docs/FINAL_GAP_AUDIT.md` (Stage 7B status + action list). Updated `QUALITY`/`TODO`. Validation:
+  `uv run pytest` (54 passed, ~97%) + `ruff check`/`format --check` green; path validation OK; raw
+  results/analysis/figures `git diff` empty; text audit only honest/negated/meta matches. **No model
+  run/download, no benchmark rerun, no fake results, no commit/push.**
+- **Iterations / corrections:** none — docs-only polish; no broken reference required a non-doc fix.
+- **Lessons / notes for next prompts:** remaining before a real "submission DONE": license/extension/
+  qualitative-samples, and the user-controlled group code / HF-access / push. AirLLM stays a negative
+  result; no `Qwen2-7B`; cost stays assumption-based until real prices are sourced/dated.
+
+---
+
 *Template for future entries:*
 *Prompt NNN — <stage>: <title> — Intent / Context / Constraints / Verbatim prompt /
 Actions / Outcome / Iterations / Lessons.*

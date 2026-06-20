@@ -97,3 +97,10 @@ behaviour is evidenced by the raw run JSONs under `results/`. The SDK is **pure/
 metric math is unit-tested with a controlled clock, no model/network. These are smoke probes, not
 benchmarks. Stage 3D's HF CPU smoke proved the pipeline (R-REPRO partially evidenced); Stage 4A's
 `airllm_compat.py` did **not** unblock AirLLM CPU (ADR-0017).
+
+**Stage 7A/7B update (final report draft + polish):** docs-only — no code/test changes. README
+became the 13-section technical report (embedded figures, resolvable evidence links);
+`reports/final_report.md` + `docs/FINAL_GAP_AUDIT.md` added; `docs/SUBMISSION_CHECKLIST.md` rewritten
+to real DONE/PARTIAL/BLOCKED/TODO statuses. Gates re-verified unchanged: **54 tests pass, ~97%
+coverage, ruff check + format clean, all files ≤150 code lines.** No model run/download; raw
+results/analysis/figures untouched; AirLLM stays blocked; no `Qwen2-7B`.

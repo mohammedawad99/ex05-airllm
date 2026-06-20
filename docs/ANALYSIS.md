@@ -87,6 +87,7 @@ All numbers derive from documented **assumptions**, not verified live pricing
 
 ## 8. Next steps
 
-- Integrate these tables/figures into the final README report (Stage 6/7).
+- **Done (Stage 7A):** these tables/figures are integrated into the README technical report and
+  `reports/final_report.md`; gaps tracked in `docs/FINAL_GAP_AUDIT.md`.
 - *Optional:* a Windows-native DirectML analysis if time permits (extension, not AirLLM).
 - **No Qwen2-7B** unless the AirLLM blocker is resolved on a viable backend.

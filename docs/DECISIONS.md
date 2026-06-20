@@ -276,6 +276,26 @@
   PLANNED/blocked. Supersedes the AirLLM-centric framing of ADR-0101a's main run; the model
   shortlist's 7B remains a *deferred* candidate (only if the AirLLM blocker is resolved).
 
+## ADR-0019 — README is the final technical report; companion report + gap audit added (Stage 7A)
+- **Status:** ACCEPTED (Stage 7A, docs only — no model run/download/benchmark)
+- **Context:** The prior README was a Stage-4B planning placeholder ("not submission-ready"). The
+  assignment requires the README to *be* the technical report, with tables, figures, reproduction,
+  concept↔evidence links, and honest limitations. The measured evidence (Stage 5B/6A) and the
+  AirLLM negative result are now committed and stable.
+- **Decision:**
+  1. Rewrite `README.md` as the **13-section submission-facing technical report**, embedding the
+     committed measurement tables and the four generated figures, and linking all evidence.
+  2. Add `reports/final_report.md` as an **extended companion** (AirLLM forensics, concept mapping,
+     Research-Question answers) — **no new measurements**, cites committed data only.
+  3. Add `docs/FINAL_GAP_AUDIT.md` — a satisfied/partial/blocked/missing requirement audit.
+  4. Keep framing honest: **AirLLM blocked (not a success)**; Transformers CPU is the measured path;
+     cost/energy is **assumption-based, not verified**; `Qwen2-7B` not downloaded/approved.
+- **Evidence:** `README.md`, `reports/final_report.md`, `docs/FINAL_GAP_AUDIT.md`,
+  `results/analysis/*`, `figures/*`.
+- **Consequences:** R-README-01 / R-CONCEPT-01 / R-RQ-01 move to `PARTIALLY_EVIDENCED`. No
+  experimental requirement is marked DONE; AirLLM (R-AIR-01) stays PLANNED/blocked. Final polish +
+  end-to-end `SUBMISSION_CHECKLIST` run remain (Stage 7B).
+
 ---
 
 ## Deferred decisions (evidence required first)

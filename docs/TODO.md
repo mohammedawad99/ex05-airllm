@@ -309,13 +309,19 @@
 > Analysis from **committed data only** — no model run, no download, no benchmark, no fake results;
 > raw measurement files unmodified. AirLLM stays **not evidenced**; Qwen2-7B not downloaded.
 
-## Stage 6B / 7 — Final report (next)
+## Stage 7A — Final report draft & gap audit (done)
+
+> Drafted in Stage 7A (docs only; **no model run/download/benchmark**): README rewritten as the
+> 13-section technical report with embedded tables/figures; `reports/final_report.md` companion
+> added; `docs/FINAL_GAP_AUDIT.md` created. AirLLM stays **blocked/not evidenced**; `Qwen2-7B` not
+> downloaded/approved. Cost/energy assumption-based, not verified.
 
 | id | task | pri | status | req | DoD |
 | --- | --- | --- | --- | --- | --- |
-| T6.5 | Integrate tables/figures into README technical report | P0 | TODO | R-README-01 | Evidence map, reproduction, limitations |
-| T6.6 | Concept explanations tied to evidence; answer Research Questions | P0 | TODO | R-CONCEPT-01,R-RQ-01 | reports/concepts.md |
+| T6.5 | Integrate tables/figures into README technical report | P0 | IN_PROGRESS | R-README-01 | Stage 7A: README is the report (tables, embedded figures, repro, limitations). Polish + final audit pending |
+| T6.6 | Concept explanations tied to evidence; answer Research Questions | P0 | IN_PROGRESS | R-CONCEPT-01,R-RQ-01 | Stage 7A: README §9 + `reports/final_report.md` §5–6 (measured-vs-discussed markers) |
 | T6.7 | (Optional) original extension; DirectML analysis | P1 | TODO | R-EXT-01 | ADR for the chosen extension |
+| T7A.1 | Final gap audit (satisfied/partial/blocked/missing) | P0 | DONE | all | `docs/FINAL_GAP_AUDIT.md` |
 
 > **No AirLLM run** (blocked, ADR-0017/0018) and **no Qwen2-7B download** (`download_approved=false`).
 > AirLLM compression/quantization is GPU/bitsandbytes-bound → out of scope on CPU; any quantization
@@ -337,9 +343,9 @@
 
 | id | task | pri | status | req | DoD |
 | --- | --- | --- | --- | --- | --- |
-| T7.1 | Assemble README technical report | P0 | TODO | R-README-01 | Tables/graphs/evidence map/repro/limits/links |
-| T7.2 | Run SUBMISSION_CHECKLIST end-to-end | P0 | TODO | R-NOFAKE | 100% green |
-| T7.3 | Final requirements re-audit | P0 | TODO | all | All DONE/N-A with evidence |
+| T7.1 | Assemble README technical report | P0 | IN_PROGRESS | R-README-01 | Stage 7A/7B: README is the report w/ tables, embedded figures, evidence map, repro, limits. Final assembly pending experiment gaps |
+| T7.2 | Run SUBMISSION_CHECKLIST end-to-end | P0 | IN_PROGRESS | R-NOFAKE | Stage 7B: checklist updated to real DONE/PARTIAL/BLOCKED/TODO. Overall = PARTIAL by design (not 100% green; AirLLM blocked, quant/7B not done) |
+| T7.3 | Final requirements re-audit | P0 | IN_PROGRESS | all | Stage 7B: gap audit aligned w/ README + checklist; no experimental req DONE; AirLLM BLOCKED |
 | T7.4 | Clean git history; user-initiated push | P0 | BLOCKED | R-GIT-HISTORY | Pushed only on explicit user request |
 
 ---
