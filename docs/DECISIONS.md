@@ -38,12 +38,33 @@
 - **Consequences:** Safe public repo; runtime requires the user to set env vars / log in.
 
 ## ADR-0004 — Layered, SDK-fronted architecture with a central API Gatekeeper
-- **Status:** ACCEPTED (design intent; implemented Stage 3+)
+- **Status:** ACCEPTED (design intent; realized in Stage 9A — see ADR-0020)
 - **Context:** Guidelines §4–5 require all logic behind an SDK and all external API calls
   through a central gatekeeper (rate limit, retry, queue, logging).
 - **Decision:** Adopt the layered design in `PLAN.md` §2; route every API call through
   `ApiGatekeeper`; keep CLI/analysis layers thin; OOP + DRY; files ≤150 lines.
 - **Consequences:** Clear boundaries, testable units, no scattered API calls.
+
+## ADR-0020 — Thin SDK facade + fail-closed API gatekeeper; gatekeeper requirement N/A today
+- **Status:** ACCEPTED (Stage 9A, docs+code; no model run/download)
+- **Context:** A grading audit flagged that the SDK facade and the API-gatekeeper status were not
+  closed. The project makes **no live external-API calls** (On-Prem-vs-API cost is assumption-based,
+  not queried), so a full gatekeeper is not exercised — but the status must be explicit.
+- **Decision:**
+  1. Add a **thin SDK facade** `src/ex05_airllm/sdk.py` exposing stable entry points (version,
+     prompts, measurement loading, summary stats, cost/energy estimate) by **delegating** to the
+     existing modules — no business logic duplicated, **no model loading, no network**. (R-ARCH-SDK
+     → PARTIALLY_EVIDENCED.)
+  2. Mark **R-ARCH-GATEKEEPER `N/A_WITH_RATIONALE`** (no live API), but ship a minimal **fail-closed,
+     disabled-by-default** `ApiGatekeeper` (`api_gatekeeper.py`) as the single choke point a future
+     live path must use; it performs **no network I/O** and is unit-tested. Config example:
+     `config/rate_limits.example.json`.
+  3. Commit **`.env-example`** (dummy values only; tokens optional/blank; committed results are
+     inspectable without credentials). (R-CONFIG-ARCH → EVIDENCED.)
+- **Honesty:** This does **not** add any experimental result. Quantization/TTFT/large-model gaps stay
+  open (PLAN §8 Stage 9B–9D); the repo is **not** claimed self-assessment-100-ready.
+- **Consequences:** Professional-rubric gaps (SDK, gatekeeper status, `.env-example`) are closed at
+  low risk; experimental completeness is unchanged and honestly reported.
 
 ## ADR-0005 — Honest, evidence-bound reporting; negative results are valid
 - **Status:** ACCEPTED

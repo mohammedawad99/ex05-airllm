@@ -266,3 +266,37 @@ ConfigLoader, ApiGatekeeper, and the runner — exercised end-to-end on a **tiny
 From the assignment's realistic-estimate appendix (Vibe Coding): roughly **6.5–11h
 end-to-end**, of which **~2–3h** is active engineering time, the rest physical
 compute/download. These are estimates and will not be reported as actual durations.
+
+## 8. Stage 9 — rubric-compliance repairs & approved experiment extensions
+
+**Stage 9A — low-risk rubric repairs (done; no model run/download).** Added committed
+`.env-example` (dummy values), a thin **SDK facade** (`sdk.py`, delegates only), and a fail-closed
+disabled-by-default **`ApiGatekeeper`** guard (no live API exists → `N/A_WITH_RATIONALE`) with tests.
+Docs reframed: **not** self-assessment-100-ready; quantization/TTFT/large-model gaps stated openly.
+
+**Stage 9B — TTFT streaming measurement (NO new download).**
+- *Scope:* measure **TTFT** (and a cleaner TPOT = (gen_time − TTFT)/(out_tokens − 1)) on the
+  **already-cached** `Qwen/Qwen2-0.5B`, CPU, offline — same model/prompts as Stage 5B.
+- *Method:* add a streaming first-token hook (e.g. `TextIteratorStreamer` or a per-step callback) to
+  capture wall-clock at the first decoded token; reuse the existing `MeasurementResult` schema (the
+  TTFT field already exists). Fixed seeds, 3 prompts × ≥2 repeats, `do_sample=False`.
+- *Outputs:* new run JSONs + a separate summary CSV under a **new** results subdir (does **not**
+  overwrite Stage 5B raw data); regenerate analysis/figures via the existing pipeline.
+- *Guardrails:* offline / local-files-only; no new download; no edits to committed Stage 5B raw data;
+  TTFT reported as measured only if the hook genuinely fires (else stays `None`, never estimated).
+- *Effort:* small (runner tweak + a focused test with a fake streamer; no network).
+
+**Stage 9C — GGUF / CPU quantization experiment (REQUIRES EXPLICIT USER APPROVAL before any
+dependency or model download).**
+- *Scope:* compare ≥2 precisions (e.g. Q8 vs Q4) of a small model on CPU and record
+  runtime/throughput/peak-RAM + a qualitative sample per level → a real quantization comparison.
+- *Why approval-gated:* needs a CPU-friendly GGUF runtime (e.g. `llama-cpp-python`) **and** a GGUF
+  weight download — both new dependencies/artifacts. **No download or dependency add happens without
+  the user's explicit go-ahead;** `download_approved=false` until then.
+- *Guardrails:* weights stay git-ignored; only metrics/summaries committed; AirLLM stays a separate
+  blocked path; results labelled measured (not estimated).
+
+**Stage 9D — optional large-model memory-pressure baseline (REQUIRES EXPLICIT USER APPROVAL before
+any `Qwen2-7B` (~15 GB) download).** A genuine larger-than-RAM case to exercise paging/streaming
+behaviour. Deferred and approval-gated; the AirLLM CPU blocker would still apply to the AirLLM path,
+so this targets a runnable backend only. Not started; no download.

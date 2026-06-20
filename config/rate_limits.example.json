@@ -1,0 +1,11 @@
+{
+  "_comment": "Example rate-limit config for a FUTURE external-API path. No live API is called anywhere in this project; API costs are assumption-based (see docs/COSTS.md). Copy/edit only if a real provider path is ever added.",
+  "external_api_enabled": false,
+  "providers": {
+    "example_provider": {
+      "requests_per_minute": 60,
+      "max_retries": 3,
+      "timeout_seconds": 30
+    }
+  }
+}

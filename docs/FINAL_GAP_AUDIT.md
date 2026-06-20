@@ -31,8 +31,13 @@ Status legend: **SATISFIED** · **PARTIALLY_SATISFIED** · **BLOCKED** · **NOT_
 | 9 | Graphs / figures | SATISFIED | `figures/*.png`, `docs/ANALYSIS.md` §4 | 4 plain-matplotlib figures generated from committed data (runtime, throughput, peak RAM, break-even). |
 | 10 | Lecture concept linkage | PARTIALLY_SATISFIED | `README.md` §9, `reports/final_report.md` §5–6 | Concepts tied to *our* evidence with measured-vs-discussed markers; some (quantization, prefill/decode split) discussed, not measured. |
 | 11 | AI workflow documentation | SATISFIED | `docs/AI_WORKFLOW.md`, `docs/PROMPTS.md` | Prompt-engineering log maintained per stage. |
-| 12 | Quality gates / tests | SATISFIED | `tests/`, `pyproject.toml`, `docs/QUALITY.md` | 54 tests, ~97% coverage (≥85), ruff check + format clean, every file ≤150 code lines. |
-| 13 | Secrets / model-weight hygiene | SATISFIED | `.gitignore`, repo audit | No secrets/tokens committed; **no model weights/shards tracked**; weights/caches/raw logs git-ignored. |
+| 12 | Quality gates / tests | SATISFIED | `tests/`, `pyproject.toml`, `docs/QUALITY.md` | 64 tests, ~97% coverage (≥85), ruff check + format clean, every file ≤150 code lines. |
+| 13 | Secrets / model-weight hygiene | SATISFIED | `.gitignore`, `.env-example`, repo audit | No secrets/tokens committed; `.env-example` has dummy values only; **no model weights/shards tracked**; weights/caches/raw logs git-ignored. |
+| 14 | SDK facade & config hygiene | SATISFIED | `src/ex05_airllm/sdk.py`, `.env-example`, `tests/unit/test_sdk.py` | Stage 9A: thin SDK facade delegating to existing modules (no logic duplicated, no model/network); `.env-example` committed. |
+| 15 | API gatekeeper | N/A_WITH_RATIONALE | `src/ex05_airllm/api_gatekeeper.py`, `config/rate_limits.example.json`, `tests/unit/test_api_gatekeeper.py` | No live external API is called anywhere (cost is assumption-based); a fail-closed, disabled-by-default guard is implemented + tested for any future path. |
+| 16 | Quantization measured run | NOT_DONE | `docs/PLAN.md` Stage 9C | No quantized inference executed; planned GGUF/CPU, **requires explicit user approval before any download**. |
+| 17 | TTFT measurement | NOT_DONE | `docs/PLAN.md` Stage 9B | No streaming hook (`None`); Stage 9B can measure on the already-cached `Qwen2-0.5B`, **no new download**. |
+| 18 | Large-model memory-pressure case | NOT_DONE | `docs/PLAN.md` | No >RAM model run; **requires explicit user approval before any `Qwen2-7B` download**. |
 
 ## 3. Explicit blockers
 
@@ -71,16 +76,26 @@ Status legend: **SATISFIED** · **PARTIALLY_SATISFIED** · **BLOCKED** · **NOT_
 > This audit asserts **no** AirLLM success, **no** market-verified pricing, and **no** large-model
 > performance. It records what is satisfied, what is partial, what is blocked, and what is not done.
 
-## 6. Readiness verdict (Stage 8B)
+## 6. Readiness verdict (Stage 9A)
 
-**READY_FOR_MANUAL_SUBMISSION** — *not submitted, not 100% complete.* No technical blocker remains
-for an honest negative-result submission; the report is complete and token-free-inspectable. The
-course **group code** is **handled manually by the student** in the course submission system
-(deliberately not stored in the repo; does not block readiness). Remaining experiment gaps (AirLLM
-generation, quantization, larger-model run) are documented **acceptable limitations**. A broader
-qualitative table / Roofline figure are **optional**; one coherent committed smoke sample is now
-surfaced in README §7 / `reports/final_report.md` §4 (Stage 3D smoke JSON — no model rerun). The
-project's **original analytical extensions** are the AirLLM forensic failure analysis and the
-assumption-based local-vs-API break-even analysis (neither a measured AirLLM success). License: not
-explicitly declared (ADR-0106; attribution/credits present, no model weights, none invented). See
-`docs/SUBMISSION_CHECKLIST.md` for the full per-item classification.
+**READY_FOR_HONEST_SUBMISSION (with known limitations)** — *not submitted, not 100% complete, and
+explicitly **not** claimed ready for a self-assessment-100 grade.* The report is complete and
+token-free-inspectable; the course **group code** is handled manually by the student outside the repo
+(does not block readiness).
+
+**Stage 9A closures (low-risk, no model run):** `.env-example` committed (dummy only); thin **SDK
+facade** (`sdk.py`); **API gatekeeper** `N/A_WITH_RATIONALE` with a fail-closed disabled-by-default
+guard implemented + tested.
+
+**Still open before any self-assessment-100 claim** (rows 16–18 above):
+- **Quantization measured run — NOT_DONE** → Stage 9C (GGUF/CPU), **requires user approval before any
+  download**.
+- **TTFT — NOT_DONE/PARTIAL** → Stage 9B, measurable on the **already-cached** `Qwen2-0.5B`, no new
+  download.
+- **Large-model memory-pressure baseline — NOT_DONE** → requires user approval before any `Qwen2-7B`
+  download.
+
+AirLLM remains **BLOCKED** (structured negative result, not a success); the original analytical
+extensions are the AirLLM forensic analysis + the assumption-based break-even analysis; license not
+explicitly declared (ADR-0106; none invented). See `docs/SUBMISSION_CHECKLIST.md` for the full
+per-item classification.

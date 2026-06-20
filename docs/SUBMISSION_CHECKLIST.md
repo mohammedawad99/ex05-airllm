@@ -73,12 +73,15 @@ Status legend: **DONE** (complete, evidenced) · **PARTIAL** (real evidence, not
 
 ## E. Quality gates (see QUALITY.md)
 - **DONE** — `ruff check .` zero errors; `ruff format --check .` clean — *evidence: run log*
-- **DONE** — Tests pass (happy + error paths); coverage ≥85% — *evidence: pytest (54 passed, ~97%)*
+- **DONE** — Tests pass (happy + error paths); coverage ≥85% — *evidence: pytest (64 passed, ~97%)*
 - **DONE** — Every source file ≤150 code lines — *evidence: line-count audit*
-- **PARTIAL** — No hardcoded config; secrets via `os.environ` (labels/schema centralized) —
-  *evidence: src/constants.py, config/*
-- **PARTIAL** — Layered/SDK-fronted, OOP/DRY; central API gatekeeper not needed yet (no live API
-  calls made) — *evidence: src/ex05_airllm/*
+- **DONE** — Config hierarchy: versioned `config/*.example.*`, `.env` git-ignored, **`.env-example`
+  committed** (dummy values only) — *evidence: .env-example, config/*
+- **DONE** — Thin **SDK facade** (`sdk.py`) fronts the pure logic (delegates, no duplication);
+  no hardcoded secrets (env/config) — *evidence: src/ex05_airllm/sdk.py, tests/unit/test_sdk.py*
+- **N/A** — Central **API gatekeeper**: no live external API is called anywhere; a fail-closed,
+  disabled-by-default `ApiGatekeeper` guard is implemented + tested for any future path —
+  *evidence: src/ex05_airllm/api_gatekeeper.py, config/rate_limits.example.json*
 - **DONE** — Versioning starts at `1.0.0` (code + config, test-enforced) — *evidence:
   src/ex05_airllm/version.py*
 - **DONE** — `uv` only; `pyproject.toml` + `uv.lock` committed — *evidence: repo root*
@@ -109,25 +112,35 @@ Status legend: **DONE** (complete, evidenced) · **PARTIAL** (real evidence, not
 
 ---
 
-## Overall submission readiness: **READY_FOR_MANUAL_SUBMISSION** (Stage 8B)
+## Overall submission readiness: **READY_FOR_HONEST_SUBMISSION (with known limitations)** — Stage 9A
 
 The repository is internally consistent, honest, and reproducible for the **measured Transformers
 CPU path**, with AirLLM presented as a structured **negative result**. The report / checklist / gap
 audit are complete and the submission is **inspectable with no Hugging Face token**. It is **not**
-submitted and is **not** 100% complete — the student completes submission manually. Standing:
+submitted, **not** 100% complete, and is **explicitly not claimed as ready for a self-assessment-100
+grade** — the experimental gaps below remain open. The student completes submission manually.
 
-- **Handled manually (outside the repo):** the course **group code** is entered in the course
-  submission system; it is deliberately not stored here and does not block readiness.
-- **ACCEPTABLE_LIMITATION (documented, not overstated):** AirLLM generation **BLOCKED** (negative
-  result); quantization and a larger-model run **NOT_DONE**; TPOT approximate / TTFT `None` / VRAM
-  N/A; cost/energy assumption-based.
-- **OPTIONAL (recommended, not blocking):** a Roofline figure and a broader qualitative table. One
-  coherent committed smoke sample is surfaced in README §7 / `reports/final_report.md` §4 (Stage 3D
-  smoke JSON); a per-quantization qualitative comparison is N/A (no quant run). The project's
-  **original analytical extensions** are the AirLLM forensic failure analysis and the
-  assumption-based local-vs-API break-even analysis — neither is a measured AirLLM success.
-- **License:** not explicitly declared; attribution/credits present, no model weights, no invented
-  license (ADR-0106).
+**Not ready for a self-assessment-100 claim until these are closed** (each needs work / approval):
+- **Quantization measured run — NOT_DONE** (no quantized inference executed; planned Stage 9C,
+  GGUF/CPU, **requires explicit user approval before any dependency/model download**).
+- **TTFT — NOT_DONE/PARTIAL** (no streaming hook → `None`); planned Stage 9B can measure it on the
+  **already-cached** `Qwen2-0.5B` with **no new download**.
+- **Large-model baseline / memory-pressure case — NOT_DONE** (no >RAM model run); requires explicit
+  user approval before any `Qwen2-7B` download.
+
+Standing on the rest:
+- **Stage 9A closures (DONE):** `.env-example` committed (dummy only); thin **SDK facade**
+  (`sdk.py`); **API gatekeeper** is `N/A_WITH_RATIONALE` (no live API) with a fail-closed
+  disabled-by-default guard implemented + tested.
+- **Handled manually (outside the repo):** the course **group code** (entered in the course
+  submission system; not stored here; does not block readiness).
+- **ACCEPTABLE_LIMITATION (documented, not overstated):** AirLLM generation **BLOCKED**; TPOT
+  approximate / VRAM N/A; cost/energy assumption-based.
+- **OPTIONAL:** a Roofline figure and a broader qualitative table. One coherent committed smoke
+  sample is surfaced in README §7 / `reports/final_report.md` §4. Original analytical extensions =
+  AirLLM forensic analysis + assumption-based break-even (neither a measured AirLLM success).
+- **License:** not explicitly declared; attribution/credits present, no model weights, none invented
+  (ADR-0106).
 
 No item above overstates: no AirLLM success, no `Qwen2-7B` run/download, no market-verified pricing,
-no fabricated results, not submitted, not 100% complete.
+no fabricated results, not submitted, not 100% complete, not claimed self-assessment-100 ready.

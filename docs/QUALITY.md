@@ -104,3 +104,11 @@ became the 13-section technical report (embedded figures, resolvable evidence li
 to real DONE/PARTIAL/BLOCKED/TODO statuses. Gates re-verified unchanged: **54 tests pass, ~97%
 coverage, ruff check + format clean, all files ≤150 code lines.** No model run/download; raw
 results/analysis/figures untouched; AirLLM stays blocked; no `Qwen2-7B`.
+
+**Stage 9A update (low-risk rubric repairs; no model run/download):** added a thin **SDK facade**
+(`sdk.py`, delegates only — no logic duplicated, no model/network), a fail-closed disabled-by-default
+**`ApiGatekeeper`** guard (`api_gatekeeper.py`; no live API → `N/A_WITH_RATIONALE`), `config/
+rate_limits.example.json`, and committed **`.env-example`** (dummy values). New unit tests cover both
+modules (tmp_path, no network). Gates: **64 tests pass, ~97% coverage, ruff check + format clean, all
+files ≤150 code lines.** Raw results/analysis/figures untouched; `pyproject.toml`/`uv.lock` unchanged.
+Repo is **not** claimed self-assessment-100-ready — quantization/TTFT/large-model gaps stay open.

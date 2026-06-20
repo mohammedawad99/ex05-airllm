@@ -157,4 +157,8 @@ committed evidence and clearly labelled; neither presents AirLLM as having gener
 
 An honest negative AirLLM result plus a working, reproducible Transformers CPU measurement pipeline,
 analyzed transparently with assumption-marked cost/energy. Engineering evidence over fabricated
-success. Repository status: **READY_FOR_MANUAL_SUBMISSION** (not submitted; not 100% complete).
+success. Repository status: **READY_FOR_HONEST_SUBMISSION (with known limitations)** — not submitted,
+not 100% complete, and **not** claimed ready for a self-assessment-100 grade until the quantization
+(Stage 9C), TTFT (Stage 9B), and large-model memory-pressure gaps are closed (see `docs/PLAN.md` §8).
+Stage 9A added engineering hygiene only (`.env-example`, SDK facade, fail-closed API gatekeeper) — no
+new experimental result.

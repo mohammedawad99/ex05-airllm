@@ -349,6 +349,10 @@
 | T7.4 | Clean git history; user-initiated push | P0 | IN_PROGRESS | R-GIT-HISTORY | Stages 0–7B pushed (`e3d8537`); final submission push only on explicit user request |
 | T8.1 | Stage 8A final submission-readiness audit | P0 | DONE | R-NOFAKE | Verdict READY_AFTER_USER_INPUT; doc fixes (README License & credits; stale checklist push line) |
 | T8.2 | Stage 8B close for manual submission | P0 | DONE | R-NOFAKE,R-LICENSE,R-EXT-01 | Readiness → **READY_FOR_MANUAL_SUBMISSION** (not submitted/100%); group code handled manually (not in repo); license undecided (ADR-0106, none invented); Stage 3D qualitative smoke sample surfaced (README §7, final_report §4); original analytical extensions designated (ADR-0105). No model run; committed + pushed |
+| T9.1 | Stage 9A low-risk rubric repairs | P0 | DONE | R-CONFIG-ARCH,R-ARCH-SDK,R-ARCH-GATEKEEPER | `.env-example` (dummy); thin `sdk.py` facade; fail-closed `ApiGatekeeper` guard (N/A_WITH_RATIONALE, no live API) + `config/rate_limits.example.json`; tests (64 pass, ~97%). Docs reframed **not** self-assessment-100-ready (ADR-0020). No model run/download |
+| T9.2 | Stage 9B TTFT streaming measurement (NO new download) | P0 | TODO | R-MEAS-TTFT | Streaming first-token hook on **cached** Qwen2-0.5B (offline); new results subdir, no overwrite of Stage 5B; PLAN §8 |
+| T9.3 | Stage 9C GGUF/CPU quantization (≥2 levels) | P0 | TODO (APPROVAL-GATED) | R-QUANT-01,R-MEAS-QUAL | **Requires explicit user approval before any dependency/model download** (`download_approved=false`); PLAN §8 |
+| T9.4 | Stage 9D optional large-model memory-pressure baseline | P1 | TODO (APPROVAL-GATED) | R-BASE-01 | **Requires explicit user approval before any Qwen2-7B (~15 GB) download**; PLAN §8 |
 
 ---
 

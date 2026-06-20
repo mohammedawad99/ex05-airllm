@@ -1320,6 +1320,39 @@
 
 ---
 
+## Prompt 024 — Stage 9A: Low-risk rubric-compliance repairs
+
+- **Stage:** 9A
+- **Date:** 2026-06-20
+- **Intent:** Close zero/low-risk professional-rubric gaps a grading audit flagged — **without**
+  running/downloading models, changing raw results, or claiming experimental success.
+- **Context:** Audit said the repo is strong engineering-wise but not experimentally 100-ready; gaps:
+  missing `.env-example`, no SDK facade, unclear API-gatekeeper status, plus open
+  quantization/TTFT/large-model items and readiness wording too close to "ready".
+- **Key constraints encoded:** add committed `.env-example` (dummy values, tokens optional/blank,
+  note results inspectable without credentials); add a **thin** `sdk.py` facade delegating to existing
+  modules (no rewrite, no model/network, ≤150 lines); resolve API gatekeeper as `N/A_WITH_RATIONALE`
+  (no live API) and ship a minimal fail-closed disabled-by-default guard + tests +
+  `config/rate_limits.example.json`; reframe docs as honest-with-limitations and **not**
+  self-assessment-100-ready; keep quantization NOT_DONE, TTFT NOT_DONE/PARTIAL, large-model NOT_DONE,
+  AirLLM BLOCKED; plan Stage 9B (TTFT, no download) / 9C (GGUF quant, approval-gated) / 9D
+  (large-model, approval-gated). Forbidden: model download/run, `Qwen2-7B`, AirLLM/Ollama/DirectML,
+  benchmark rerun, fake results, edits to raw/analysis/figures/pyproject/uv.lock, stage/commit/push.
+- **Outcome:** Added `.env-example`, `src/ex05_airllm/sdk.py`, `src/ex05_airllm/api_gatekeeper.py`,
+  `config/rate_limits.example.json`, `tests/unit/test_sdk.py`, `tests/unit/test_api_gatekeeper.py`
+  (gatekeeper never touches the network; refuses while disabled). Updated README / final_report /
+  SUBMISSION_CHECKLIST / FINAL_GAP_AUDIT / REQUIREMENTS_AUDIT (R-CONFIG-ARCH→EVIDENCED,
+  R-ARCH-SDK→PARTIALLY_EVIDENCED, R-ARCH-GATEKEEPER→N/A_WITH_RATIONALE) / TODO / PLAN §8 / QUALITY /
+  DECISIONS (ADR-0020). Readiness reframed → **READY_FOR_HONEST_SUBMISSION (with known limitations)**,
+  explicitly not self-assessment-100-ready. Validation: **64 tests pass, ~97% cov, ruff/format clean,
+  all files ≤150 lines**; protected diffs empty; no model run/download; no fake results.
+- **Iterations / corrections:** ran `ruff format` once on `api_gatekeeper.py` (line wrap).
+- **Lessons / notes for next prompts:** the remaining 100-grade gaps are experimental — Stage 9B
+  (TTFT, no new download) is the safe next step; Stage 9C/9D need explicit user approval before any
+  dependency/model download. AirLLM stays a structured negative result; cost stays assumption-based.
+
+---
+
 *Template for future entries:*
 *Prompt NNN — <stage>: <title> — Intent / Context / Constraints / Verbatim prompt /
 Actions / Outcome / Iterations / Lessons.*

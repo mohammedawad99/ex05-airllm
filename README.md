@@ -312,10 +312,19 @@ This project's original contributions are **analytical**, built honestly on the 
 
 ## Submission status
 
-- **READY_FOR_MANUAL_SUBMISSION** — the repository is internally consistent, honest, and
-  reproducible for the measured path. It is **not** submitted and is **not** claimed 100% complete;
-  remaining experiment gaps (AirLLM generation, quantization, larger-model run) are documented
-  acceptable limitations.
+- **READY_FOR_HONEST_SUBMISSION (with known limitations)** — the repository is internally
+  consistent, honest, and reproducible for the measured path. It is **not** submitted, **not**
+  claimed 100% complete, and is **explicitly not claimed ready for a self-assessment-100 grade.**
+- **Open before any self-assessment-100 claim** (each needs work / approval; see
+  [`docs/SUBMISSION_CHECKLIST.md`](docs/SUBMISSION_CHECKLIST.md) and `docs/PLAN.md` §8): a
+  **quantization** measured run (Stage 9C, approval-gated download), **TTFT** measurement (Stage 9B,
+  no new download), and a **large-model memory-pressure baseline** (approval-gated `Qwen2-7B`).
+- **Engineering hygiene (Stage 9A):** a committed [`.env-example`](.env-example) (dummy values), a
+  thin **SDK facade** (`src/ex05_airllm/sdk.py`) over the pure logic, and a fail-closed
+  disabled-by-default **API gatekeeper** (`src/ex05_airllm/api_gatekeeper.py`) — the project makes
+  **no live external-API calls**, so the gatekeeper requirement is `N/A_WITH_RATIONALE` with a guard
+  in place.
+- Other remaining experiment gaps (AirLLM generation) are documented acceptable limitations.
 - **Repo:** `https://github.com/mohammedawad99/ex05-airllm` (`origin`, `main`).
 - **Non-repo submission metadata** (the course **group code**) is **handled manually by the student
   in the course submission system** — deliberately **not** stored in this repository, and it does
