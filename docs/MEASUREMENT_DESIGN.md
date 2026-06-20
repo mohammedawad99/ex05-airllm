@@ -53,6 +53,11 @@ measurement (a stated risk, §8).
 > **Stage 5B — these powered a real 6-run Transformers CPU measurement** on the local Qwen2-0.5B
 > (`run_transformers_cpu_measurement.py` → `results/measurements/transformers_cpu_qwen2_0_5b/`;
 > see `docs/MEASUREMENT_RUNS.md`). TTFT recorded `None` (no streaming hook), TPOT approximate.
+>
+> **Stage 6A — analysis generated from that committed data** (`analyze_measurements.py` +
+> `analysis_stats.py` + `cost_model.py`): summary stats, per-prompt means, AirLLM negative-result
+> aggregation, an assumption-based cost/energy estimate, and plain-matplotlib figures
+> (`docs/ANALYSIS.md`). No model runs; raw measurement files unchanged.
 
 Every run emits one record with these columns (authoritative copy:
 `src/ex05_airllm/constants.py::RESULT_SCHEMA_COLUMNS`). Raw per-run JSON in

@@ -29,6 +29,7 @@
 | 016 | 4B | Stage 4B — Formal experiment direction revision | `EXPERIMENT_REVISION.md` + ADR-0018: HF `transformers` CPU is the runnable measurement path; AirLLM kept as documented failure analysis; Qwen2-7B deferred (`download_approved=false`). Stage 5 = measurement SDK + repeatable Transformers CPU run. Added R-GRADE-AIRLLM. Docs-only; no model run, no download, no benchmark, no fake results |
 | 017 | 5A | Stage 5A — Measurement SDK & result schema | Implemented `result_schema`/`metrics`/`result_writer`/`prompts`/`env` (TDD, ≤150 lines); 38 tests ~97% cov, ruff/format clean. Optional metrics None, success False (no fake values). No inference, no download, no benchmark, no fake results |
 | 018 | 5B | Stage 5B — Repeatable Transformers CPU measurement runner | `run_transformers_cpu_measurement.py` + tests; ran **6/6** HF CPU runs on cached Qwen2-0.5B (offline) → JSON + summary.csv; runtime ~5.3–6.4 s, ~4.5–5.3 tok/s, peak RAM ~4.0 GB; TTFT None / TPOT approx documented. `MEASUREMENT_RUNS.md`; audit PARTIALLY_EVIDENCED. No AirLLM, no 7B, no benchmark, no fake results |
+| 019 | 6A | Stage 6A — Analysis, figures & cost/energy estimate | `analyze_measurements.py`+`analysis_stats.py`+`cost_model.py` (TDD); computed stats/per-prompt from committed `summary.csv`, AirLLM negative-result aggregation (`any_success=false`), assumption-based cost/energy, 4 matplotlib figures; `ANALYSIS.md`. From committed data only — no model run, no download, no benchmark, no fake results; raw data unmodified |
 
 ---
 
@@ -1103,6 +1104,74 @@
 - **Lessons / notes for next prompts:** Stage 6 builds analysis/plots *from* `summary.csv`, the
   cost/energy estimate, and folds the AirLLM failure JSONs in as structured evidence. To evidence
   real TTFT/TPOT later, add a token-streaming hook; current TPOT is explicitly an approximation.
+
+---
+
+## Prompt 019 — Stage 6A: Measurement analysis, figures, and cost/energy estimate
+
+- **Stage:** 6A
+- **Date:** 2026-06-20
+- **Intent:** Generate reproducible analysis artifacts **from existing committed measurement data
+  only** (Stage 5B Transformers CPU CSV/JSON + Stage 3/4A AirLLM failure JSONs): analysis tables,
+  JSON stats, plain-matplotlib figures, and an assumption-driven cost/energy estimate. No model
+  execution, no downloads, no fake results.
+- **Context:** Stage 5B produced 6 successful Transformers CPU records; AirLLM is a documented
+  blocker. This stage analyses that committed evidence and folds AirLLM in as a negative result.
+- **Key constraints encoded:** create `analyze_measurements.py` + `cost_model.py` (≤150 lines
+  each); read `summary.csv` (+ optional AirLLM JSONs); produce `reports/measurement_summary.md`,
+  `results/analysis/*.json`, and `figures/*.png` (matplotlib only, no seaborn, plain style);
+  compute success count + min/mean/max for runtime/throughput/peak-RAM/output-tokens + per-prompt
+  means; note TTFT unavailable/None; AirLLM summary lists each attempt with `success=false` +
+  failure category (never imply success); assumption-driven cost/energy with configurable
+  assumptions (CPU watts, $/kWh, assumed API per-1M prices, optional hardware cost) and explicit
+  formulas + caveats; tests use synthetic tmp data, no models/network, verify stats + cost formulas
+  + AirLLM aggregation never marks success; ≤150 lines. Forbidden: download any model/Qwen2-7B,
+  run Transformers/AirLLM/Ollama/DirectML, benchmark, fake results, hand-edit committed result
+  JSON/CSV, edit site-packages, stage/commit/push, materials, secrets.
+- **Verbatim prompt (condensed; full text retained in the conversation transcript):**
+
+  > **Stage 6A — Measurement Analysis, Figures, and Cost/Energy Estimate.** Generate reproducible
+  > analysis from existing committed data only (Stage 5B CSV/JSON + Stage 3/4A AirLLM failure
+  > JSONs); no model execution, no downloads, no fake results. Create
+  > `src/ex05_airllm/analyze_measurements.py` and `cost_model.py`. Analysis reads
+  > `results/measurements/transformers_cpu_qwen2_0_5b/summary.csv` (+ optional AirLLM JSONs) and
+  > produces `reports/measurement_summary.md`,
+  > `results/analysis/transformers_cpu_qwen2_0_5b_summary_stats.json`,
+  > `results/analysis/airllm_failure_summary.json`, and matplotlib figures
+  > (`figures/transformers_cpu_{runtime,throughput,peak_ram}_by_prompt.png`,
+  > `figures/cost_break_even_estimate.png`); no seaborn, plain matplotlib. Compute success count;
+  > runtime/throughput/peak-RAM/output-token min/mean/max; per-prompt means; note TTFT None. AirLLM
+  > summary lists each attempt success=false + failure category/reason, never implying success,
+  > used as a negative result. Cost/energy: conservative assumption-driven model (local CPU watts,
+  > $/kWh, API per-1M in/out assumptions, optional hardware cost; energy_kwh = runtime/3600 ×
+  > watts/1000; local cost = energy×price; API cost from measured tokens; illustrative break-even,
+  > not verified pricing); save `results/analysis/cost_energy_assumptions.json` +
+  > `cost_energy_estimate.json`. Tests (`test_analyze_measurements.py`, `test_cost_model.py`):
+  > synthetic tmp data, no models/network, test summary stats + cost formulas + AirLLM aggregation
+  > not marking success; ≤150 lines. Update ANALYSIS/COSTS/MEASUREMENT_RUNS/MEASUREMENT_DESIGN/TODO/
+  > PLAN/QUALITY/REQUIREMENTS_AUDIT (PARTIALLY_EVIDENCED; not final-report DONE; AirLLM PLANNED/
+  > BLOCKED)/PROMPTS/README. Run `uv run python -m ex05_airllm.analyze_measurements`. Forbidden:
+  > download any model/Qwen2-7B, run Transformers/AirLLM/Ollama/DirectML, benchmark, fake results,
+  > hand-edit committed result JSON/CSV, site-packages, stage/commit/push, materials, secrets.
+
+- **Outcome:** Implemented `cost_model.py` (pure energy/cost/break-even formulas + assumptions),
+  `analysis_stats.py` (pure stats/per-prompt/AirLLM-aggregation/markdown — split out to keep files
+  ≤150 lines), and `analyze_measurements.py` (figures + orchestration, matplotlib Agg, pragma no
+  cover) + tests. Ran the analysis on committed data → **6/6** stats: runtime 5.16/5.68/6.57 s,
+  throughput 4.42/5.07/5.31 tok/s, peak RAM 3985/4016/4029 MB, output 27/28.7/30 tokens; AirLLM
+  `any_success=false` (4 attempts); assumption-based cost/energy (45 W, $0.20/kWh, $0.50/$1.50 per
+  1M; per-run energy ≈7.1e-5 kWh, local ≈$1.4e-5, assumed API ≈$4.9e-5). Generated 4 figures, 4
+  analysis JSONs, `reports/measurement_summary.md`; created `docs/ANALYSIS.md`; cost/energy audit
+  rows → PARTIALLY_EVIDENCED (AirLLM stays PLANNED/BLOCKED). 54 tests ~97% cov, ruff/format clean,
+  ≤150 lines. **Raw measurement data unmodified (git diff empty). No model run, no download, no
+  benchmark, no fake results, no commit/push.**
+- **Iterations / corrections:** analyze_measurements first exceeded 150 lines → split pure logic
+  into `analysis_stats.py`; fixed a few E501 long markdown/docstring lines (helper rows + wrapped
+  strings).
+- **Lessons / notes for next prompts:** cost/energy is **assumption-based, not verified pricing** —
+  source/date real prices before any quantitative claim. Stage 6B/7 integrates these tables/figures
+  into the README technical report + concept/RQ write-ups; AirLLM stays a negative result; no
+  Qwen2-7B.
 
 ---
 

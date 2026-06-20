@@ -1,0 +1,31 @@
+{
+  "attempts": [
+    {
+      "stage": "3A",
+      "file": "stage3_smoke_airllm_qwen2_0_5b.json",
+      "success": false,
+      "failure_reason": "AssertionError: model.safetensors.index.json should exist."
+    },
+    {
+      "stage": "3B",
+      "file": "stage3b_smoke_airllm_qwen2_0_5b_resharded.json",
+      "success": false,
+      "failure_reason": "RuntimeError: Tensor on device cpu is not on the expected device meta!"
+    },
+    {
+      "stage": "3C",
+      "file": "stage3c_smoke_airllm_qwen2_0_5b_torch241.json",
+      "success": false,
+      "failure_reason": "RuntimeError: Tensor on device cpu is not on the expected device meta!"
+    },
+    {
+      "stage": "4A",
+      "file": "stage4a_smoke_airllm_qwen2_0_5b_patched.json",
+      "success": false,
+      "failure_reason": "RuntimeError: Tensor on device cpu is not on the expected device meta!"
+    }
+  ],
+  "attempt_count": 4,
+  "any_success": false,
+  "conclusion": "AirLLM CPU/Qwen2 is blocked in this environment; a negative result, not a success."
+}

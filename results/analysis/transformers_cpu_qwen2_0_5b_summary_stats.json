@@ -1,0 +1,51 @@
+{
+  "run_count": 6,
+  "success_count": 6,
+  "ttft_note": "TTFT unavailable (None): HF generate() was not token-streamed in this runner",
+  "metrics": {
+    "total_runtime_seconds": {
+      "min": 5.1624,
+      "mean": 5.6824,
+      "max": 6.5699,
+      "n": 6
+    },
+    "tokens_per_second": {
+      "min": 4.4206,
+      "mean": 5.0672,
+      "max": 5.3091,
+      "n": 6
+    },
+    "peak_ram_mb": {
+      "min": 3985.4,
+      "mean": 4015.6167,
+      "max": 4029.1,
+      "n": 6
+    },
+    "output_tokens": {
+      "min": 27.0,
+      "mean": 28.6667,
+      "max": 30.0,
+      "n": 6
+    }
+  },
+  "per_prompt": {
+    "os_definition": {
+      "runs": 2,
+      "mean_runtime_seconds": 6.0563,
+      "mean_tokens_per_second": 4.8269,
+      "mean_peak_ram_mb": 4007.2
+    },
+    "ai_agent_short": {
+      "runs": 2,
+      "mean_runtime_seconds": 5.7595,
+      "mean_tokens_per_second": 5.2116,
+      "mean_peak_ram_mb": 4010.5
+    },
+    "memory_management_short": {
+      "runs": 2,
+      "mean_runtime_seconds": 5.2314,
+      "mean_tokens_per_second": 5.1633,
+      "mean_peak_ram_mb": 4029.1
+    }
+  }
+}

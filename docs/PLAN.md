@@ -201,8 +201,19 @@ ConfigLoader, ApiGatekeeper, and the runner — exercised end-to-end on a **tiny
   ~4.0 GB, load ~5.4 s; **TTFT = None** (no streaming hook), **TPOT approximate** (documented).
   Evidence:
   `docs/MEASUREMENT_RUNS.md`. **No AirLLM, no Qwen2-7B download.**
-- **Next (Stage 6):** analysis/plots *from* `summary.csv`, cost/energy estimate, and the final
-  report — folding the AirLLM failure JSONs in as structured evidence (not success).
+**Stage 6A — analysis, figures & cost/energy estimate ✅ (done; from committed data):**
+- `analyze_measurements.py` (+ `analysis_stats.py`, `cost_model.py`) computed summary/per-prompt
+  stats, the AirLLM negative-result aggregation (`any_success=false`), an **assumption-based**
+  cost/energy estimate, and plain-matplotlib figures — all **from committed data, no model runs**.
+  Outputs: `results/analysis/*.json`, `figures/*.png`, `reports/measurement_summary.md`,
+  `docs/ANALYSIS.md`. Raw measurement files unchanged. Cost/energy is illustrative, **not** verified
+  pricing.
+
+### Stage 6B/7 — Final report (next)
+- Integrate the tables/figures into the README technical report (evidence map, reproduction,
+  honest limitations); tie lecture concepts to *our* evidence; answer the Research Questions; fold
+  the AirLLM failure analysis in as a structured **negative result** (never success); optionally a
+  DirectML extension. **No Qwen2-7B** unless the AirLLM blocker is resolved.
 - **DoD:** `results/` has repeatable Transformers-CPU measurement records (schema-valid) + the
   AirLLM failure evidence; tests pass, coverage ≥85%, `ruff` clean, files ≤150 lines; raw vs
   summary separated (raw git-ignored). **No AirLLM success claimed; no benchmark of a model we

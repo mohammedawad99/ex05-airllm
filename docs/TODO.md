@@ -296,6 +296,27 @@
 > **No AirLLM run** (blocked, ADR-0017/0018), **no Qwen2-7B download** (`download_approved=false`).
 > A small repeatable CPU measurement (6 runs), **not** a tuned benchmark; no fake values.
 
+## Stage 6A — Analysis, figures & cost/energy estimate  *(done; from committed data)*
+
+| id | task | pri | status | req | DoD |
+| --- | --- | --- | --- | --- | --- |
+| T6A.1 | `analyze_measurements.py` + `analysis_stats.py` + `cost_model.py` (TDD) | P0 | DONE | R-MEAS-*,R-COST-* | Tests; ≤150 lines; no model runs |
+| T6A.2 | Compute stats/per-prompt from `summary.csv`; AirLLM negative-result aggregation | P0 | DONE | R-MEAS-*,R-AIR-01 | `results/analysis/*.json`; AirLLM `any_success=false` |
+| T6A.3 | Plain-matplotlib figures (runtime/throughput/RAM/break-even) | P0 | DONE | R-README-01 | `figures/*.png` generated from data (no seaborn) |
+| T6A.4 | Assumption-based cost/energy estimate (not verified pricing) | P0 | DONE | R-COST-*,R-MEAS-ENERGY | `cost_energy_*.json`; caveats explicit |
+| T6A.5 | `ANALYSIS.md` + update COSTS/MEASUREMENT docs/audit; log Prompt 019 | P0 | DONE | R-PROMPTLOG | Audit cost/energy → PARTIALLY_EVIDENCED |
+
+> Analysis from **committed data only** — no model run, no download, no benchmark, no fake results;
+> raw measurement files unmodified. AirLLM stays **not evidenced**; Qwen2-7B not downloaded.
+
+## Stage 6B / 7 — Final report (next)
+
+| id | task | pri | status | req | DoD |
+| --- | --- | --- | --- | --- | --- |
+| T6.5 | Integrate tables/figures into README technical report | P0 | TODO | R-README-01 | Evidence map, reproduction, limitations |
+| T6.6 | Concept explanations tied to evidence; answer Research Questions | P0 | TODO | R-CONCEPT-01,R-RQ-01 | reports/concepts.md |
+| T6.7 | (Optional) original extension; DirectML analysis | P1 | TODO | R-EXT-01 | ADR for the chosen extension |
+
 > **No AirLLM run** (blocked, ADR-0017/0018) and **no Qwen2-7B download** (`download_approved=false`).
 > AirLLM compression/quantization is GPU/bitsandbytes-bound → out of scope on CPU; any quantization
 > shown uses GGUF via the baseline. AirLLM appears as failure evidence, not a successful run.

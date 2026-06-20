@@ -73,7 +73,11 @@ varies run-to-run even with a fixed seed; absolute values are environment-specif
 
 ## 7. Next steps
 
-- **Analysis/plots** generated *from* `summary.csv` (Stage 6) — no hand-drawn figures.
-- **Cost/energy estimate** from measured runtimes + documented assumptions (`COSTS.md`).
-- **Final-report integration:** this measurement as the honest local-inference baseline, alongside
-  the AirLLM failure analysis and (optional) DirectML extension.
+- **Analysis/plots generated (Stage 6A)** *from* `summary.csv` — see `docs/ANALYSIS.md`,
+  `reports/measurement_summary.md`, `results/analysis/*.json`, and `figures/transformers_cpu_*.png`
+  (plain matplotlib, no hand-drawn figures).
+- **Cost/energy estimate (assumption-based)** generated in Stage 6A
+  (`results/analysis/cost_energy_estimate.json`, `figures/cost_break_even_estimate.png`,
+  `docs/COSTS.md` §7) — **not** verified market pricing.
+- **Final-report integration (Stage 6/7):** this measurement as the honest local-inference
+  baseline, alongside the AirLLM failure analysis and (optional) DirectML extension.

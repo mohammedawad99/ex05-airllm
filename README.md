@@ -59,9 +59,10 @@ tables, graphs, an evidence map, reproduction instructions, and honest limitatio
 | Stage 3D Transformers CPU fallback (Qwen2-0.5B) | 🟩 **Succeeded** — direct HF CPU smoke proves the **measurement pipeline** (schema-valid result JSON; `docs/SMOKE_RUN.md` §8). Not AirLLM, not a benchmark |
 | Baseline experiment | ⛔ Not started (Stage 4) |
 | AirLLM + quantization experiment | ⛔ Not started (Stage 5) |
-| Measurements / figures / cost analysis | ⛔ Not started (Stages 5–6) |
 | Implementation code & tests | 🟢 Stage 5A/5B — **measurement SDK** + **runner**; 44 unit tests, ~97% coverage |
 | Measurement runs (Transformers CPU, Qwen2-0.5B) | 🟢 Stage 5B — **6/6 runs succeeded** (`docs/MEASUREMENT_RUNS.md`): runtime ~5.2–6.6 s, ~4.4–5.3 tok/s, peak RAM ~4.0 GB. Small repeatable measurement, **not** a benchmark; not AirLLM |
+| Analysis, figures & cost/energy | 🟢 Stage 6A — tables/figures from committed data + **assumption-based** cost/energy estimate (`docs/ANALYSIS.md`, `figures/`, `results/analysis/`). Not verified pricing; not a benchmark |
+| Measurements / figures / cost analysis | 🟢 Stage 5B/6A — measured + analyzed (Transformers CPU). Final-report integration pending (Stage 6B/7) |
 
 There are **no results to report yet**, and none are claimed.
 
@@ -85,6 +86,7 @@ ex05-airllm/
 │   ├── PRD_measurement.md  PRD_airllm_pipeline.md   # Per-mechanism PRDs
 │   ├── SMOKE_RUN.md              # Stage 3A–4A smoke probes (AirLLM fail, HF CPU success)
 │   ├── MEASUREMENT_RUNS.md       # Stage 5B Transformers CPU measurement (6 runs)
+│   ├── ANALYSIS.md               # Stage 6A analysis, figures, cost/energy (from committed data)
 │   ├── AIRLLM_PATCH_FEASIBILITY.md  # Stage 4A patch infeasibility analysis
 │   ├── EXPERIMENT_REVISION.md    # Stage 4B revised direction (honest)
 │   ├── PRD.md  PLAN.md  TODO.md  # Requirements / architecture / task ledger

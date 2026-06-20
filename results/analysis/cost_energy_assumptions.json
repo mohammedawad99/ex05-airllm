@@ -1,0 +1,9 @@
+{
+  "local_cpu_power_watts": 45.0,
+  "electricity_usd_per_kwh": 0.2,
+  "api_cost_per_1m_input_tokens_usd": 0.5,
+  "api_cost_per_1m_output_tokens_usd": 1.5,
+  "hardware_cost_usd": 0.0,
+  "pricing_status": "assumption_not_live_verified",
+  "pricing_note": "assumption-based; NOT current/verified market pricing"
+}
