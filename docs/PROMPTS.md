@@ -1526,6 +1526,39 @@
 
 ---
 
+## Prompt 030 — Stage 10B-0: Large-model memory-pressure preflight (docs only)
+
+- **Stage:** 10B-0
+- **Date:** 2026-06-20
+- **Intent:** Evidence-based plan for the last remaining gap — a large-model (>RAM) memory-pressure
+  baseline — verifying hardware/storage and deciding whether a Qwen 7B Transformers attempt is safe.
+- **Context:** Quantization (INT8 + GGUF Q8/Q4) and TTFT are committed; only the large-model baseline
+  is open. AirLLM stays blocked; Qwen2-7B still not downloaded/approved.
+- **Key constraints encoded:** planning/audit ONLY — no download, no model run, no `uv add`, no
+  pyproject/uv.lock edits, no Qwen2-7B; capture `free`/`df`/`uname`/`lscpu`/versions into a markdown
+  doc (not raw logs); create `docs/LARGE_MODEL_PREFLIGHT.md` with the required sections (status, why,
+  hw snapshot, existing evidence, candidate, pressure rationale, risks, approval, guardrails,
+  success/failure criteria, allowed/forbidden files, submission impact) including the **exact**
+  future approval text; update TODO/PLAN/FINAL_GAP_AUDIT/SUBMISSION_CHECKLIST/REQUIREMENTS_AUDIT/
+  PROMPTS + small README/final_report pointers. Forbidden: download, model run, deps, edit source/
+  tests/results/figures/lock/config, stage/commit/push, pip.
+- **Outcome:** Captured hw snapshot — **11 GiB RAM + 3 GiB swap, 924 GB free disk**, 24-CPU Ryzen AI
+  9 HX 370, WSL2, Python 3.12.3 / uv 0.11.9, `.local_models/` ≈4.1 GB. Verdict: a 7B fp16 (~15 GB)
+  Transformers baseline **exceeds RAM+swap → OOM expected**; it is **feasible to *attempt* safely**
+  as a guarded single-prompt pressure test where an **OOM/structured negative result is acceptable
+  and in-spec** (not a success requirement); disk is ample for the ~15 GB download. Recommended
+  candidate `Qwen/Qwen2.5-7B-Instruct` (or `Qwen2-7B-Instruct`). Wrote `LARGE_MODEL_PREFLIGHT.md` (14
+  sections) with guardrails + the exact approval text; updated the audit/plan/checklist docs.
+  Validation green; protected diffs empty; no secrets; no model artifacts. **No download, no run, no
+  dependency change, no commit/push.**
+- **Iterations / corrections:** none.
+- **Lessons / notes for next prompts:** Stage 10B runs only after the exact approval text — "Approved:
+  Stage 10B — download and attempt a guarded Qwen 7B Transformers memory-pressure baseline, with no
+  model artifacts committed." Expect (and accept) an OOM structured negative result. AirLLM stays
+  blocked; quantization stays measured.
+
+---
+
 *Template for future entries:*
 *Prompt NNN — <stage>: <title> — Intent / Context / Constraints / Verbatim prompt /
 Actions / Outcome / Iterations / Lessons.*

@@ -394,7 +394,9 @@ This project's original contributions are **analytical**, built honestly on the 
   (Transformers) and **GGUF Q8_0 vs Q4_K_M** (`llama.cpp`, user-approved download) — see §7.
 - **Open before any self-assessment-100 claim** (see
   [`docs/SUBMISSION_CHECKLIST.md`](docs/SUBMISSION_CHECKLIST.md) and `docs/PLAN.md` §8): a
-  **large-model memory-pressure baseline** (approval-gated `Qwen2-7B`).
+  **large-model memory-pressure baseline** — scoped in
+  [`docs/LARGE_MODEL_PREFLIGHT.md`](docs/LARGE_MODEL_PREFLIGHT.md) (7B fp16 ~15 GB > 11 GiB RAM →
+  OOM expected; approval-gated Qwen 7B download).
 - **Engineering hygiene (Stage 9A):** a committed [`.env-example`](.env-example) (dummy values), a
   thin **SDK facade** (`src/ex05_airllm/sdk.py`) over the pure logic, and a fail-closed
   disabled-by-default **API gatekeeper** (`src/ex05_airllm/api_gatekeeper.py`) — the project makes

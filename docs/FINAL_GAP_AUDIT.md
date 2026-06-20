@@ -37,7 +37,7 @@ Status legend: **SATISFIED** · **PARTIALLY_SATISFIED** · **BLOCKED** · **NOT_
 | 15 | API gatekeeper | N/A_WITH_RATIONALE | `src/ex05_airllm/api_gatekeeper.py`, `config/rate_limits.example.json`, `tests/unit/test_api_gatekeeper.py` | No live external API is called anywhere (cost is assumption-based); a fail-closed, disabled-by-default guard is implemented + tested for any future path. |
 | 16 | Quantization measured run | SATISFIED (small model) | `results/measurements/transformers_cpu_int8_quantization_qwen2_0_5b/`, `results/measurements/gguf_quantization_qwen2_5_0_5b/`, `docs/MEASUREMENT_RUNS.md` §9–§10 | Stage 9C (dynamic INT8 vs FP32) **and** Stage 10A (**GGUF Q8_0 vs Q4_K_M**, 12/12) both executed. F16 GGUF excluded (size cap). Low-bit quantization genuinely evidenced on a small model; no large-model quant. |
 | 17 | TTFT measurement | SATISFIED | `results/measurements/transformers_cpu_streaming_qwen2_0_5b/`, `docs/MEASUREMENT_RUNS.md` §8 | Stage 9B: **real TTFT measured** via `TextIteratorStreamer` (6/6, cached Qwen2-0.5B, offline, no new download). mean ≈0.41 s (skewed by cold first run; steady ≈0.25–0.27 s); TPOT now decode-only. Supersedes Stage 5B's `None`. |
-| 18 | Large-model memory-pressure case | NOT_DONE | `docs/PLAN.md` | No >RAM model run; **requires explicit user approval before any `Qwen2-7B` download**. |
+| 18 | Large-model memory-pressure case | NOT_DONE (preflight done) | `docs/LARGE_MODEL_PREFLIGHT.md`, `docs/PLAN.md` | No >RAM model run. Stage 10B-0 preflight scoped it: 7B fp16 (~15 GB) > 11 GiB RAM → OOM expected; guarded attempt + structured-negative-result plan. **Requires explicit user approval before any Qwen 7B download** (Stage 10B). |
 
 ## 3. Explicit blockers
 
@@ -98,8 +98,9 @@ guard implemented + tested.
 quantization gap is **SATISFIED on a small model** (F16 GGUF excluded by the ~1.2 GB cap).
 
 **Still open before any self-assessment-100 claim** (row 18 above):
-- **Large-model memory-pressure baseline — NOT_DONE** → requires user approval before any `Qwen2-7B`
-  download (Stage 10B).
+- **Large-model memory-pressure baseline — NOT_DONE** (Stage 10B-0 preflight done,
+  `docs/LARGE_MODEL_PREFLIGHT.md`) → requires explicit user approval before any Qwen 7B (~15 GB)
+  download (Stage 10B); 7B fp16 > RAM, so an OOM/structured-negative-result is the expected outcome.
 
 AirLLM remains **BLOCKED** (structured negative result, not a success); the original analytical
 extensions are the AirLLM forensic analysis + the assumption-based break-even analysis; license not

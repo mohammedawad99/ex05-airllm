@@ -199,7 +199,8 @@ An honest negative AirLLM result plus a working, reproducible Transformers CPU m
 analyzed transparently with assumption-marked cost/energy. Engineering evidence over fabricated
 success. Repository status: **READY_FOR_HONEST_SUBMISSION (with known limitations)** — not submitted,
 not 100% complete, and **not** claimed ready for a self-assessment-100 grade until the remaining gap
-is closed (see `docs/PLAN.md` §8): a **large-model (>RAM) memory-pressure baseline** (approval-gated).
+is closed (see `docs/PLAN.md` §8 and `docs/LARGE_MODEL_PREFLIGHT.md`): a **large-model (>RAM)
+memory-pressure baseline** (approval-gated; 7B fp16 ~15 GB > 11 GiB RAM → OOM expected).
 **TTFT is measured** (Stage 9B) and **quantization is measured two ways** — dynamic INT8 vs FP32
 (Stage 9C) and GGUF Q8_0 vs Q4_K_M (Stage 10A, user-approved download; F16 excluded by size cap).
 Stage 9A added engineering hygiene only (`.env-example`, SDK facade, fail-closed API gatekeeper) — no

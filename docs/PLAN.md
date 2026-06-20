@@ -318,7 +318,13 @@ stages (own sweep). Low-bit quantization now genuinely evidenced on a small mode
 - *Guardrails:* weights stay git-ignored; only metrics/summaries committed; AirLLM stays a separate
   blocked path; results labelled measured (not estimated).
 
-**Stage 9D — optional large-model memory-pressure baseline (REQUIRES EXPLICIT USER APPROVAL before
-any `Qwen2-7B` (~15 GB) download).** A genuine larger-than-RAM case to exercise paging/streaming
-behaviour. Deferred and approval-gated; the AirLLM CPU blocker would still apply to the AirLLM path,
-so this targets a runnable backend only. Not started; no download.
+**Stage 10B-0 — large-model memory-pressure preflight (done; docs only).** `docs/LARGE_MODEL_PREFLIGHT.md`
+scopes the 7B Transformers pressure test against the measured hardware (11 GiB RAM + 3 GiB swap vs
+~15 GB fp16 7B → **OOM expected/acceptable**), with guardrails, success/failure criteria, and the
+exact approval text. No download/run/dependency change.
+
+**Stage 10B — optional large-model memory-pressure baseline (REQUIRES EXPLICIT USER APPROVAL before
+any Qwen 7B (~15 GB) download).** A genuine larger-than-RAM case; expected to OOM or thrash → a
+**structured negative result** is an acceptable, in-spec outcome (not a success requirement). Guarded
+single-prompt attempt, tiny `max_new_tokens`, strict timeout, no committed weights — see
+`docs/LARGE_MODEL_PREFLIGHT.md`. Not started; no download.

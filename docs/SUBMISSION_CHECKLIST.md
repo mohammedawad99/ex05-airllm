@@ -131,8 +131,10 @@ user-approved download; F16 excluded by the ~1.2 GB cap). Prior raw data unchang
 git-ignored.
 
 **Not ready for a self-assessment-100 claim until this is closed** (needs work / approval):
-- **Large-model baseline / memory-pressure case — NOT_DONE** (no >RAM model run); requires explicit
-  user approval before any `Qwen2-7B` download (Stage 10B).
+- **Large-model baseline / memory-pressure case — NOT_DONE** (no >RAM model run). Stage 10B-0
+  **preflight done** (`docs/LARGE_MODEL_PREFLIGHT.md`): 7B fp16 (~15 GB) > 11 GiB RAM → OOM expected,
+  a structured negative result is acceptable. Requires explicit user approval before any Qwen 7B
+  download (Stage 10B).
 
 Standing on the rest:
 - **Stage 9A closures (DONE):** `.env-example` committed (dummy only); thin **SDK facade**
