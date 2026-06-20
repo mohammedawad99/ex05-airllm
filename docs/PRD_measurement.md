@@ -9,8 +9,12 @@
 >
 > **Stage 5A — implemented & tested (no inference):** `result_schema.py` (typed `MeasurementResult`),
 > `metrics.py` (`MetricsCollector`, injectable clock/RSS), `result_writer.py` (`write_json`/
-> `append_csv`, stable header), `prompts.py`, `env.py`. 38 unit tests, no model/network. The
-> Stage 5B runner wires these around a real Transformers CPU `generate`.
+> `append_csv`, stable header), `prompts.py`, `env.py`. Unit tests, no model/network.
+>
+> **Stage 5B — runner ran (6/6):** `run_transformers_cpu_measurement.py` wires the SDK around a
+> real HF `transformers` CPU `generate` on the local Qwen2-0.5B → 6 schema-valid records +
+> `summary.csv` (`docs/MEASUREMENT_RUNS.md`). TTFT recorded `None` (no streaming hook); TPOT is an
+> approximation — both documented, never faked.
 
 ## 1. Purpose
 

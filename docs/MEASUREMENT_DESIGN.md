@@ -48,8 +48,11 @@ measurement (a stated risk, §8).
 > default to `None`, `success` defaults to `False` — never a fake value). Timing/memory come
 > from `metrics.py::MetricsCollector` (injectable clock + RSS, unit-tested with a controlled
 > clock); records are persisted by `result_writer.py` (`write_json` / `append_csv`, stable
-> header). Prompts: `prompts.py`; reproducibility metadata: `env.py` (no secrets/private
-> paths). These power the **Stage 5B** Transformers CPU measurement; no model was run in 5A.
+> header). Prompts: `prompts.py`; reproducibility metadata: `env.py` (no secrets/private paths).
+>
+> **Stage 5B — these powered a real 6-run Transformers CPU measurement** on the local Qwen2-0.5B
+> (`run_transformers_cpu_measurement.py` → `results/measurements/transformers_cpu_qwen2_0_5b/`;
+> see `docs/MEASUREMENT_RUNS.md`). TTFT recorded `None` (no streaming hook), TPOT approximate.
 
 Every run emits one record with these columns (authoritative copy:
 `src/ex05_airllm/constants.py::RESULT_SCHEMA_COLUMNS`). Raw per-run JSON in

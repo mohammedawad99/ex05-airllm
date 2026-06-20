@@ -60,7 +60,8 @@ tables, graphs, an evidence map, reproduction instructions, and honest limitatio
 | Baseline experiment | ⛔ Not started (Stage 4) |
 | AirLLM + quantization experiment | ⛔ Not started (Stage 5) |
 | Measurements / figures / cost analysis | ⛔ Not started (Stages 5–6) |
-| Implementation code & tests | 🟢 Stage 5A — **measurement SDK** (`result_schema`/`metrics`/`result_writer`/`prompts`/`env`) + smoke probes; 38 unit tests, ~97% coverage (no inference run yet) |
+| Implementation code & tests | 🟢 Stage 5A/5B — **measurement SDK** + **runner**; 44 unit tests, ~97% coverage |
+| Measurement runs (Transformers CPU, Qwen2-0.5B) | 🟢 Stage 5B — **6/6 runs succeeded** (`docs/MEASUREMENT_RUNS.md`): runtime ~5.2–6.6 s, ~4.4–5.3 tok/s, peak RAM ~4.0 GB. Small repeatable measurement, **not** a benchmark; not AirLLM |
 
 There are **no results to report yet**, and none are claimed.
 
@@ -83,6 +84,7 @@ ex05-airllm/
 │   ├── MODEL_SELECTION.md        # Stage 2B metadata-verified shortlist
 │   ├── PRD_measurement.md  PRD_airllm_pipeline.md   # Per-mechanism PRDs
 │   ├── SMOKE_RUN.md              # Stage 3A–4A smoke probes (AirLLM fail, HF CPU success)
+│   ├── MEASUREMENT_RUNS.md       # Stage 5B Transformers CPU measurement (6 runs)
 │   ├── AIRLLM_PATCH_FEASIBILITY.md  # Stage 4A patch infeasibility analysis
 │   ├── EXPERIMENT_REVISION.md    # Stage 4B revised direction (honest)
 │   ├── PRD.md  PLAN.md  TODO.md  # Requirements / architecture / task ledger

@@ -282,16 +282,19 @@
 > **No model run, no inference, no download** in 5A. All metric math is tested with a
 > controlled clock; failure records never look successful.
 
-## Stage 5B — Repeatable Transformers CPU measurement  *(next)*
+## Stage 5B — Repeatable Transformers CPU measurement  *(done; 6/6 runs)*
 
 | id | task | pri | status | req | DoD |
 | --- | --- | --- | --- | --- | --- |
-| T5B.1 | Runner: wire SDK around a real HF `transformers` CPU `generate` (Qwen2-0.5B, local) | P0 | TODO | R-BASE-01,R-MEAS-* | Repeatable records; fixed seeds; no download |
-| T5B.2 | Fold AirLLM failure JSONs in as structured evidence | P0 | TODO | R-AIR-01 | Negative result presented honestly (not success) |
-| T5B.3 | (Optional) DirectML tiny GPU-vs-CPU baseline | P2 | TODO | R-EXT-01 | Optional extension; Windows-native |
-| T5B.4 | Qualitative output samples (Transformers CPU) | P1 | TODO | R-MEAS-QUAL | Samples stored |
+| T5B.1 | Runner: SDK around real HF `transformers` CPU `generate` (Qwen2-0.5B, local) | P0 | DONE | R-BASE-01,R-MEAS-* | `run_transformers_cpu_measurement.py` + tests |
+| T5B.2 | Run the 6-run matrix (3 prompts × 2), write JSON + summary.csv | P0 | DONE | R-BASE-01,R-MEAS-* | **6/6 success**; `results/measurements/.../summary.csv` |
+| T5B.3 | Document runs + metrics caveats (TTFT None, TPOT approx) | P0 | DONE | R-MEAS-* | `MEASUREMENT_RUNS.md`; audit PARTIALLY_EVIDENCED |
+| T5B.4 | Fold AirLLM failure JSONs in as structured evidence | P1 | TODO | R-AIR-01 | Stage 6 report (negative result, not success) |
+| T5B.5 | (Optional) DirectML tiny GPU-vs-CPU baseline | P2 | TODO | R-EXT-01 | Optional extension; Windows-native |
+| T5B.6 | Qualitative output samples (Transformers CPU) | P1 | TODO | R-MEAS-QUAL | Samples stored |
 
 > **No AirLLM run** (blocked, ADR-0017/0018), **no Qwen2-7B download** (`download_approved=false`).
+> A small repeatable CPU measurement (6 runs), **not** a tuned benchmark; no fake values.
 
 > **No AirLLM run** (blocked, ADR-0017/0018) and **no Qwen2-7B download** (`download_approved=false`).
 > AirLLM compression/quantization is GPU/bitsandbytes-bound → out of scope on CPU; any quantization

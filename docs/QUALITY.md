@@ -84,9 +84,12 @@ fail_under = 85
 > Q8 (full SDK/gatekeeper architecture), Q11 (reproducibility of real runs), and Q12 apply
 > from Stage 3+ when experiment code and measurements exist. No experiment results are claimed.
 
-**Stage 3A–5A update:** gates stay green with the smoke/prepare/compat modules and the
-**measurement SDK** (`result_schema`, `metrics`, `result_writer`, `prompts`, `env`) — **38 tests
-pass, coverage ~97%, ruff/format clean, files ≤150 lines** (`uv run pytest` / `ruff check .`).
+**Stage 3A–5B update:** gates stay green with the smoke/prepare/compat modules, the **measurement
+SDK** (`result_schema`, `metrics`, `result_writer`, `prompts`, `env`), and the **runner**
+(`run_transformers_cpu_measurement`) — **44 tests pass, coverage ~97%, ruff/format clean, files
+≤150 lines** (`uv run pytest` / `ruff check .`). Stage 5B ran a real **6/6** Transformers CPU
+measurement on Qwen2-0.5B (`MEASUREMENT_RUNS.md`) — a small repeatable measurement, **not** a
+benchmark; TTFT `None` / TPOT approximate are documented, never faked.
 Model-loading code paths are `# pragma: no cover` (they need real weights/network); their
 behaviour is evidenced by the raw run JSONs under `results/`. The SDK is **pure/testable** — its
 metric math is unit-tested with a controlled clock, no model/network. These are smoke probes, not

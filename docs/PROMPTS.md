@@ -28,6 +28,7 @@
 | 015 | 4A | Stage 4A — AirLLM Qwen2 CPU patch feasibility | Implemented + tested a local fail-closed rotary shim (`airllm_compat.py`, no site-packages edit); patched smoke **still FAILED**; diagnostic disproved rotary → meta culprit is a layer param (RMSNorm `weight`) in AirLLM's core CPU streaming. Minimal shim **infeasible** → ADR-0017 (documented limitation + HF baseline). No new download, no 7B, no benchmark, no fake results |
 | 016 | 4B | Stage 4B — Formal experiment direction revision | `EXPERIMENT_REVISION.md` + ADR-0018: HF `transformers` CPU is the runnable measurement path; AirLLM kept as documented failure analysis; Qwen2-7B deferred (`download_approved=false`). Stage 5 = measurement SDK + repeatable Transformers CPU run. Added R-GRADE-AIRLLM. Docs-only; no model run, no download, no benchmark, no fake results |
 | 017 | 5A | Stage 5A — Measurement SDK & result schema | Implemented `result_schema`/`metrics`/`result_writer`/`prompts`/`env` (TDD, ≤150 lines); 38 tests ~97% cov, ruff/format clean. Optional metrics None, success False (no fake values). No inference, no download, no benchmark, no fake results |
+| 018 | 5B | Stage 5B — Repeatable Transformers CPU measurement runner | `run_transformers_cpu_measurement.py` + tests; ran **6/6** HF CPU runs on cached Qwen2-0.5B (offline) → JSON + summary.csv; runtime ~5.3–6.4 s, ~4.5–5.3 tok/s, peak RAM ~4.0 GB; TTFT None / TPOT approx documented. `MEASUREMENT_RUNS.md`; audit PARTIALLY_EVIDENCED. No AirLLM, no 7B, no benchmark, no fake results |
 
 ---
 
@@ -1043,6 +1044,65 @@
 - **Lessons / notes for next prompts:** Stage 5B is a thin runner that wires this SDK around a real
   HF `transformers` CPU `generate` on the **local** Qwen2-0.5B (fixed seeds), writing schema-valid
   records and folding the AirLLM failure JSONs in as structured evidence — no AirLLM run, no 7B.
+
+---
+
+## Prompt 018 — Stage 5B: Repeatable Transformers CPU measurement runner
+
+- **Stage:** 5B
+- **Date:** 2026-06-20
+- **Intent:** Implement and run a thin repeatable measurement runner over the Transformers CPU
+  path using the Stage 5A SDK, producing schema-valid JSON + CSV records for the local
+  Qwen/Qwen2-0.5B. No AirLLM, no new model download.
+- **Context:** Stage 5A built the SDK; AirLLM CPU is blocked (ADR-0018) so Transformers CPU is the
+  runnable measurement path. Qwen2-0.5B is already cached from earlier approved stages.
+- **Key constraints encoded:** `run_transformers_cpu_measurement.py`; Qwen2-0.5B only;
+  `AutoTokenizer`/`AutoModelForCausalLM`; CPU; `local_files_only=True`; offline; deterministic
+  (`manual_seed(0)`, `do_sample=False`, `max_new_tokens<=32`); prompt registry; matrix = 3 prompts
+  × 2 repeats = **6 runs**; load model once; use MetricsCollector + ResultWriter; per-run JSON +
+  `summary.csv` under `results/measurements/transformers_cpu_qwen2_0_5b/`; stable run ids; record
+  load/generation/total seconds, peak RAM, output tokens, tokens/sec; **TTFT may be None**; **TPOT
+  may be generation_seconds/output_tokens with a documented caveat**; capture failures honestly;
+  never fake success; tests must not load a model (helpers only); files ≤150 lines. Forbidden:
+  download 7B/any model, AirLLM, Ollama, DirectML, benchmark beyond the 6 runs, graphs, fake
+  results, edit site-packages, stage/commit/push, materials, secrets.
+- **Verbatim prompt (condensed; full text retained in the conversation transcript):**
+
+  > **Stage 5B — Repeatable Transformers CPU Measurement Runner.** Implement and run a thin
+  > repeatable runner around the Transformers CPU path using the Stage 5A SDK, producing
+  > schema-valid JSON+CSV for Qwen/Qwen2-0.5B. No AirLLM, no new download. Create
+  > `src/ex05_airllm/run_transformers_cpu_measurement.py`: Qwen2-0.5B only; AutoTokenizer/
+  > AutoModelForCausalLM; CPU; `local_files_only=True`; offline; deterministic (`manual_seed(0)`,
+  > `do_sample=False`, `max_new_tokens<=32`); prompt registry; matrix 3 prompts × 2 repeats = 6;
+  > load once; MetricsCollector+ResultWriter; per-run JSON under
+  > `results/measurements/transformers_cpu_qwen2_0_5b/`; append `summary.csv`; stable run ids;
+  > record load/generation/total seconds, peak RAM, output tokens, tokens/sec; TTFT may be None;
+  > TPOT may be generation_seconds/output_tokens with documented caveat; capture failures honestly;
+  > never fake success. Optional typer CLI if small/testable; defaults run the approved Qwen2-0.5B
+  > only. Tests (`test_run_transformers_cpu_measurement.py`): no model load/network; unit-test run
+  > id/result construction/output token estimation/config defaults; ≤150 lines. Update
+  > MEASUREMENT_RUNS/MEASUREMENT_DESIGN/PRD_measurement/TODO/PLAN/QUALITY/REQUIREMENTS_AUDIT
+  > (PARTIALLY_EVIDENCED, AirLLM PLANNED/BLOCKED not DONE)/PROMPTS/README. Run
+  > `HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 uv run python -m
+  > ex05_airllm.run_transformers_cpu_measurement`. Forbidden: download 7B/any model, AirLLM,
+  > Ollama, DirectML, benchmark beyond the 6 runs, graphs, fake results, site-packages, stage/
+  > commit/push, materials, secrets.
+
+- **Outcome:** Implemented the runner (testable helpers `make_run_id`/`output_tokens_from_ids`/
+  `approx_tpot`/`build_result`; model parts `# pragma: no cover`) + `test_run_transformers_cpu_
+  measurement.py`. Ran offline → **6/6 runs succeeded** on cached Qwen2-0.5B; wrote 6 JSONs +
+  `summary.csv` to `results/measurements/transformers_cpu_qwen2_0_5b/`. Measured: output 27–30
+  tokens, total runtime 5.25–6.42 s, throughput ~4.5–5.3 tok/s, peak RAM ~3987–4031 MB, load
+  ~4.50 s; **TTFT = None** (no streaming hook), **TPOT approximate** (`generation_seconds/
+  output_tokens`, caveat in each record's `notes`). Created `MEASUREMENT_RUNS.md`; set
+  R-BASE-01/R-MEAS-TPOT/THRU/MEM/TIME → PARTIALLY_EVIDENCED (R-MEAS-TTFT noted None; AirLLM stays
+  PLANNED/BLOCKED). 44 tests ~97% cov, ruff/format clean, ≤150 lines. **No AirLLM, no Qwen2-7B, no
+  new download, no DirectML/Ollama, no graphs, no fake results, no commit/push.**
+- **Iterations / corrections:** ruff reformatted the runner (wrapped long signatures); fixed two
+  E501s via the formatter.
+- **Lessons / notes for next prompts:** Stage 6 builds analysis/plots *from* `summary.csv`, the
+  cost/energy estimate, and folds the AirLLM failure JSONs in as structured evidence. To evidence
+  real TTFT/TPOT later, add a token-streaming hook; current TPOT is explicitly an approximation.
 
 ---
 

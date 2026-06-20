@@ -192,11 +192,17 @@ ConfigLoader, ApiGatekeeper, and the runner — exercised end-to-end on a **tiny
   `prompts.py`, `env.py` — all TDD, files ≤150 lines, 38 unit tests (no model/network).
   Optional metrics default to `None` and `success` to `False` (no fake values).
 
-**Stage 5B — repeatable Transformers CPU measurement (next):**
-- **Work:** a thin runner wiring the SDK around a real HF `transformers` CPU `generate` on the
-  local **Qwen2-0.5B** (TTFT/TPOT/throughput/peak-RAM/runtime, fixed seeds); fold the **AirLLM
-  failure JSONs** in as structured evidence (not success); *optionally* a DirectML tiny
-  GPU-vs-CPU baseline. **No Qwen2-7B download** (deferred; `download_approved=false`).
+**Stage 5B — repeatable Transformers CPU measurement ✅ (done; 6/6 runs):**
+- `run_transformers_cpu_measurement.py` wires the SDK around a real HF `transformers` CPU
+  `generate` on the local **Qwen2-0.5B** (offline, `local_files_only`, `manual_seed(0)`,
+  `do_sample=False`). Ran the **3 prompts × 2 repeats = 6 runs, all successful**, writing 6
+  schema-valid JSONs + `summary.csv` to `results/measurements/transformers_cpu_qwen2_0_5b/`
+  (`environment=wsl_cpu`). Measured: runtime ~5.2–6.6 s, throughput ~4.4–5.3 tok/s, peak RAM
+  ~4.0 GB, load ~5.4 s; **TTFT = None** (no streaming hook), **TPOT approximate** (documented).
+  Evidence:
+  `docs/MEASUREMENT_RUNS.md`. **No AirLLM, no Qwen2-7B download.**
+- **Next (Stage 6):** analysis/plots *from* `summary.csv`, cost/energy estimate, and the final
+  report — folding the AirLLM failure JSONs in as structured evidence (not success).
 - **DoD:** `results/` has repeatable Transformers-CPU measurement records (schema-valid) + the
   AirLLM failure evidence; tests pass, coverage ≥85%, `ruff` clean, files ≤150 lines; raw vs
   summary separated (raw git-ignored). **No AirLLM success claimed; no benchmark of a model we
