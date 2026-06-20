@@ -75,6 +75,17 @@ prompts × 2 repeats = 6 runs**. Authoritative values:
 The numbers are tight and stable across repeats, which is the point: a small, **reproducible**
 measurement, not a competitive benchmark.
 
+**Qualitative smoke sample (illustrative, from committed evidence).** The Stage 3D smoke
+(`results/stage3d_smoke_transformers_qwen2_0_5b_cpu.json`) preserved one short output:
+
+> Prompt: "Define an operating system in one short sentence." → Output (16 tokens): "An operating
+> system is a software program that manages the hardware and software resources of a…" *(truncated
+> at `max_new_tokens=16`)*
+
+It is a **tiny Transformers CPU smoke sample** — **not** AirLLM output, **not** a benchmark, **not** a
+full qualitative comparison, and **not** a quantization comparison. The Stage 5B JSONs store metrics
+but no generated text, so no broader qualitative table is asserted; no model was rerun to produce this.
+
 ## 5. Concept mapping (measured vs discussed)
 
 See README §9 for the concise version. The analytical core:
@@ -135,8 +146,15 @@ AirLLM did not generate; the mitigation is this report's depth — a reproducibl
 a working measured fallback, and zero fabricated claims. The assignment explicitly rewards a
 well-analyzed negative result over an unsupported positive claim.
 
-## 10. Conclusion
+## 10. Original analytical extensions
+
+The project's original contributions are **analytical**, not a claimed AirLLM success:
+(1) the **AirLLM forensic failure analysis** with structured negative-result evidence (§3), and
+(2) the **assumption-based local-vs-API energy/cost break-even analysis** (§7). Both are built on
+committed evidence and clearly labelled; neither presents AirLLM as having generated.
+
+## 11. Conclusion
 
 An honest negative AirLLM result plus a working, reproducible Transformers CPU measurement pipeline,
 analyzed transparently with assumption-marked cost/energy. Engineering evidence over fabricated
-success.
+success. Repository status: **READY_FOR_MANUAL_SUBMISSION** (not submitted; not 100% complete).

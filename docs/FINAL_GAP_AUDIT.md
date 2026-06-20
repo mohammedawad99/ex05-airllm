@@ -70,3 +70,17 @@ Status legend: **SATISFIED** · **PARTIALLY_SATISFIED** · **BLOCKED** · **NOT_
 
 > This audit asserts **no** AirLLM success, **no** market-verified pricing, and **no** large-model
 > performance. It records what is satisfied, what is partial, what is blocked, and what is not done.
+
+## 6. Readiness verdict (Stage 8B)
+
+**READY_FOR_MANUAL_SUBMISSION** — *not submitted, not 100% complete.* No technical blocker remains
+for an honest negative-result submission; the report is complete and token-free-inspectable. The
+course **group code** is **handled manually by the student** in the course submission system
+(deliberately not stored in the repo; does not block readiness). Remaining experiment gaps (AirLLM
+generation, quantization, larger-model run) are documented **acceptable limitations**. A broader
+qualitative table / Roofline figure are **optional**; one coherent committed smoke sample is now
+surfaced in README §7 / `reports/final_report.md` §4 (Stage 3D smoke JSON — no model rerun). The
+project's **original analytical extensions** are the AirLLM forensic failure analysis and the
+assumption-based local-vs-API break-even analysis (neither a measured AirLLM success). License: not
+explicitly declared (ADR-0106; attribution/credits present, no model weights, none invented). See
+`docs/SUBMISSION_CHECKLIST.md` for the full per-item classification.

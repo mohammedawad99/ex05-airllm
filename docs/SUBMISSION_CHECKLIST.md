@@ -33,7 +33,9 @@ Status legend: **DONE** (complete, evidenced) · **PARTIAL** (real evidence, not
   (license/extension/provider) remain open — *evidence: docs/DECISIONS.md*
 - **DONE** — Prompt log covers all significant prompts (through Prompt 021); decisions log current —
   *evidence: docs/PROMPTS.md, docs/DECISIONS.md*
-- **TODO** — License & credits formally declared (ADR-0106 open) — *evidence: docs/DECISIONS.md*
+- **PARTIAL** — README has a **License & credits** section. Project license not explicitly declared;
+  the repository includes attribution/credits and no model weights (ADR-0106 left undecided; no
+  license invented) — *evidence: README.md, docs/DECISIONS.md*
 
 ## C. Experiment evidence
 - **DONE** — Hardware documented from the real machine (OS/CPU/RAM/GPU/VRAM/disk/free), host + WSL2
@@ -93,19 +95,39 @@ Status legend: **DONE** (complete, evidenced) · **PARTIAL** (real evidence, not
   remaining experiment gaps — *evidence: docs/REQUIREMENTS_AUDIT.md, docs/FINAL_GAP_AUDIT.md*
 
 ## G. Submission mechanics (user-controlled)
-- **TODO** — Group code recorded — *NEEDED_USER_INPUT*
-- **DONE** — GitHub repo URL set; history clean/meaningful (per-stage commits, no `git add .`) —
-  *evidence: git log, origin/main*
-- **TODO** — Hugging Face access confirmed without storing a token — *NEEDED_USER_INPUT*
-- **TODO** — Final push performed **only on explicit user request** (Stage 7A/7B drafts uncommitted
-  until instructed)
+- **N/A (repo)** — Group code is **handled manually by the student in the course submission system**;
+  deliberately **not** stored in this repository and **does not block** repository readiness
+- **DONE** — GitHub repo URL set; history clean/meaningful (per-stage commits, no `git add .`);
+  Stages 0–7B committed + pushed through `e3d8537` — *evidence: git log, origin/main*
+- **DONE** — Submission is **inspectable without any Hugging Face token** — committed
+  results/analysis/figures + README explain the result with no model download — *evidence:
+  results/, figures/, README §10*
+- **TODO** — User confirms their own HF access (token-free) for any *optional* model re-download —
+  *USER_INPUT_REQUIRED (not needed to inspect the submission)*
+- **TODO** — Final push performed **only on explicit user request** (Stages 7A/7B already committed
+  + pushed; only the final post-Stage-8 submission confirmation remains)
 
 ---
 
-## Overall submission readiness: **PARTIAL (not DONE)**
+## Overall submission readiness: **READY_FOR_MANUAL_SUBMISSION** (Stage 8B)
 
 The repository is internally consistent, honest, and reproducible for the **measured Transformers
-CPU path**, with AirLLM presented as a structured **negative result**. It is **not** marked
-submission-DONE: the AirLLM generation is blocked, quantization and a larger-model run are not done,
-and license/extension/qualitative-samples plus user-controlled submission items remain open. No item
-above overstates: no AirLLM success, no `Qwen2-7B` run, no market-verified pricing.
+CPU path**, with AirLLM presented as a structured **negative result**. The report / checklist / gap
+audit are complete and the submission is **inspectable with no Hugging Face token**. It is **not**
+submitted and is **not** 100% complete — the student completes submission manually. Standing:
+
+- **Handled manually (outside the repo):** the course **group code** is entered in the course
+  submission system; it is deliberately not stored here and does not block readiness.
+- **ACCEPTABLE_LIMITATION (documented, not overstated):** AirLLM generation **BLOCKED** (negative
+  result); quantization and a larger-model run **NOT_DONE**; TPOT approximate / TTFT `None` / VRAM
+  N/A; cost/energy assumption-based.
+- **OPTIONAL (recommended, not blocking):** a Roofline figure and a broader qualitative table. One
+  coherent committed smoke sample is surfaced in README §7 / `reports/final_report.md` §4 (Stage 3D
+  smoke JSON); a per-quantization qualitative comparison is N/A (no quant run). The project's
+  **original analytical extensions** are the AirLLM forensic failure analysis and the
+  assumption-based local-vs-API break-even analysis — neither is a measured AirLLM success.
+- **License:** not explicitly declared; attribution/credits present, no model weights, no invented
+  license (ADR-0106).
+
+No item above overstates: no AirLLM success, no `Qwen2-7B` run/download, no market-verified pricing,
+no fabricated results, not submitted, not 100% complete.

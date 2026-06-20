@@ -1247,6 +1247,79 @@
 
 ---
 
+## Prompt 022 — Stage 8A: Final submission-readiness audit
+
+- **Stage:** 8A
+- **Date:** 2026-06-20
+- **Intent:** Strict final submission-readiness audit — classify every remaining checklist item, audit
+  group code / token-free inspection / license / qualitative samples / AirLLM honesty, and return a
+  single readiness verdict. Implement only **trivial documentation-only corrections** in allowed
+  files; otherwise report.
+- **Context:** Stages 0–7B committed/pushed (`e3d8537`); checklist said overall **PARTIAL**.
+- **Key constraints encoded:** read `docs/SUBMISSION_CHECKLIST.md`, classify each PARTIAL/TODO/BLOCKED
+  as REQUIRED_BEFORE_SUBMISSION / OPTIONAL / ACCEPTABLE_LIMITATION / USER_INPUT_REQUIRED; never invent
+  a group code; verify token-free inspection (committed results/analysis/figures; README separates
+  inspect vs optional rerun); confirm license/access wording; decide if qualitative samples are
+  required (propose a no-rerun Stage 8B only if required); verify AirLLM honesty (no
+  succeeded/benchmark/final-performance, no `Qwen2-7B` downloaded/tested). Allowed edits:
+  SUBMISSION_CHECKLIST, FINAL_GAP_AUDIT, README, final_report, QUALITY, TODO, PROMPTS. Forbidden:
+  model run/download, `Qwen2-7B`, AirLLM/Ollama/DirectML, benchmark rerun, fake results, raw/analysis/
+  figure/source/test/lock edits, commit/push.
+- **Outcome / findings:** Verdict **READY_AFTER_USER_INPUT**. Two trivial doc fixes applied: (1) the
+  Stage 7A rewrite had dropped the README **License & credits** section → restored honestly (license
+  pending ADR-0106, **not invented**; course attribution; no material/PDF path); (2) the checklist
+  push line was **stale** ("7A/7B drafts uncommitted") → corrected to reflect `e3d8537` pushed.
+  Refined the checklist HF line to credit **token-free inspection** (DONE) vs the user's own access
+  (USER_INPUT). **Group code = USER_INPUT_REQUIRED** (not invented). **Qualitative samples = OPTIONAL**
+  — Stage 5B JSONs store metrics but **no output text**, so a per-run table needs a rerun; one
+  coherent committed sample already exists in `docs/SMOKE_RUN.md` §8 / the Stage 3D smoke JSON, and a
+  per-quantization comparison is N/A (no quant run). AirLLM honesty confirmed: structured negative
+  result, no success/benchmark claim. **No model run/download, no raw/analysis/figure edits, no
+  benchmark rerun, no fake results, no commit/push.**
+- **Iterations / corrections:** none beyond the two doc fixes above.
+- **Lessons / notes for next prompts:** before a true submission-DONE, the user must supply group
+  code, a license choice (ADR-0106), HF-access confirmation, and trigger the final push. Optional
+  strengtheners (no rerun needed for the first): surface the committed Stage 3D qualitative sample in
+  README; add a Roofline figure; designate the break-even/AirLLM analysis as the original extension.
+
+---
+
+## Prompt 023 — Stage 8B: Close submission readiness for manual submission
+
+- **Stage:** 8B
+- **Date:** 2026-06-20
+- **Intent:** Final documentation-only closing fixes, then commit + push **one** readiness commit so
+  the repository is ready for **manual** course submission (not marked submitted).
+- **Context:** Stage 8A left uncommitted doc fixes and verdict READY_AFTER_USER_INPUT; the student
+  handles group code / submission metadata manually outside the repo.
+- **Key constraints encoded:** do **not** add/insert a group code (handled manually in the course
+  system; must not block readiness); change readiness → **READY_FOR_MANUAL_SUBMISSION** (never
+  "SUBMITTED", never "100% complete"); do not invent a license — state "Project license not
+  explicitly declared; course submission repository includes attribution/credits and no model
+  weights" (no `LICENSE` file unless one exists / explicitly chosen); surface the committed Stage 3D
+  `output_text` as a tiny Transformers CPU smoke sample (not AirLLM, not a benchmark, not a full
+  qualitative/quantization comparison) using **only committed evidence, no model rerun**; designate
+  the original **analytical** extensions (AirLLM forensic failure analysis + assumption-based
+  local-vs-API break-even) without claiming AirLLM success. Allowed doc edits only; forbidden: model
+  run/download, `Qwen2-7B`, AirLLM/Ollama/DirectML, benchmark rerun, fake results, raw/analysis/
+  figure/source/test/lock edits.
+- **Outcome:** Surfaced the Stage 3D qualitative smoke sample in README §7 + `reports/final_report.md`
+  §4 (clearly labelled tiny CPU smoke, not AirLLM/benchmark/quant). README: replaced status section
+  with **Original analytical extensions**, undecided-license **License & credits**, and a
+  **Submission status = READY_FOR_MANUAL_SUBMISSION** block stating the group code is handled
+  manually outside the repo. Updated `SUBMISSION_CHECKLIST` (group code → N/A-repo/manual; license
+  PARTIAL/undecided; overall → READY_FOR_MANUAL_SUBMISSION), `FINAL_GAP_AUDIT` (verdict), `DECISIONS`
+  (ADR-0105 analytical extensions ACCEPTED; ADR-0106 license UNDECIDED, none invented), `TODO`
+  (T8.2 DONE). Validation green (54 tests, ruff/format clean); protected diffs empty; text audit only
+  honest/negated/meta. **No model run/download, no benchmark rerun, no fake results.** Committed +
+  pushed as the final readiness commit ("Finalize manual submission readiness").
+- **Iterations / corrections:** none beyond the planned closing edits.
+- **Lessons / notes for next prompts:** repository is ready for manual submission; group code/license
+  remain the student's manual/explicit choices. AirLLM stays a structured negative result; no
+  `Qwen2-7B`; cost stays assumption-based.
+
+---
+
 *Template for future entries:*
 *Prompt NNN — <stage>: <title> — Intent / Context / Constraints / Verbatim prompt /
 Actions / Outcome / Iterations / Lessons.*

@@ -346,7 +346,9 @@
 | T7.1 | Assemble README technical report | P0 | IN_PROGRESS | R-README-01 | Stage 7A/7B: README is the report w/ tables, embedded figures, evidence map, repro, limits. Final assembly pending experiment gaps |
 | T7.2 | Run SUBMISSION_CHECKLIST end-to-end | P0 | IN_PROGRESS | R-NOFAKE | Stage 7B: checklist updated to real DONE/PARTIAL/BLOCKED/TODO. Overall = PARTIAL by design (not 100% green; AirLLM blocked, quant/7B not done) |
 | T7.3 | Final requirements re-audit | P0 | IN_PROGRESS | all | Stage 7B: gap audit aligned w/ README + checklist; no experimental req DONE; AirLLM BLOCKED |
-| T7.4 | Clean git history; user-initiated push | P0 | BLOCKED | R-GIT-HISTORY | Pushed only on explicit user request |
+| T7.4 | Clean git history; user-initiated push | P0 | IN_PROGRESS | R-GIT-HISTORY | Stages 0–7B pushed (`e3d8537`); final submission push only on explicit user request |
+| T8.1 | Stage 8A final submission-readiness audit | P0 | DONE | R-NOFAKE | Verdict READY_AFTER_USER_INPUT; doc fixes (README License & credits; stale checklist push line) |
+| T8.2 | Stage 8B close for manual submission | P0 | DONE | R-NOFAKE,R-LICENSE,R-EXT-01 | Readiness → **READY_FOR_MANUAL_SUBMISSION** (not submitted/100%); group code handled manually (not in repo); license undecided (ADR-0106, none invented); Stage 3D qualitative smoke sample surfaced (README §7, final_report §4); original analytical extensions designated (ADR-0105). No model run; committed + pushed |
 
 ---
 

@@ -143,6 +143,17 @@ Figures (plain matplotlib, generated from the committed data):
 ![Mean throughput by prompt](figures/transformers_cpu_throughput_by_prompt.png)
 ![Mean peak RAM by prompt](figures/transformers_cpu_peak_ram_by_prompt.png)
 
+**Qualitative smoke sample (illustrative).** The Stage 3D smoke run preserved one short output
+(`results/stage3d_smoke_transformers_qwen2_0_5b_cpu.json`), shown here as a coherence sanity-check:
+
+> **Prompt:** "Define an operating system in one short sentence."
+> **Output (16 tokens):** "An operating system is a software program that manages the hardware and
+> software resources of a…" *(truncated at `max_new_tokens=16`)*
+
+This is a **tiny Transformers CPU smoke sample** — **not** AirLLM output, **not** a benchmark, **not**
+a full qualitative comparison, and **not** a quantization comparison. The Stage 5B measurement JSONs
+record metrics and token counts but not generated text, so no broader qualitative table is claimed.
+
 ## 8. Cost and energy estimate
 
 An **assumption-based, illustrative** estimate (`src/ex05_airllm/cost_model.py`;
@@ -276,12 +287,42 @@ the assignment's stated grading philosophy.
 - `.gitignore` excludes `.env`, credentials, model weights, caches, and large artifacts.
 - **No model weights or shards are tracked** (verified by audit).
 
-## Status & required user input
+## Original analytical extensions
 
+This project's original contributions are **analytical**, built honestly on the available evidence
+(neither is a measured AirLLM success):
+
+1. **AirLLM forensic failure analysis** — a reproducible, root-caused investigation of why AirLLM's
+   CPU layer-streaming is blocked for Qwen2 here, with structured negative-result evidence (the raw
+   `results/stage3*` / `results/stage4a*` JSONs aggregated to `any_success=false`). See §6.
+2. **Assumption-based local-vs-API energy/cost break-even analysis** — a transparent, parameterized
+   model turning measured runtimes into per-request energy/cost and an illustrative break-even, with
+   every input marked as an assumption (not market-verified pricing). See §8.
+
+## License & credits
+
+- **Project license not explicitly declared;** the course submission repository includes
+  attribution/credits and no model weights. No license is invented here (ADR-0106 left undecided); a
+  license file would be added only on an explicit choice.
+- **Credits:** coursework for Assignment 05 (Lecture 08). Course-provided reference material is kept
+  **local only** and is **not** part of this repository or redistributed. Model:
+  `Qwen/Qwen2-0.5B` (Qwen2, openly available; used from a local cache, no token).
+- **Honesty:** every number traces to committed data; AirLLM is reported as a structured negative
+  result, never as a success; cost/energy is assumption-based, not market-verified.
+
+## Submission status
+
+- **READY_FOR_MANUAL_SUBMISSION** — the repository is internally consistent, honest, and
+  reproducible for the measured path. It is **not** submitted and is **not** claimed 100% complete;
+  remaining experiment gaps (AirLLM generation, quantization, larger-model run) are documented
+  acceptable limitations.
 - **Repo:** `https://github.com/mohammedawad99/ex05-airllm` (`origin`, `main`).
-- Still `NEEDED_USER_INPUT` (never invented; see `docs/REQUIREMENTS_AUDIT.md` §C): course **group
-  code**, **HF access** confirmation (token-free), and real **electricity tariff** / **hardware
-  cost** if the cost estimate is to move beyond assumptions.
+- **Non-repo submission metadata** (the course **group code**) is **handled manually by the student
+  in the course submission system** — deliberately **not** stored in this repository, and it does
+  **not** block repository readiness.
+- Optional, non-blocking (see `docs/REQUIREMENTS_AUDIT.md` §C): the student's own token-free **HF
+  access** confirmation, and a real **electricity tariff** / **hardware cost** if the cost estimate
+  is to move beyond assumptions.
 
 ## Evidence map & key documents
 

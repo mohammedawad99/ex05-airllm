@@ -348,10 +348,19 @@ These are intentionally **not** decided in Stage 0; deciding them now would mean
   and cited.
 
 ## ADR-0105 — Original extension (which one)
-- **Status:** DEFERRED → Stage 6
-- **Candidates:** bottleneck-shift map · quantization Pareto frontier · AirLLM decision
-  matrix · API-vs-local break-even simulator · LoRA/QLoRA mini-study · multi-model compare.
+- **Status:** ACCEPTED (Stage 8B) — the delivered original extensions are **analytical**.
+- **Decision:** The project's two original contributions are (1) the **AirLLM forensic failure
+  analysis** with structured negative-result evidence (root-caused CPU meta-device blocker; the raw
+  `results/stage3*`/`stage4a*` JSONs aggregated to `any_success=false`), and (2) the
+  **assumption-based local-vs-API energy/cost break-even analysis** (`cost_model.py` + the break-even
+  figure). Both are evidence-backed and clearly labelled; **neither is a measured AirLLM success.**
+- **Candidates not pursued (would need a model run/quant/GPU):** quantization Pareto frontier ·
+  LoRA/QLoRA mini-study · multi-model compare — out of scope under the AirLLM CPU blocker.
 
 ## ADR-0106 — Project license
-- **Status:** DEFERRED → before any public push (Stage 7)
-- **Why deferred:** Coursework; license declared once the user confirms distribution intent.
+- **Status:** UNDECIDED (Stage 8B) — **no license invented.**
+- **Decision:** The project license is **not explicitly declared.** The course submission repository
+  includes attribution/credits (README "License & credits") and contains **no model weights**. A
+  `LICENSE` file would be added only on an explicit license choice by the author; none is assumed.
+- **Why:** Coursework; declaring/choosing a license is the author's call. Stating it plainly is more
+  honest than inventing a license for a graded submission.
