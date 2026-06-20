@@ -1420,6 +1420,43 @@
 
 ---
 
+## Prompt 027 — Stage 9C Route A: PyTorch dynamic INT8 quantization measurement (no download)
+
+- **Stage:** 9C (Route A)
+- **Date:** 2026-06-20
+- **User approval:** "Approved: run Stage 9C Route A — PyTorch dynamic INT8 on the cached
+  Qwen2-0.5B, no download, no new dependency." (Route B / GGUF Q4/Q8 **not** approved.)
+- **Intent:** Real no-download quantization comparison — FP32 reference vs PyTorch **dynamic INT8**
+  on the same cached `Qwen2-0.5B`, CPU, offline.
+- **Key constraints encoded:** dynamic INT8 ONLY (no GGUF/Q4/Q8 claims); can move quantization to
+  PARTIALLY_EVIDENCED, not fully SATISFIED; pure helpers `quantization_measurement.py` + runner
+  `run_transformers_cpu_int8_quantization_measurement.py` + tests (pure: variant labels, run-id,
+  comparison summary, preview truncation, failed-INT8 handling); 2 variants × 3 prompts × 2 repeats =
+  12 rows; deterministic (`seed 0`, `do_sample=False`, `max_new_tokens=32`); record variant/success/
+  load/quant_seconds/gen/total/output_tokens/tok-per-s/peak_ram/approx_tpot/qualitative preview; new
+  results dir, no overwrite of Stage 5B/9B; honest failure JSON if INT8 fails (no fabrication, no
+  GGUF/bitsandbytes/new deps); files ≤150 lines. Forbidden: download/Qwen2-7B/GGUF, deps/uv add,
+  edit pyproject/uv.lock/Stage5B-9B raw/analysis/figures/site-packages, AirLLM/Ollama/DirectML/Route
+  B, stage/commit/push.
+- **Outcome:** 12/12 succeeded. **fp32**: 4.83 tok/s, 6.03 s gen, 7192 MB; **int8_dynamic**: 17.27
+  tok/s, 1.89 s gen, 7086 MB. INT8 ≈**3.6× faster**, RAM ≈1.5% lower, but **output quality degraded**
+  (fp32 coherent; INT8 incoherent — committed per-variant previews). Honest caveats: peak RAM holds
+  both models (not comparable to Stage 5B single-model); dynamic INT8 = Linear-only; INT8 packed
+  param estimate unavailable → recorded empty, not fabricated. Quantization → **PARTIALLY_EVIDENCED
+  (dynamic INT8 only)**; **GGUF Q4/Q8 stays NOT_DONE / approval-gated**. Gates: **77 tests pass, ~92%
+  cov, ruff/format clean, ≤150 lines**; post-run checker green; Stage 5B/9B/analysis/figures/pyproject/
+  uv.lock diffs empty; no model artifacts. Docs updated across MEASUREMENT_RUNS §9 / MEASUREMENT_DESIGN
+  §8c / QUANTIZATION_PREFLIGHT / FINAL_GAP_AUDIT / SUBMISSION_CHECKLIST / REQUIREMENTS_AUDIT
+  (R-QUANT-01, R-MEAS-QUAL) / TODO / PLAN / QUALITY / README §7 / final_report. **No download, no dep
+  change, no Qwen2-7B, no GGUF, no AirLLM, no fake results, no commit/push.**
+- **Iterations / corrections:** removed an unused import; shortened one docstring for E501.
+- **Lessons / notes for next prompts:** INT8 dynamic is a real but quality-lossy speedup on this
+  small model — report the regression honestly. The only remaining experimental gaps are GGUF Q4/Q8
+  (Route B) and the large-model pressure case, both approval-gated before any dependency/model
+  download. AirLLM stays blocked.
+
+---
+
 *Template for future entries:*
 *Prompt NNN — <stage>: <title> — Intent / Context / Constraints / Verbatim prompt /
 Actions / Outcome / Iterations / Lessons.*

@@ -113,3 +113,37 @@ a worker thread), measuring **real TTFT** — never estimated from total runtime
   interpretation**; **Stage 5B remains valid** for the non-streaming total-runtime/throughput
   evidence. Stage 5B raw data is **unmodified** (separate directory). Still **not** AirLLM, **not** a
   benchmark, **no** quantization, **no** download, **no** Qwen2-7B.
+
+## 9. Stage 9C Route A — PyTorch dynamic INT8 vs FP32 (no-download quantization)
+
+A real **no-download** quantization comparison (user-approved Route A): the cached `Qwen2-0.5B` FP32
+reference vs a **PyTorch dynamic INT8** version of the *same* model
+(`torch.ao.quantization.quantize_dynamic` on Linear modules), CPU, offline, deterministic. **This is
+dynamic INT8 only — NOT GGUF, NOT Q4, NOT Q8.**
+
+- **Runner:** `src/ex05_airllm/run_transformers_cpu_int8_quantization_measurement.py` (+ pure helpers
+  `src/ex05_airllm/quantization_measurement.py`). **Results:**
+  `results/measurements/transformers_cpu_int8_quantization_qwen2_0_5b/` (12 per-run JSON + summary).
+- **Config:** `Qwen/Qwen2-0.5B`, CPU, offline, `torch.manual_seed(0)`, `do_sample=False`,
+  `max_new_tokens=32`, 3 prompts × 2 repeats × 2 variants = **12 runs, all succeeded**.
+
+| variant | runs | mean gen (s) | mean tok/s | mean peak RAM (MB) | mean out tokens |
+| --- | --- | --- | --- | --- | --- |
+| fp32_reference | 6 | 6.026 | 4.834 | 7192.4 | 28.7 |
+| int8_dynamic | 6 | 1.892 | 17.268 | 7086.3 | 32.0 |
+
+- **INT8 vs FP32 (descriptive ratios):** throughput **×3.57** (faster), generation time **×0.314**,
+  peak RAM **×0.985** (≈1.5% lower — modest). Quantization step took ≈14 s once.
+- **⚠️ Quality regression (honest, important):** the dynamic-INT8 outputs **degraded clearly**. FP32
+  produced a coherent answer ("An operating system is a software program that manages the hardware
+  and software resources…"); INT8 produced **incoherent** text (e.g. "____. A. 1 B. 2 C. 3 D. 4 答案…").
+  So INT8 here is **much faster but lower quality** — a real measured trade-off, not a free win.
+- **Caveats:** peak RAM in this run (~7 GB) is **higher than Stage 5B (~4 GB)** because both the FP32
+  reference *and* the derived INT8 model are held in memory together — so these RAM numbers are
+  **not** directly comparable to the single-model Stage 5B run. Dynamic INT8 quantizes **Linear
+  modules only** (not embeddings/attention math), which is why the resident-memory reduction is
+  small. `param_mb_estimate` ≈ 2521 MB for FP32 state-dict; the INT8 packed estimate was unavailable
+  and is recorded as empty (**not fabricated**).
+- **Status:** this moves quantization **NOT_DONE → PARTIALLY_EVIDENCED** (dynamic INT8 only). A
+  **low-bit GGUF Q4/Q8 sweep remains NOT_DONE / approval-gated** (Route B). Stage 5B/9B raw data
+  unmodified. No download, no new dependency, no AirLLM, no Qwen2-7B.

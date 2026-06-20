@@ -120,3 +120,12 @@ Repo is **not** claimed self-assessment-100-ready — quantization/TTFT/large-mo
 `results/measurements/transformers_cpu_streaming_qwen2_0_5b/`; Stage 5B raw data untouched. Gates:
 **71 tests pass, ~97% coverage, ruff check + format clean, all files ≤150 code lines.** No download,
 no Qwen2-7B, no AirLLM, no quantization; `pyproject.toml`/`uv.lock`/figures/analysis-JSON unchanged.
+
+**Stage 9C Route A update (no-download dynamic INT8 quantization):** added
+`quantization_measurement.py` (pure helpers) + `run_transformers_cpu_int8_quantization_measurement.py`
++ tests (fake data). Ran FP32 vs **PyTorch dynamic INT8** (12/12) on the cached Qwen2-0.5B (offline)
+→ new dir `results/measurements/transformers_cpu_int8_quantization_qwen2_0_5b/`. Honest result: INT8
+≈3.6× faster but **output quality degraded** (per-variant previews committed). Gates: **77 tests
+pass, ~92% coverage, ruff check + format clean, all files ≤150 code lines.** No download, no new
+dependency, no GGUF/Q4/Q8, no Qwen2-7B, no AirLLM; Stage 5B/9B raw + `pyproject.toml`/`uv.lock`/
+figures/analysis-JSON unchanged. Quantization → PARTIALLY_EVIDENCED (dynamic INT8 only).

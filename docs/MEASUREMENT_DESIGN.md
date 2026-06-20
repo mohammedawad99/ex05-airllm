@@ -151,6 +151,21 @@ None` (never estimated). Stage 9B measures **real TTFT** with a genuine streamin
   and **do not** modify Stage 5B raw data. This streaming run supersedes Stage 5B for TTFT/TPOT
   interpretation; Stage 5B stays valid for non-streaming total-runtime/throughput.
 
+## 8c. Dynamic INT8 quantization method (Stage 9C Route A)
+
+A **no-download** quantization comparison on the cached `Qwen2-0.5B`: FP32 reference vs **PyTorch
+dynamic INT8** (`torch.ao.quantization.quantize_dynamic(model, {torch.nn.Linear}, dtype=qint8)`),
+same prompts/harness, CPU, offline, deterministic.
+
+- **Variants:** `fp32_reference` and `int8_dynamic`; same `MeasurementResult`-style fields plus
+  `variant`, `quantization_seconds`, `param_mb_estimate`, and an `output_preview`/`output_text`
+  qualitative sample per run. Results in a **separate** dir (no overwrite of Stage 5B/9B).
+- **Honesty bounds:** this is **dynamic INT8 only** — it quantizes Linear modules, **not** GGUF/Q4/Q8
+  and not a low-bit sweep. It can move quantization to **PARTIALLY_EVIDENCED**, never "fully
+  satisfied". Quality is assessed from the committed previews; if a variant fails it is recorded
+  `success=false` with a reason — never fabricated. Peak RAM holds both models at once, so it is not
+  comparable to the single-model Stage 5B RSS.
+
 ## 9. Acceptance criteria for Stage 2B
 
 - A **model shortlist matrix** is prepared (params, format, on-disk size vs 933 GB, RAM vs

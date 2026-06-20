@@ -48,8 +48,10 @@ Status legend: **DONE** (complete, evidenced) · **PARTIAL** (real evidence, not
 - **BLOCKED** — AirLLM run completed → **not achieved**; investigated and root-caused (meta-device
   defect), structured failure evidence kept — *evidence: results/stage3*, results/stage4a*,
   results/analysis/airllm_failure_summary.json, docs/AIRLLM_PATCH_FEASIBILITY.md*
-- **TODO** — Quantization sweep (≥2 levels) → **not a measured run** (CUDA `bitsandbytes`
-  unavailable; CPU GGUF route not executed) — *evidence: docs/TODO.md, R-QUANT-01*
+- **PARTIAL** — Quantization: **dynamic INT8 vs FP32 measured** (Stage 9C Route A, 12/12, no
+  download) — INT8 much faster but **lower quality** (honest trade-off). Low-bit **GGUF Q4/Q8 not
+  done** (approval-gated) — *evidence: results/measurements/transformers_cpu_int8_quantization_qwen2_0_5b/,
+  docs/MEASUREMENT_RUNS.md §9*
 - **PARTIAL** — Metrics captured: runtime/throughput/peak-RAM **measured**; **TTFT measured**
   (Stage 9B streaming run) and **TPOT decode-only**; peak VRAM **N/A** (no GPU); energy
   **estimated** — *evidence: results/measurements/transformers_cpu_streaming_qwen2_0_5b/,
@@ -74,7 +76,7 @@ Status legend: **DONE** (complete, evidenced) · **PARTIAL** (real evidence, not
 
 ## E. Quality gates (see QUALITY.md)
 - **DONE** — `ruff check .` zero errors; `ruff format --check .` clean — *evidence: run log*
-- **DONE** — Tests pass (happy + error paths); coverage ≥85% — *evidence: pytest (71 passed, ~97%)*
+- **DONE** — Tests pass (happy + error paths); coverage ≥85% — *evidence: pytest (77 passed, ~92%)*
 - **DONE** — Every source file ≤150 code lines — *evidence: line-count audit*
 - **DONE** — Config hierarchy: versioned `config/*.example.*`, `.env` git-ignored, **`.env-example`
   committed** (dummy values only) — *evidence: .env-example, config/*
@@ -126,10 +128,9 @@ grade** — the experimental gaps below remain open. The student completes submi
 TPOT is now decode-only. Stage 5B raw data unchanged.
 
 **Not ready for a self-assessment-100 claim until these are closed** (each needs work / approval):
-- **Quantization measured run — NOT_DONE** (no quantized inference executed). Stage 9C-0 preflight
-  (`docs/QUANTIZATION_PREFLIGHT.md`) chose **Route A** (torch dynamic INT8 — **no download/dependency**,
-  recommended; needs a go-ahead) vs **Route B** (GGUF Q8/Q4 — **requires explicit user approval
-  before any dependency/model download**).
+- **Quantization — PARTIALLY done.** Stage 9C **Route A executed**: dynamic INT8 vs FP32 measured
+  (no download) — INT8 much faster but quality degraded (honest). **Low-bit GGUF Q4/Q8 (Route B)
+  remains NOT_DONE — requires explicit user approval before any dependency/model download.**
 - **Large-model baseline / memory-pressure case — NOT_DONE** (no >RAM model run); requires explicit
   user approval before any `Qwen2-7B` download.
 

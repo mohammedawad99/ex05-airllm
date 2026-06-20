@@ -7,8 +7,13 @@
 
 ## 1. Status
 
-- **Quantization requirement (R-QUANT-01 / R-MEAS-QUAL): NOT_DONE.** No quantized inference has been
-  run or measured. Nothing here changes that — this is a route decision, not an execution.
+- **UPDATE (Stage 9C executed — Route A):** Route A has since been **run** (user-approved). Dynamic
+  INT8 vs FP32 was measured on the cached `Qwen2-0.5B` (12/12) →
+  `results/measurements/transformers_cpu_int8_quantization_qwen2_0_5b/` and `docs/MEASUREMENT_RUNS.md`
+  §9. Quantization is now **PARTIALLY_EVIDENCED** (dynamic INT8 only). **Route B (GGUF Q4/Q8) remains
+  NOT_DONE / approval-gated.** The route analysis below is preserved as the original decision record.
+- **Quantization requirement (R-QUANT-01 / R-MEAS-QUAL) at preflight time: NOT_DONE.** No quantized
+  inference had been run or measured then — this document was a route decision, not an execution.
 - **HEAD:** `b6a3b47` (Stage 9B streaming TTFT). Working tree clean except ignored artifacts.
 - **Approved local model:** `Qwen/Qwen2-0.5B` only (already cached). **`Qwen2-7B` remains not
   downloaded / not approved.** AirLLM remains **blocked / not evidenced**.

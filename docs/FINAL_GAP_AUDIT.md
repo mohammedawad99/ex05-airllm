@@ -25,7 +25,7 @@ Status legend: **SATISFIED** · **PARTIALLY_SATISFIED** · **BLOCKED** · **NOT_
 | 3 | Model selection rationale | PARTIALLY_SATISFIED | `docs/MODEL_SELECTION.md`, `DECISIONS.md` ADR-0101a/0018 | Rationale documented; `Qwen2-0.5B` measured; `Qwen2-7B` deferred (not downloaded/approved); final large pick not finalized. |
 | 4 | Direct baseline / local inference | PARTIALLY_SATISFIED | `results/measurements/transformers_cpu_qwen2_0_5b/`, `docs/MEASUREMENT_RUNS.md` | HF `transformers` CPU baseline on `Qwen2-0.5B` ran **6/6**; baseline on a larger/selected model not done. |
 | 5 | AirLLM integration | BLOCKED | `results/stage3*`, `results/stage4a*`, `results/analysis/airllm_failure_summary.json`, `docs/AIRLLM_PATCH_FEASIBILITY.md` | Installs/imports; format fixed by re-shard; **CPU forward fails** (meta-device) — root-caused to AirLLM core param streaming. `any_success=false`. Not a success. |
-| 6 | Quantization | NOT_DONE | `docs/TODO.md`, `docs/REQUIREMENTS_AUDIT.md` R-QUANT-01 | Discussed only; CUDA `bitsandbytes` unavailable, CPU GGUF route not executed. **No quantized run/measurement.** |
+| 6 | Quantization | PARTIALLY_SATISFIED | `results/measurements/transformers_cpu_int8_quantization_qwen2_0_5b/`, `docs/MEASUREMENT_RUNS.md` §9 | Stage 9C Route A: **PyTorch dynamic INT8 vs FP32 measured** (12/12, no download) — INT8 ≈3.6× faster but **output quality degraded** and RAM ≈1.5% lower (honest trade-off). **Dynamic INT8 only — low-bit GGUF Q4/Q8 remains NOT_DONE / approval-gated.** |
 | 7 | Metrics (runtime, throughput, TPOT, TTFT, RAM, VRAM, energy) | PARTIALLY_SATISFIED | `results/measurements/...`, `results/analysis/...`, `docs/ANALYSIS.md` | runtime **SATISFIED**; throughput **SATISFIED**; RAM (RSS) **SATISFIED**; **TTFT SATISFIED** (Stage 9B streaming run); **TPOT SATISFIED** (decode-only, Stage 9B) — Stage 5B's TPOT was approximate; VRAM **N/A** (no GPU compute); energy **PARTIALLY** (assumption-based estimate). |
 | 8 | Cost analysis (API / On-Prem / break-even) | PARTIALLY_SATISFIED | `results/analysis/cost_energy_estimate.json`, `figures/cost_break_even_estimate.png`, `docs/COSTS.md` | Computed under explicit assumptions; `pricing_status=assumption_not_live_verified`. CAPEX=0 sensitivity stated. Not market-verified. |
 | 9 | Graphs / figures | SATISFIED | `figures/*.png`, `docs/ANALYSIS.md` §4 | 4 plain-matplotlib figures generated from committed data (runtime, throughput, peak RAM, break-even). |
@@ -35,7 +35,7 @@ Status legend: **SATISFIED** · **PARTIALLY_SATISFIED** · **BLOCKED** · **NOT_
 | 13 | Secrets / model-weight hygiene | SATISFIED | `.gitignore`, `.env-example`, repo audit | No secrets/tokens committed; `.env-example` has dummy values only; **no model weights/shards tracked**; weights/caches/raw logs git-ignored. |
 | 14 | SDK facade & config hygiene | SATISFIED | `src/ex05_airllm/sdk.py`, `.env-example`, `tests/unit/test_sdk.py` | Stage 9A: thin SDK facade delegating to existing modules (no logic duplicated, no model/network); `.env-example` committed. |
 | 15 | API gatekeeper | N/A_WITH_RATIONALE | `src/ex05_airllm/api_gatekeeper.py`, `config/rate_limits.example.json`, `tests/unit/test_api_gatekeeper.py` | No live external API is called anywhere (cost is assumption-based); a fail-closed, disabled-by-default guard is implemented + tested for any future path. |
-| 16 | Quantization measured run | NOT_DONE (route planned) | `docs/QUANTIZATION_PREFLIGHT.md`, `docs/PLAN.md` Stage 9C | No quantized inference executed. Stage 9C-0 preflight chose **Route A** (torch dynamic INT8, no download/dep — recommended) vs **Route B** (GGUF Q8/Q4, approval-gated download+dep). Awaiting user go-ahead. |
+| 16 | Quantization measured run | PARTIALLY_SATISFIED | `results/measurements/transformers_cpu_int8_quantization_qwen2_0_5b/`, `docs/MEASUREMENT_RUNS.md` §9 | Stage 9C **Route A executed**: dynamic INT8 vs FP32, 12/12, no download/dependency. INT8 much faster, quality degraded (honest). **Route B (GGUF Q4/Q8) remains NOT_DONE / approval-gated.** |
 | 17 | TTFT measurement | SATISFIED | `results/measurements/transformers_cpu_streaming_qwen2_0_5b/`, `docs/MEASUREMENT_RUNS.md` §8 | Stage 9B: **real TTFT measured** via `TextIteratorStreamer` (6/6, cached Qwen2-0.5B, offline, no new download). mean ≈0.41 s (skewed by cold first run; steady ≈0.25–0.27 s); TPOT now decode-only. Supersedes Stage 5B's `None`. |
 | 18 | Large-model memory-pressure case | NOT_DONE | `docs/PLAN.md` | No >RAM model run; **requires explicit user approval before any `Qwen2-7B` download**. |
 
@@ -90,10 +90,13 @@ guard implemented + tested.
 **Closed since (Stage 9B):** **TTFT now measured** via a real streaming run on the already-cached
 `Qwen2-0.5B` (no new download); TPOT is now decode-only. Stage 5B raw data unchanged.
 
+**Partially closed since (Stage 9C Route A):** **dynamic INT8 vs FP32 measured** (no download) →
+quantization is **PARTIALLY_SATISFIED**. A **low-bit GGUF Q4/Q8 sweep (Route B) remains NOT_DONE /
+approval-gated** (needs a dependency add + model download).
+
 **Still open before any self-assessment-100 claim** (rows 16 & 18 above):
-- **Quantization measured run — NOT_DONE** → route chosen in `docs/QUANTIZATION_PREFLIGHT.md`:
-  **Route A** (torch dynamic INT8, no download/dep — recommended) needs a go-ahead; **Route B**
-  (GGUF Q8/Q4) **requires user approval before any dependency/model download**.
+- **Low-bit GGUF Q4/Q8 quantization — NOT_DONE** → Route B, **requires user approval before any
+  dependency/model download**.
 - **Large-model memory-pressure baseline — NOT_DONE** → requires user approval before any `Qwen2-7B`
   download.
 
