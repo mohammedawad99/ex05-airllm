@@ -193,11 +193,12 @@ See README §9 for the concise version. The analytical core:
 
 ## 7. Cost & energy (assumption-based)
 
-Assumptions: CPU **45 W**, **$0.20/kWh**, assumed API **$0.50 / $1.50** per 1M in/out tokens,
-`hardware_cost_usd = 0`. Per run (mean ~5.68 s, ~9 in / ~29 out tokens): energy ≈ **7.1×10⁻⁵ kWh**,
-local ≈ **$1.4×10⁻⁵**, assumed API ≈ **$4.9×10⁻⁵**, break-even **0 requests** at CAPEX=0. Source:
-`results/analysis/cost_energy_estimate.json`; method: `docs/COSTS.md`. **Not market-verified
-pricing.**
+**v1 estimate (CAPEX=0 — superseded by the CAPEX-aware v2 below).** Assumptions: CPU **45 W**,
+**$0.20/kWh**, assumed API **$0.50 / $1.50** per 1M in/out tokens, `hardware_cost_usd = 0`. Per run
+(mean ~5.68 s, ~9 in / ~29 out tokens): energy ≈ **7.1×10⁻⁵ kWh**, local ≈ **$1.4×10⁻⁵**, assumed API
+≈ **$4.9×10⁻⁵**, break-even **0 requests** at CAPEX=0 (this zero is exactly *why* v2 adds a nonzero
+allocated CAPEX). Source: `results/analysis/cost_energy_estimate.json`; method: `docs/COSTS.md`. **Not
+market-verified pricing.**
 
 **Cost model v2 (Stage 11A — CAPEX-aware).** To make the break-even meaningful, a v2 model
 (`src/ex05_airllm/cost_model.py` → `results/analysis/cost_model_v2.json`,

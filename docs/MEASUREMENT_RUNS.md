@@ -144,8 +144,9 @@ dynamic INT8 only — NOT GGUF, NOT Q4, NOT Q8.**
   modules only** (not embeddings/attention math), which is why the resident-memory reduction is
   small. `param_mb_estimate` ≈ 2521 MB for FP32 state-dict; the INT8 packed estimate was unavailable
   and is recorded as empty (**not fabricated**).
-- **Status:** this moves quantization **NOT_DONE → PARTIALLY_EVIDENCED** (dynamic INT8 only). A
-  **low-bit GGUF Q4/Q8 sweep remains NOT_DONE / approval-gated** (Route B). Stage 5B/9B raw data
+- **Status (as of Stage 9C):** this moved quantization **NOT_DONE → PARTIALLY_EVIDENCED** (dynamic
+  INT8 only); the low-bit GGUF Q4/Q8 sweep was still approval-gated at that point. **It has since been
+  done — see §10 (Stage 10A: GGUF Q8_0 vs Q4_K_M, user-approved, 12/12).** Stage 5B/9B raw data
   unmodified. No download, no new dependency, no AirLLM, no Qwen2-7B.
 
 ## 10. Stage 10A — GGUF CPU low-bit quantization sweep (Q8_0 vs Q4_K_M)

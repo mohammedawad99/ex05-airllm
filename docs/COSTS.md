@@ -105,4 +105,11 @@ local electricity ≈ $1.4×10⁻⁵, assumed API ≈ $4.9×10⁻⁵.
 
 > **Caveat (firm):** these are **illustrative under assumptions, NOT current verified market
 > pricing.** Real provider prices must be sourced and dated before any quantitative cost claim.
-> The **break-even simulator** remains a candidate original extension (R-EXT-01 / ADR-0105).
+
+> **Superseded by cost model v2 (Stage 11A).** This v1 estimate uses `hardware_cost_usd=0` (CAPEX as a
+> sensitivity only). The delivered **break-even simulator** is the CAPEX-aware **cost model v2**
+> (`build_cost_model_v2` in `cost_model.py` → `results/analysis/cost_model_v2.json`,
+> `figures/final_cost_break_even.png`): **nonzero allocated CAPEX** ($900 × 25% = $225 → $4.6875/month)
+> giving a meaningful amortized break-even (≈47k req/month vs gpt-4o-mini, ≈13k vs gpt-4.1-mini);
+> electricity-only break-even is 0. All prices/tariff/FX are **dated assumptions (2026-06-21)**, not
+> guaranteed pricing. See `docs/ANALYSIS.md` §9 (R-EXT-01 now PARTIALLY_EVIDENCED).

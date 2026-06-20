@@ -33,9 +33,9 @@ Status legend: **DONE** (complete, evidenced) · **PARTIAL** (real evidence, not
   (license/extension/provider) remain open — *evidence: docs/DECISIONS.md*
 - **DONE** — Prompt log covers all significant prompts (through Prompt 021); decisions log current —
   *evidence: docs/PROMPTS.md, docs/DECISIONS.md*
-- **PARTIAL** — README has a **License & credits** section. Project license not explicitly declared;
-  the repository includes attribution/credits and no model weights (ADR-0106 left undecided; no
-  license invented) — *evidence: README.md, docs/DECISIONS.md*
+- **DONE** — **MIT `LICENSE`** added (© 2026 Mohamed Awad; ADR-0107, supersedes ADR-0106), covering
+  the project's own source/tests/docs only — not model weights/datasets/dependencies; README has a
+  **License & credits** section — *evidence: LICENSE, README.md, docs/DECISIONS.md*
 
 ## C. Experiment evidence
 - **DONE** — Hardware documented from the real machine (OS/CPU/RAM/GPU/VRAM/disk/free), host + WSL2
@@ -160,8 +160,8 @@ Standing on the rest:
 - **OPTIONAL:** a Roofline figure and a broader qualitative table. One coherent committed smoke
   sample is surfaced in README §7 / `reports/final_report.md` §4. Original analytical extensions =
   AirLLM forensic analysis + assumption-based break-even (neither a measured AirLLM success).
-- **License:** not explicitly declared; attribution/credits present, no model weights, none invented
-  (ADR-0106).
+- **License:** **MIT** (`LICENSE`, © 2026 Mohamed Awad; ADR-0107) — covers the project's own
+  source/tests/docs only, not model weights/dependencies; attribution/credits present.
 
 No item above overstates: no AirLLM success, **no full large-model benchmark** (the Stage 10B 7B run
 is a guarded memory-budget structured negative, weights git-ignored/never committed), no

@@ -448,9 +448,10 @@ This project's original contributions are **analytical**, built honestly on the 
 
 ## License & credits
 
-- **Project license not explicitly declared;** the course submission repository includes
-  attribution/credits and no model weights. No license is invented here (ADR-0106 left undecided); a
-  license file would be added only on an explicit choice.
+- **Project license: MIT** (`LICENSE`, © 2026 Mohamed Awad) — covers this project's own source, tests,
+  and docs only. It does **not** cover model weights, datasets, or third-party dependencies (their own
+  licenses; not redistributed here). This supersedes the earlier "undecided" stance (ADR-0106 → see the
+  Stage 12A ADR in `docs/DECISIONS.md`).
 - **Credits:** coursework for Assignment 05 (Lecture 08). Course-provided reference material is kept
   **local only** and is **not** part of this repository or redistributed. Model:
   `Qwen/Qwen2-0.5B` (Qwen2, openly available; used from a local cache, no token).

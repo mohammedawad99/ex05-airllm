@@ -379,9 +379,29 @@ These are intentionally **not** decided in Stage 0; deciding them now would mean
   LoRA/QLoRA mini-study · multi-model compare — out of scope under the AirLLM CPU blocker.
 
 ## ADR-0106 — Project license
-- **Status:** UNDECIDED (Stage 8B) — **no license invented.**
-- **Decision:** The project license is **not explicitly declared.** The course submission repository
-  includes attribution/credits (README "License & credits") and contains **no model weights**. A
-  `LICENSE` file would be added only on an explicit license choice by the author; none is assumed.
-- **Why:** Coursework; declaring/choosing a license is the author's call. Stating it plainly is more
-  honest than inventing a license for a graded submission.
+- **Status:** SUPERSEDED by ADR-0107 (Stage 12A). *(Originally UNDECIDED at Stage 8B — no license
+  invented, pending the author's explicit choice.)*
+- **Decision (original):** The project license was **not explicitly declared**; a `LICENSE` file would
+  be added only on an explicit choice by the author.
+- **Why:** Coursework; declaring/choosing a license is the author's call. This has now been made — see
+  ADR-0107.
+
+## ADR-0107 — Stage 12A: license (MIT) + cost-v2/roofline methodology + 7B status
+- **Status:** ACCEPTED (Stage 12A; docs/repo polish only — no model run, no download).
+- **License — MIT.** A standard permissive **MIT `LICENSE`** (© 2026 Mohamed Awad) is added, covering
+  the project's **own** source/tests/docs only — **not** model weights, datasets, or third-party
+  dependencies (their own licenses; nothing redistributed). Supersedes ADR-0106's "undecided" stance.
+  MIT chosen as the simplest, course-appropriate permissive default.
+- **Cost model v2 (Stage 11A) — dated assumptions + allocated CAPEX.** `build_cost_model_v2` uses a
+  **nonzero allocated CAPEX** ($900 × 25% usage = $225 → $4.6875/month) so the break-even is meaningful
+  (≈47k req/month vs gpt-4o-mini, ≈13k vs gpt-4.1-mini); electricity-only break-even is 0. All
+  prices/tariff/FX are **documented assumptions dated 2026-06-21**, recorded with `pricing_status`,
+  **not guaranteed future pricing**. The v1 (`hardware_cost_usd=0`) estimate is retained for history.
+- **Roofline output is qualitative.** `roofline_classification.json` / `final_roofline_classification.png`
+  are a **Roofline-style qualitative classification anchored to measured evidence** — explicitly **not**
+  a formal hardware roofline benchmark (no measured FLOP/byte arithmetic intensity).
+- **7B remains a structured negative.** The large-model story stays the Stage 10B guarded
+  memory-pressure **structured negative** (`memory_budget_exceeded`). A successful **GGUF-Q4 7B**
+  generation is **out of scope** unless a future **Stage 12B** is explicitly approved (incl. model
+  download) — preflight scoped in `docs/LARGE_MODEL_PREFLIGHT.md` §15. No 100-ready / 100%-complete
+  claim is made.

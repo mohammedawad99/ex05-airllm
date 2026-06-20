@@ -43,12 +43,18 @@ Status legend: **SATISFIED** · **PARTIALLY_SATISFIED** · **BLOCKED** · **NOT_
 
 - **AirLLM CPU/Qwen2 — BLOCKED.** Core meta→CPU parameter-streaming defect; torch and rotary ruled
   out; minimal local shim infeasible (ADR-0017). Documented negative result, not a success.
-- **`Qwen2-7B` — DEFERRED.** Not downloaded, not approved (`download_approved=false`); the same
-  AirLLM core path would fail identically, so a ~15 GB download to reproduce a known blocker is
-  unjustified.
-- **Quantization — PARTIALLY done.** Stage 9C Route A measured FP32 vs **PyTorch dynamic INT8** (no
-  download): INT8 ≈3.6× faster but quality degraded and RAM ≈1.5% lower — a speed/quality trade-off.
-  **Dynamic INT8 only; a low-bit GGUF Q4/Q8 sweep remains NOT_DONE / approval-gated** (Route B).
+- **AirLLM on `Qwen2-7B` — DEFERRED.** The 7B AirLLM run is not attempted (the same AirLLM core path
+  would fail identically, so a ~15 GB download to reproduce a known blocker is unjustified). Separately,
+  Stage 10B **did** run a guarded `Qwen2.5-7B` fp16 **direct Transformers** memory-pressure attempt
+  (structured negative `memory_budget_exceeded`, row 18) — a guarded memory-budget attempt, not a full
+  benchmark; weights git-ignored, never committed.
+- **Quantization — measured on a small model (two ways).** Stage 9C Route A measured FP32 vs **PyTorch
+  dynamic INT8** (no download): INT8 ≈3.6× faster but quality degraded and RAM ≈1.5% lower. Stage 10A
+  Route B (user-approved) then **measured the low-bit GGUF Q8_0 vs Q4_K_M sweep** (`llama.cpp`,
+  `Qwen2.5-0.5B-Instruct-GGUF`, 12/12) — **GGUF Q4/Q8 is DONE on a small model**, F16 excluded by the
+  ~1.2 GB cap. Both are small-model only and not cross-comparable; **no large-model quantization** yet
+  (a future GGUF-Q4 7B run would be a separate, approval-gated stage — see `docs/DECISIONS.md` and the
+  Stage 12B preflight in `docs/LARGE_MODEL_PREFLIGHT.md`).
 - **TTFT — measured (Stage 9B), Transformers CPU streaming only.** Real TTFT via
   `TextIteratorStreamer` (mean ≈0.41 s); decode-only TPOT. Stage 5B's non-streaming run still records
   `None`. TTFT is **not** measured for AirLLM (blocked).
@@ -106,6 +112,6 @@ The repo is still **not** claimed self-assessment-100-ready / 100% complete: Air
 quantization stays small-model, cost/energy stays assumption-based.
 
 AirLLM remains **BLOCKED** (structured negative result, not a success); the original analytical
-extensions are the AirLLM forensic analysis + the assumption-based break-even analysis; license not
-explicitly declared (ADR-0106; none invented). See `docs/SUBMISSION_CHECKLIST.md` for the full
-per-item classification.
+extensions are the AirLLM forensic analysis + the CAPEX-aware **cost model v2** break-even simulator;
+license is **MIT** (`LICENSE`, ADR-0107, supersedes ADR-0106). See `docs/SUBMISSION_CHECKLIST.md` for
+the full per-item classification.

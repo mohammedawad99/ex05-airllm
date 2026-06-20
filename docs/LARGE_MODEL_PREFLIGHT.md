@@ -146,3 +146,72 @@ Stage 10B must not download or run anything until the user provides this **exact
   the repo stays **honest, reproducible, and explicitly NOT self-assessment-100-ready**; AirLLM stays
   a blocked negative result; quantization (INT8 + GGUF Q8/Q4) stays measured; `Qwen2-7B` stays not
   downloaded/not approved.
+- **Update:** Stage 10B has since **attempted & evidenced** the direct fp16 7B pressure baseline as a
+  guarded structured negative (`memory_budget_exceeded`); §15 below scopes the *next* optional step — a
+  **GGUF-Q4 7B** run that might actually *fit and generate* — as a separate, approval-gated Stage 12B.
+
+## 15. Stage 12B-0 — GGUF Q4 7B preflight (PLAN ONLY; no download, no run, no dependency)
+
+> **Planning/audit only.** Nothing here downloads, runs a model, adds a dependency, or edits a result.
+> Unlike Stage 10B (direct fp16 7B → expected OOM), a **Q4_K_M 7B (~4.5 GB)** plausibly **fits** the
+> WSL budget and could **generate**, turning the large-model story from "OOM negative" into a possible
+> *successful quantized large-model* run. This stays **gated** behind explicit user approval.
+
+**1. Candidate model**
+- Preferred: **`Qwen/Qwen2.5-7B-Instruct-GGUF`**, file **`qwen2.5-7b-instruct-q4_k_m.gguf`** (Q4_K_M),
+  via `llama-cpp-python` (the same runtime/family as the Stage 10A 0.5B GGUF sweep — consistent,
+  `llama.cpp`-compatible). The exact repo/file name and size are inferred from the Stage 10A naming
+  pattern; the **precise filename and on-disk size are TODO_REQUIRES_APPROVAL_AND_LOOKUP** at Stage 12B
+  approval time (no metadata is fetched now). **Not downloaded.**
+
+**2. Expected resource footprint**
+- **Model file size:** Q4_K_M 7B ≈ **4.3–4.9 GB** (TODO confirm at lookup).
+- **RAM risk (WSL ~11 GiB RAM + ~3 GiB swap):** Q4 weights (~4.5 GB) + KV cache + runtime overhead are
+  expected to **fit** with a small context; **moderate** risk (much lower than fp16's ~15 GB). With
+  **mmap** the weights are paged from disk, lowering resident RSS further.
+- **Disk-space risk:** **low** — ~5 GB download onto the 924 GB-free volume.
+- **mmap:** **use mmap** (`use_mmap=True`, llama.cpp default) so weights are demand-paged.
+- **n_ctx:** limit to **512** (or 1024 max) to bound KV-cache memory.
+- **max_new_tokens:** small — **32** (single short generation).
+
+**3. Measurement schema**
+- **Result dir:** `results/measurements/gguf_7b_quantized_q4_pressure/` (new; never edit prior dirs).
+- **CSV/JSON fields:** `model_id`, `quantization_variant`, `backend=llama_cpp`, `environment=wsl_cpu`,
+  `success`, `structured_negative_result`, `failure_class`, `ttft_seconds`, `tpot_seconds`,
+  `throughput_tokens_per_second`, `peak_rss_mb`, `model_file_size_mb`, `load_seconds`,
+  `generation_seconds`, `prompt_id`, `output_preview`, `quality_label`, `notes`.
+
+**4. Success criteria**
+- **Success:** `success=True` and `generation_completed=True` with a **non-empty `output_preview`** →
+  the headline becomes a *successful quantized large-model generation* (coherent or labelled via
+  `quality_label`).
+- **Failure (still a valid deliverable):** memory/timeout failure → `structured_negative_result=True`
+  with `failure_class ∈ {memory_budget_exceeded, oom_or_killed, timeout_or_thrash}`.
+
+**5. Safety**
+- **One run only** initially (single prompt, e.g. `os_definition`), deterministic (`temperature=0`,
+  `seed=0`). **No external APIs. No AirLLM.** **No model artifact tracked** (weights git-ignored under
+  `.local_models/`). A **hard timeout owned by the parent process** (subprocess + wall-clock cap, like
+  Stage 10B's guarded runner), **not** a shell `timeout`. **Write the result JSON/CSV even on failure.**
+
+**6. Files needed in a future Stage 12B (when approved)**
+- **Code:** `src/ex05_airllm/gguf_7b_pressure.py` (pure helpers: schema/classify/summarize) +
+  `src/ex05_airllm/run_gguf_7b_quantized_pressure.py` (guarded parent/child runner). Each ≤150 code
+  lines; reuse `gguf_measurement` helpers where possible.
+- **Tests:** `tests/unit/test_gguf_7b_pressure.py` (pure, fake records, monkeypatched paths — no
+  llama_cpp import, no network).
+- **Docs:** `MEASUREMENT_RUNS.md`, `MEASUREMENT_DESIGN.md`, `FINAL_GAP_AUDIT.md`,
+  `SUBMISSION_CHECKLIST.md`, `REQUIREMENTS_AUDIT.md`, `TODO.md`, `PLAN.md`, `QUALITY.md`, `PROMPTS.md`,
+  `README.md`, `reports/final_report.md`.
+- **Figures/analysis:** extend `analysis_pipeline.py` to fold the 7B-Q4 row into
+  `final_evidence_summary.json` + the roofline; optionally a small new figure. (`pyproject.toml`/
+  `uv.lock` only if `llama-cpp-python` is not already present — it is, from Stage 10A, so **no new
+  dependency expected**.)
+
+**7. Go / no-go recommendation**
+- **Benefit:** a successful Q4 7B generation would materially strengthen the big-model story (fits-and-
+  runs vs fp16 OOM). **Risk:** ~5 GB download + a chance of thrash/OOM on the 11 GiB host; modest time.
+- **Recommendation: STOP-AND-SUBMIT-NOW is defensible** — the repo already has a complete, honest
+  large-model-pressure story (Stage 10B negative) plus measured small-model quantization. **Proceed to
+  Stage 12B only after explicit user approval that includes the model download**; it is **optional
+  upside**, not a prerequisite for an honest submission. No 100-ready / 100%-complete claim either way.
