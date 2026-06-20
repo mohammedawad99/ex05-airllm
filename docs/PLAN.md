@@ -185,11 +185,18 @@ ConfigLoader, ApiGatekeeper, and the runner — exercised end-to-end on a **tiny
 ### Stage 5 — Measurement SDK + repeatable Transformers CPU measurement  *(revised per ADR-0018)*
 - **Entry:** Stage 4B revision approved. AirLLM CPU/Qwen2 is a documented limitation, not the
   main run.
-- **Work:** Implement **MetricsCollector** + **ResultWriter** (TDD, SDK-fronted, files ≤150
-  lines) emitting `RESULT_SCHEMA_COLUMNS` records; run a **repeatable HF `transformers` CPU
-  measurement** on the local **Qwen2-0.5B** (TTFT/TPOT/throughput/peak-RAM/runtime, fixed seeds);
-  fold the **AirLLM failure JSONs** in as structured evidence (not success); *optionally* a
-  DirectML tiny GPU-vs-CPU baseline. **No Qwen2-7B download** (deferred; `download_approved=false`).
+
+**Stage 5A — measurement SDK & result schema ✅ (done; no inference):**
+- Implemented `result_schema.py` (typed `MeasurementResult`), `metrics.py` (`MetricsCollector`,
+  injectable clock/RSS), `result_writer.py` (`write_json`/`append_csv`, stable header),
+  `prompts.py`, `env.py` — all TDD, files ≤150 lines, 38 unit tests (no model/network).
+  Optional metrics default to `None` and `success` to `False` (no fake values).
+
+**Stage 5B — repeatable Transformers CPU measurement (next):**
+- **Work:** a thin runner wiring the SDK around a real HF `transformers` CPU `generate` on the
+  local **Qwen2-0.5B** (TTFT/TPOT/throughput/peak-RAM/runtime, fixed seeds); fold the **AirLLM
+  failure JSONs** in as structured evidence (not success); *optionally* a DirectML tiny
+  GPU-vs-CPU baseline. **No Qwen2-7B download** (deferred; `download_approved=false`).
 - **DoD:** `results/` has repeatable Transformers-CPU measurement records (schema-valid) + the
   AirLLM failure evidence; tests pass, coverage ≥85%, `ruff` clean, files ≤150 lines; raw vs
   summary separated (raw git-ignored). **No AirLLM success claimed; no benchmark of a model we

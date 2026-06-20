@@ -27,6 +27,7 @@
 | 014 | 3D | Stage 3D — Transformers CPU fallback smoke | Direct HF `transformers` CPU smoke on cached Qwen2-0.5B (offline) **SUCCEEDED** (coherent 16-token output) → measurement pipeline proven (R-REPRO partial; ADR-0016 EVIDENCED). NOT AirLLM, NOT a benchmark; AirLLM CPU stays blocked. No new download, no 7B, no fake results |
 | 015 | 4A | Stage 4A — AirLLM Qwen2 CPU patch feasibility | Implemented + tested a local fail-closed rotary shim (`airllm_compat.py`, no site-packages edit); patched smoke **still FAILED**; diagnostic disproved rotary → meta culprit is a layer param (RMSNorm `weight`) in AirLLM's core CPU streaming. Minimal shim **infeasible** → ADR-0017 (documented limitation + HF baseline). No new download, no 7B, no benchmark, no fake results |
 | 016 | 4B | Stage 4B — Formal experiment direction revision | `EXPERIMENT_REVISION.md` + ADR-0018: HF `transformers` CPU is the runnable measurement path; AirLLM kept as documented failure analysis; Qwen2-7B deferred (`download_approved=false`). Stage 5 = measurement SDK + repeatable Transformers CPU run. Added R-GRADE-AIRLLM. Docs-only; no model run, no download, no benchmark, no fake results |
+| 017 | 5A | Stage 5A — Measurement SDK & result schema | Implemented `result_schema`/`metrics`/`result_writer`/`prompts`/`env` (TDD, ≤150 lines); 38 tests ~97% cov, ruff/format clean. Optional metrics None, success False (no fake values). No inference, no download, no benchmark, no fake results |
 
 ---
 
@@ -986,6 +987,62 @@
 - **Lessons / notes for next prompts:** Stage 5 implements the measurement SDK
   (MetricsCollector/ResultWriter, TDD) and a repeatable Transformers CPU measurement; AirLLM stays
   failure evidence; no Qwen2-7B until the AirLLM blocker is resolved on a viable backend.
+
+---
+
+## Prompt 017 — Stage 5A: Measurement SDK & result schema
+
+- **Stage:** 5A
+- **Date:** 2026-06-20
+- **Intent:** Implement a tested **measurement SDK** that can support repeatable CPU inference
+  measurements in Stage 5B — **without running any model inference** in this stage.
+- **Context:** Stage 4B set the runnable path to HF `transformers` CPU; this stage builds the
+  reusable measurement components (schema, collector, writer, prompts, env) the runner will use.
+- **Key constraints encoded:** small modular files under `src/ex05_airllm/`, each ≤150 code
+  lines (`metrics.py`, `result_schema.py`, `result_writer.py`, `prompts.py`, `env.py`); typed
+  result model aligned to `MEASUREMENT_DESIGN.md` (optional/None where unavailable);
+  MetricsCollector with start/mark_first_token/finish + psutil memory + TTFT/TPOT/throughput/
+  runtime math, **no model inference for tests**; ResultWriter `write_json`/`append_csv` with
+  parent-dir creation, stable column order, **no fake defaults**; deterministic prompt registry;
+  privacy-safe env metadata (no usernames/private paths/tokens); tests under `tests/unit` using
+  `tmp_path`, failure record must not look successful, CSV stable headers, controlled-clock metric
+  math. Forbidden: run Transformers/AirLLM/Ollama/DirectML, benchmark, download any model/Qwen2-7B,
+  graphs, fake results, edit site-packages, stage/commit/push, materials, secrets.
+- **Verbatim prompt (condensed; full text retained in the conversation transcript):**
+
+  > **Stage 5A — Measurement SDK and Result Schema.** Implement a tested measurement SDK to
+  > support repeatable CPU inference measurements in Stage 5B, without running model inference.
+  > Create small modular files under `src/ex05_airllm/` (≤150 lines each): `metrics.py`,
+  > `result_schema.py`, `result_writer.py`, `prompts.py`, maybe `env.py`. (1) Typed result
+  > model/dataclass/Pydantic aligned to MEASUREMENT_DESIGN.md fields (run_id…notes), optional/None
+  > allowed. (2) MetricsCollector: start()/mark_first_token()/finish(output_tokens)/psutil memory;
+  > compute total_runtime/ttft/generation/tpot/tokens_per_second; simple+testable; no inference for
+  > tests. (3) ResultWriter: write_json/append_csv, ensure parent dirs, stable column order, no
+  > fake defaults implying success. (4) Prompt registry (os_definition, ai_agent_short,
+  > memory_management_short) short+deterministic, no external data. (5) Env metadata: python/
+  > platform/torch+cuda if importable/project version; no usernames/private paths/tokens/secrets.
+  > Tests under tests/unit (test_result_schema/test_metrics/test_result_writer/test_prompts/
+  > test_env): no model/network/HF/AirLLM, tmp_path for writer, failure result not successful, CSV
+  > stable headers, controlled-clock metric math, all files ≤150 lines. Update MEASUREMENT_DESIGN/
+  > PRD_measurement/TODO/PLAN/QUALITY/REQUIREMENTS_AUDIT(PARTIALLY_EVIDENCED not DONE)/PROMPTS/
+  > README. Forbidden: run Transformers/AirLLM/Ollama/DirectML, benchmark, download any model/7B,
+  > graphs, fake results, edit site-packages, stage/commit/push, materials, secrets.
+
+- **Outcome:** Implemented `result_schema.py` (typed `MeasurementResult`; optional metrics default
+  `None`, `success`=`False`, `extra='forbid'`, `ordered_dict()`), `metrics.py` (`MetricsCollector`
+  with injectable clock + RSS, TTFT/TPOT/throughput/runtime/peak-RAM, raises if marked before
+  start), `result_writer.py` (`write_json`/`append_csv`, parent dirs, stable header, `None`→empty
+  cell — no fake defaults), `prompts.py` (3 deterministic prompts), `env.py` (safe metadata, no
+  user/token/`/home/`). Tests: `test_result_schema/test_metrics/test_result_writer/test_prompts/
+  test_env` (no model/network; `tmp_path`; failure record not successful; CSV stable header;
+  controlled-clock math). Validation: **38 tests pass, ~97% coverage, ruff/format clean, all files
+  ≤150 lines.** Docs updated. **No model run, no download, no benchmark, no fake results, no
+  commit/push.**
+- **Iterations / corrections:** ruff merged two imports + dropped an unused `Field`; fixed a test
+  that duplicated the `run_id` kwarg (used a `{**_BASE, "run_id": ...}` merge).
+- **Lessons / notes for next prompts:** Stage 5B is a thin runner that wires this SDK around a real
+  HF `transformers` CPU `generate` on the **local** Qwen2-0.5B (fixed seeds), writing schema-valid
+  records and folding the AirLLM failure JSONs in as structured evidence — no AirLLM run, no 7B.
 
 ---
 

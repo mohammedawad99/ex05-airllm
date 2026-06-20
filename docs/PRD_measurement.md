@@ -3,10 +3,14 @@
 > Per-mechanism PRD (guidelines §2.3) for the component that records every experiment metric.
 > Companion to `docs/MEASUREMENT_DESIGN.md`.
 >
-> **Stage 4B revision (ADR-0018):** this subsystem now backs the **runnable** measurement path —
+> **Stage 4B revision (ADR-0018):** this subsystem backs the **runnable** measurement path —
 > the HF `transformers` CPU pipeline on the local Qwen2-0.5B (Stage 3D proven) — and also records
-> the **AirLLM failure runs** as structured evidence. Implemented in Stage 5 (MetricsCollector +
-> ResultWriter, TDD).
+> the **AirLLM failure runs** as structured evidence.
+>
+> **Stage 5A — implemented & tested (no inference):** `result_schema.py` (typed `MeasurementResult`),
+> `metrics.py` (`MetricsCollector`, injectable clock/RSS), `result_writer.py` (`write_json`/
+> `append_csv`, stable header), `prompts.py`, `env.py`. 38 unit tests, no model/network. The
+> Stage 5B runner wires these around a real Transformers CPU `generate`.
 
 ## 1. Purpose
 

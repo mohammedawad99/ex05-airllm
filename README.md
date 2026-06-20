@@ -60,7 +60,7 @@ tables, graphs, an evidence map, reproduction instructions, and honest limitatio
 | Baseline experiment | ⛔ Not started (Stage 4) |
 | AirLLM + quantization experiment | ⛔ Not started (Stage 5) |
 | Measurements / figures / cost analysis | ⛔ Not started (Stages 5–6) |
-| Implementation code & tests | 🟡 Skeleton only (`version`/`constants` + version test); runners not started (Stage 3+) |
+| Implementation code & tests | 🟢 Stage 5A — **measurement SDK** (`result_schema`/`metrics`/`result_writer`/`prompts`/`env`) + smoke probes; 38 unit tests, ~97% coverage (no inference run yet) |
 
 There are **no results to report yet**, and none are claimed.
 

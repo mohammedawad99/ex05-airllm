@@ -43,6 +43,14 @@ measurement (a stated risk, §8).
 
 ## 4. Result schema
 
+> **Stage 5A — implemented & tested (no inference run):** the schema is a typed
+> `pydantic` model `src/ex05_airllm/result_schema.py::MeasurementResult` (optional metrics
+> default to `None`, `success` defaults to `False` — never a fake value). Timing/memory come
+> from `metrics.py::MetricsCollector` (injectable clock + RSS, unit-tested with a controlled
+> clock); records are persisted by `result_writer.py` (`write_json` / `append_csv`, stable
+> header). Prompts: `prompts.py`; reproducibility metadata: `env.py` (no secrets/private
+> paths). These power the **Stage 5B** Transformers CPU measurement; no model was run in 5A.
+
 Every run emits one record with these columns (authoritative copy:
 `src/ex05_airllm/constants.py::RESULT_SCHEMA_COLUMNS`). Raw per-run JSON in
 `results/raw/` (git-ignored); curated rows aggregated to CSV/JSON in `results/`.

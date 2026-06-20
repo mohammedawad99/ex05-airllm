@@ -269,15 +269,29 @@
 | T4.2 | Run direct baseline; capture behavior incl. failure | P0 | TODO | R-BASE-01 | results/baseline/*.json + reports/baseline.md |
 | T4.3 | Persist sample outputs for quality | P1 | TODO | R-MEAS-QUAL | Samples stored |
 
-## Stage 5 — Measurement SDK + repeatable Transformers CPU measurement  *(revised — ADR-0018)*
+## Stage 5A — Measurement SDK & result schema  *(done; no inference)*
 
 | id | task | pri | status | req | DoD |
 | --- | --- | --- | --- | --- | --- |
-| T5.1 | Implement MetricsCollector + ResultWriter (TDD, SDK-fronted) | P0 | TODO | R-MEAS-*,R-ARCH-SDK | Schema-valid records; tests; ≤150 lines |
-| T5.2 | Repeatable HF `transformers` CPU measurement on Qwen2-0.5B | P0 | TODO | R-BASE-01,R-MEAS-* | TTFT/TPOT/throughput/peak-RAM/runtime, fixed seeds |
-| T5.3 | Fold AirLLM failure JSONs in as structured evidence | P0 | TODO | R-AIR-01 | Negative result presented honestly (not success) |
-| T5.4 | (Optional) DirectML tiny GPU-vs-CPU baseline | P2 | TODO | R-EXT-01 | Optional extension; Windows-native |
-| T5.5 | Qualitative output samples (Transformers CPU) | P1 | TODO | R-MEAS-QUAL | Samples stored |
+| T5A.1 | `result_schema.py` (typed `MeasurementResult`, optional None, success=False) | P0 | DONE | R-MEAS-* | Schema + tests; no fake defaults |
+| T5A.2 | `metrics.py` (`MetricsCollector`: TTFT/TPOT/throughput/runtime/peak-RAM) | P0 | DONE | R-MEAS-* | Injectable clock/RSS; math unit-tested |
+| T5A.3 | `result_writer.py` (`write_json`/`append_csv`, stable header) | P0 | DONE | R-REPRO | tmp_path tests; None→empty cell |
+| T5A.4 | `prompts.py` (deterministic registry) + `env.py` (safe metadata) | P0 | DONE | R-REPRO | No secrets/private paths; tested |
+| T5A.5 | Docs + tests; log Prompt 017 | P0 | DONE | R-PROMPTLOG | 38 tests, ~97% cov, ruff clean, ≤150 lines |
+
+> **No model run, no inference, no download** in 5A. All metric math is tested with a
+> controlled clock; failure records never look successful.
+
+## Stage 5B — Repeatable Transformers CPU measurement  *(next)*
+
+| id | task | pri | status | req | DoD |
+| --- | --- | --- | --- | --- | --- |
+| T5B.1 | Runner: wire SDK around a real HF `transformers` CPU `generate` (Qwen2-0.5B, local) | P0 | TODO | R-BASE-01,R-MEAS-* | Repeatable records; fixed seeds; no download |
+| T5B.2 | Fold AirLLM failure JSONs in as structured evidence | P0 | TODO | R-AIR-01 | Negative result presented honestly (not success) |
+| T5B.3 | (Optional) DirectML tiny GPU-vs-CPU baseline | P2 | TODO | R-EXT-01 | Optional extension; Windows-native |
+| T5B.4 | Qualitative output samples (Transformers CPU) | P1 | TODO | R-MEAS-QUAL | Samples stored |
+
+> **No AirLLM run** (blocked, ADR-0017/0018), **no Qwen2-7B download** (`download_approved=false`).
 
 > **No AirLLM run** (blocked, ADR-0017/0018) and **no Qwen2-7B download** (`download_approved=false`).
 > AirLLM compression/quantization is GPU/bitsandbytes-bound → out of scope on CPU; any quantization
