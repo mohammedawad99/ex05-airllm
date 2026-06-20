@@ -30,7 +30,7 @@ outscores an unsupported positive claim**.
 | **What works** | HF `transformers` **CPU** inference on `Qwen2-0.5B` (6/6 runs); the measurement SDK (typed schema, metrics collector, result writer); the analysis + figure + cost pipeline; pinned `uv` env; tests/lint/coverage gates. |
 | **What failed** | AirLLM's **CPU forward pass for Qwen2** — meta-device error at its core parameter streaming (3B/3C/4A); a minimal local shim was shown infeasible. |
 | **What was measured** | Wall-clock runtime, throughput (tok/s), peak RAM (RSS), output-token counts — Transformers CPU, `Qwen2-0.5B`, offline. |
-| **What was not attempted** | A successful AirLLM generation; any GPU/DirectML *measurement*; a **low-bit GGUF Q4/Q8** sweep. *(Real TTFT is measured in Stage 9B; a dynamic-INT8 vs FP32 quantization comparison in Stage 9C Route A — see §7.)* |
+| **What was not attempted** | A successful AirLLM generation; any GPU/DirectML *measurement*; a **large-model (>RAM) baseline**. *(Real TTFT in Stage 9B; dynamic-INT8 vs FP32 in Stage 9C; GGUF Q8_0 vs Q4_K_M in Stage 10A — see §7.)* |
 | **Larger model** | **`Qwen2-7B` was not downloaded** and is **not approved** (`download_approved=false`). No large-model performance is claimed. |
 
 ### Measured evidence summary
@@ -43,12 +43,14 @@ Three measured CPU evidence groups exist, all on the cached `Qwen/Qwen2-0.5B` (o
 | **5B** baseline (non-streaming) | runtime / throughput / peak RAM | gen ≈5.68 s mean; ≈5.07 tok/s; ≈4016 MB; TTFT `None` | `results/measurements/transformers_cpu_qwen2_0_5b/` |
 | **9B** streaming TTFT/TPOT | **real TTFT** + decode-only TPOT | **TTFT mean 0.412 s** (min 0.249, max 1.160); TPOT mean **0.192 s/token**; throughput mean **5.02 tok/s** | `results/measurements/transformers_cpu_streaming_qwen2_0_5b/` |
 | **9C** FP32 vs dynamic INT8 | quantization speed/quality trade-off | fp32: gen **6.03 s**, **4.83 tok/s**, **7192 MB**, **28.7** out tok · int8_dynamic: gen **1.89 s**, **17.27 tok/s**, **7086 MB**, **32.0** out tok | `results/measurements/transformers_cpu_int8_quantization_qwen2_0_5b/` |
+| **10A** GGUF Q8_0 vs Q4_K_M *(diff. model/runtime)* | low-bit quantization sweep (`llama.cpp`, `Qwen2.5-0.5B-Instruct-GGUF`) | q8_0: **32.56 tok/s**, **787.6 MB**, file **675.7 MB** · q4_k_m: **31.79 tok/s**, **684.8 MB**, file **491.4 MB** (both coherent; F16 excluded >1.2 GB) | `results/measurements/gguf_quantization_qwen2_5_0_5b/` |
 
 **Interpretation (honest):** dynamic **INT8 was ≈3.6× faster but output quality regressed and peak RAM
 barely dropped (~1.5%)** in this measurement — a **speed/quality trade-off, not a free win**. TTFT is
-measured **only for the Transformers CPU streaming path**, not for AirLLM. This is **dynamic INT8
-only** — **not GGUF, not Q4, not Q8**, and not a full low-bit sweep; quantization is therefore
-**partially evidenced**, and a GGUF Q4/Q8 sweep plus a large-model pressure baseline remain open.
+measured **only for the Transformers CPU streaming path**, not for AirLLM. Quantization is measured
+**two ways** — Transformers **dynamic INT8 vs FP32** (9C) and a **GGUF Q8_0 vs Q4_K_M** low-bit sweep
+(10A, different model/runtime, not cross-comparable). Only a **large-model (>RAM) memory-pressure
+baseline** remains open; AirLLM stays a structured negative result.
 
 ## 3. Hardware and environment
 
@@ -185,9 +187,25 @@ not Q4, not Q8.**
 *Honest trade-off:* dynamic INT8 was **≈3.6× faster** here but **output quality degraded clearly**
 (FP32 gave a coherent sentence; INT8 produced incoherent text) and peak RAM was only ≈1.5% lower
 (dynamic INT8 quantizes Linear layers only; both models are held in memory during the run, so this
-RAM is not comparable to the single-model Stage 5B run). This closes quantization from NOT_DONE to
-**partially evidenced (dynamic INT8 only)** — a **low-bit GGUF Q4/Q8 sweep remains not done /
-approval-gated**.
+RAM is not comparable to the single-model Stage 5B run).
+
+**Stage 10A — GGUF low-bit sweep (Q8_0 vs Q4_K_M, user-approved).** A separate low-bit comparison via
+`llama-cpp-python` on **`Qwen/Qwen2.5-0.5B-Instruct-GGUF`** (12/12;
+`results/measurements/gguf_quantization_qwen2_5_0_5b/`, [`docs/MEASUREMENT_RUNS.md`](docs/MEASUREMENT_RUNS.md)
+§10). GGUF weights stay **git-ignored** under `.local_models/`, never committed.
+
+| variant | mean TTFT (s) | mean tok/s | mean peak RAM (MB) | file (MB) |
+| --- | --- | --- | --- | --- |
+| q8_0 | 0.403 | 32.56 | 787.6 | 675.7 |
+| q4_k_m | 0.354 | 31.79 | 684.8 | 491.4 |
+
+*Finding:* **Q4_K_M used ~13% less peak RAM and a 27% smaller file than Q8_0 at ~equal throughput,
+with coherent output for both** — the expected low-bit memory benefit. **F16 was excluded** (its GGUF
+is 1266 MB, over the ~1.2 GB approval cap). **Not cross-comparable** with the Transformers stages
+above: different model (`Qwen2.5-0.5B-Instruct`), different runtime (`llama.cpp`), so the much higher
+throughput / lower RAM reflect the optimized runtime, not a like-for-like delta. Together with the
+INT8 run, **low-bit quantization is now genuinely measured** on a small model — a **large-model
+quantization/pressure baseline remains out of scope / approval-gated**.
 
 Figures (plain matplotlib, generated from the committed data):
 
@@ -289,9 +307,9 @@ uv run python -m ex05_airllm.analyze_measurements
 
 - **AirLLM did not generate** on CPU/Qwen2 — blocked at its core parameter streaming (§6).
 - **No `Qwen2-7B` experiment** — not downloaded, not approved; no large-model performance claimed.
-- **Quantization is only partially evidenced** — a **dynamic INT8 vs FP32** comparison is measured
-  (Stage 9C Route A; INT8 faster but lower quality), but a **low-bit GGUF Q4/Q8** sweep is **not
-  done** (approval-gated).
+- **Quantization is measured on a small model only** — dynamic INT8 vs FP32 (Stage 9C) and GGUF
+  Q8_0 vs Q4_K_M (Stage 10A); there is **no large-model quantization or memory-pressure baseline**,
+  and the two runtimes are not cross-comparable.
 - **No DirectML measurement** — only a tensor smoke succeeded (Windows-native); no model was run on
   the iGPU.
 - **Cost/API pricing is assumption-based**, not live/market-verified; the energy figure uses an
@@ -372,12 +390,10 @@ This project's original contributions are **analytical**, built honestly on the 
   claimed 100% complete, and is **explicitly not claimed ready for a self-assessment-100 grade.**
 - **Closed (Stage 9B):** **TTFT is now measured** via a real streaming run on the already-cached
   `Qwen2-0.5B` (no new download) — see §7.
-- **Partially closed (Stage 9C Route A):** a **dynamic INT8 vs FP32** quantization comparison is now
-  measured (no download) — see §7.
-- **Open before any self-assessment-100 claim** (each needs work / approval; see
-  [`docs/SUBMISSION_CHECKLIST.md`](docs/SUBMISSION_CHECKLIST.md) and `docs/PLAN.md` §8): a **low-bit
-  GGUF Q4/Q8 quantization sweep** (Route B in
-  [`docs/QUANTIZATION_PREFLIGHT.md`](docs/QUANTIZATION_PREFLIGHT.md), approval-gated) and a
+- **Closed (Stage 9C + 10A):** quantization is now measured two ways — **dynamic INT8 vs FP32**
+  (Transformers) and **GGUF Q8_0 vs Q4_K_M** (`llama.cpp`, user-approved download) — see §7.
+- **Open before any self-assessment-100 claim** (see
+  [`docs/SUBMISSION_CHECKLIST.md`](docs/SUBMISSION_CHECKLIST.md) and `docs/PLAN.md` §8): a
   **large-model memory-pressure baseline** (approval-gated `Qwen2-7B`).
 - **Engineering hygiene (Stage 9A):** a committed [`.env-example`](.env-example) (dummy values), a
   thin **SDK facade** (`src/ex05_airllm/sdk.py`) over the pure logic, and a fail-closed

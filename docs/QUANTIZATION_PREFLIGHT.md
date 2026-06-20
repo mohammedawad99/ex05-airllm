@@ -7,11 +7,16 @@
 
 ## 1. Status
 
-- **UPDATE (Stage 9C executed — Route A):** Route A has since been **run** (user-approved). Dynamic
-  INT8 vs FP32 was measured on the cached `Qwen2-0.5B` (12/12) →
-  `results/measurements/transformers_cpu_int8_quantization_qwen2_0_5b/` and `docs/MEASUREMENT_RUNS.md`
-  §9. Quantization is now **PARTIALLY_EVIDENCED** (dynamic INT8 only). **Route B (GGUF Q4/Q8) remains
-  NOT_DONE / approval-gated.** The route analysis below is preserved as the original decision record.
+- **UPDATE (Stage 9C — Route A):** Route A was **run** (user-approved). Dynamic INT8 vs FP32 measured
+  on the cached `Qwen2-0.5B` (12/12) → `results/measurements/transformers_cpu_int8_quantization_qwen2_0_5b/`
+  and `docs/MEASUREMENT_RUNS.md` §9.
+- **UPDATE (Stage 10A — Route B EXECUTED):** Route B was **run** (user-approved). A low-bit GGUF
+  sweep (**Q8_0 vs Q4_K_M**) via `llama-cpp-python` on `Qwen/Qwen2.5-0.5B-Instruct-GGUF` (12/12) →
+  `results/measurements/gguf_quantization_qwen2_5_0_5b/` and `docs/MEASUREMENT_RUNS.md` §10. **F16 was
+  excluded** (its GGUF is 1266 MB > the ~1.2 GB approval cap; not substituted). GGUF weights stay
+  git-ignored. Both INT8 (9C) and GGUF Q8/Q4 (10A) are now measured; this is on a **different model/
+  runtime** than the Transformers stages, so it is its own sweep, not cross-comparable. The route
+  analysis below is preserved as the original decision record.
 - **Quantization requirement (R-QUANT-01 / R-MEAS-QUAL) at preflight time: NOT_DONE.** No quantized
   inference had been run or measured then — this document was a route decision, not an execution.
 - **HEAD:** `b6a3b47` (Stage 9B streaming TTFT). Working tree clean except ignored artifacts.

@@ -301,8 +301,15 @@ and `docs/MEASUREMENT_RUNS.md` §9. INT8 ≈3.6× faster generation but **output
 RAM only ≈1.5% lower — an honest measured trade-off. Quantization → **PARTIALLY_EVIDENCED** (dynamic
 INT8 only).
 
-**Stage 9C Route B — quantization Q4/Q8 GGUF sweep (REQUIRES EXPLICIT USER APPROVAL before any
-dependency or model download).**
+**Stage 10A Route B — ✅ DONE (user-approved).** GGUF low-bit sweep via `llama-cpp-python` on
+`Qwen/Qwen2.5-0.5B-Instruct-GGUF`: **Q8_0 vs Q4_K_M** (12/12) →
+`results/measurements/gguf_quantization_qwen2_5_0_5b/` and `docs/MEASUREMENT_RUNS.md` §10. Q4 ~13%
+less peak RAM / 27% smaller file at ~equal throughput, coherent output. **F16 excluded** (1266 MB >
+~1.2 GB approval cap). GGUF weights stay git-ignored; different model/runtime than the Transformers
+stages (own sweep). Low-bit quantization now genuinely evidenced on a small model.
+
+**Stage 9C Route B (original plan; superseded by Stage 10A above) — quantization Q4/Q8 GGUF sweep
+(REQUIRED EXPLICIT USER APPROVAL before any dependency or model download).**
 - *Scope:* compare ≥2 precisions (e.g. Q8 vs Q4) of a small model on CPU and record
   runtime/throughput/peak-RAM + a qualitative sample per level → a real quantization comparison.
 - *Why approval-gated:* needs a CPU-friendly GGUF runtime (e.g. `llama-cpp-python`) **and** a GGUF

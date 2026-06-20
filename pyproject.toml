@@ -27,6 +27,7 @@ dependencies = [
     "pydantic",
     "typer",
     "rich",
+    "llama-cpp-python>=0.3.31",
 ]
 
 [project.optional-dependencies]

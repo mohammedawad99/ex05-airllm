@@ -1490,6 +1490,42 @@
 
 ---
 
+## Prompt 029 — Stage 10A: GGUF Q8_0/Q4_K_M CPU quantization sweep (user-approved download)
+
+- **Stage:** 10A
+- **Date:** 2026-06-20
+- **User approval:** add `llama-cpp-python` (only) + download only `Qwen/Qwen2.5-0.5B-Instruct-GGUF`
+  F16(≤~1.2 GB)/Q8_0/Q4_K_M into `.local_models/gguf/...` (must stay ignored). No 7B, no other model.
+- **Intent:** Close the low-bit quantization gap with a real CPU GGUF sweep (F16/Q8/Q4) on a small
+  official Qwen GGUF model.
+- **Key constraints encoded:** uv-only dependency (`llama-cpp-python`); CPU; download only approved
+  files to `.local_models/` (git-ignored, never committed); pure helper `gguf_measurement.py` +
+  runner `run_gguf_quantization_measurement.py` + tests (pure only) ≤150 lines; same prompts; 2
+  repeats; deterministic (temp 0, top_p 1, seed 0, max_tokens 32); real streaming TTFT or None (never
+  estimated); backend `llama_cpp_gguf`, model_id `Qwen/Qwen2.5-0.5B-Instruct-GGUF`; new results dir;
+  do not edit prior raw dirs; honesty — label as Qwen2.5 GGUF, not the same as Qwen2-0.5B, not AirLLM,
+  not large-model baseline; if a file is too large/gated, stop & report, no silent substitution.
+- **Outcome:** Dependency installed (`llama-cpp-python==0.3.31`, CPU build via uv). Repo discovery
+  listed 9 GGUFs; **F16 `fp16.gguf` was 1266.4 MB > the ~1.2 GB cap → excluded (not substituted)**, so
+  the sweep ran **Q8_0 (675.7 MB) vs Q4_K_M (491.4 MB)**, 12/12 success. Means — q8_0: TTFT 0.403 s,
+  TPOT 0.0173, 32.56 tok/s, 787.6 MB; q4_k_m: TTFT 0.354 s, TPOT 0.0186, 31.79 tok/s, 684.8 MB. **Q4
+  ~13% less RAM / 27% smaller file at ~equal throughput, both coherent.** Honest caveat: different
+  model + runtime than the Transformers stages → not cross-comparable. Gates: **84 tests pass, ~88%
+  cov, ruff/format clean, ≤150 lines**; post-run checker green; prior measurement dirs/analysis/figures
+  unchanged; **GGUF weights git-ignored, not tracked**; only `pyproject.toml`/`uv.lock` changed for the
+  dependency. R-QUANT-01/R-MEAS-QUAL → EVIDENCED (small model). Docs updated (MEASUREMENT_RUNS §10,
+  MEASUREMENT_DESIGN §8d, ANALYSIS §3d, QUANTIZATION_PREFLIGHT, FINAL_GAP_AUDIT, SUBMISSION_CHECKLIST,
+  REQUIREMENTS_AUDIT, TODO, PLAN, QUALITY, README §7, final_report). Optional figures skipped (avoid
+  churn). **No 7B, no large-model baseline, no AirLLM rerun, no Ollama/DirectML, no API, no
+  commit/push.**
+- **Iterations / corrections:** removed unused import; condensed a helper to keep
+  `gguf_measurement.py` ≤150 lines; split GGUF_NOTE for E501.
+- **Lessons / notes for next prompts:** low-bit quantization now genuinely measured; the only
+  remaining experimental gap is the **large-model (>RAM) memory-pressure baseline** (Stage 10B,
+  approval-gated `Qwen2-7B`). AirLLM stays blocked.
+
+---
+
 *Template for future entries:*
 *Prompt NNN — <stage>: <title> — Intent / Context / Constraints / Verbatim prompt /
 Actions / Outcome / Iterations / Lessons.*

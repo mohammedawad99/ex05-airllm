@@ -147,3 +147,35 @@ dynamic INT8 only — NOT GGUF, NOT Q4, NOT Q8.**
 - **Status:** this moves quantization **NOT_DONE → PARTIALLY_EVIDENCED** (dynamic INT8 only). A
   **low-bit GGUF Q4/Q8 sweep remains NOT_DONE / approval-gated** (Route B). Stage 5B/9B raw data
   unmodified. No download, no new dependency, no AirLLM, no Qwen2-7B.
+
+## 10. Stage 10A — GGUF CPU low-bit quantization sweep (Q8_0 vs Q4_K_M)
+
+User-approved Route B: a controlled **low-bit GGUF** sweep via **`llama-cpp-python`** on
+**`Qwen/Qwen2.5-0.5B-Instruct-GGUF`**, CPU, deterministic (`temperature=0`, `top_p=1`, `seed=0`,
+`max_tokens=32`), with **real streaming TTFT**. 2 variants × 3 prompts × 2 repeats = **12 runs, all
+succeeded**.
+
+- **Runner:** `src/ex05_airllm/run_gguf_quantization_measurement.py` (+ pure
+  `src/ex05_airllm/gguf_measurement.py`). **Results:**
+  `results/measurements/gguf_quantization_qwen2_5_0_5b/` (12 per-run JSON + summary).
+- **Files used (git-ignored under `.local_models/`, never committed):**
+  `qwen2.5-0.5b-instruct-q8_0.gguf` (675.7 MB), `qwen2.5-0.5b-instruct-q4_k_m.gguf` (491.4 MB).
+- **F16 excluded honestly:** `qwen2.5-0.5b-instruct-fp16.gguf` is **1266.4 MB > the ~1.2 GB approval
+  cap**, so no F16 reference was downloaded or run (not substituted). Sweep is **Q8_0 vs Q4_K_M**.
+
+| variant | runs | mean TTFT (s) | mean TPOT (s/tok) | mean tok/s | mean gen (s) | mean peak RAM (MB) | file (MB) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| q8_0 | 6 | 0.403 | 0.0173 | 32.56 | 0.889 | 787.6 | 675.7 |
+| q4_k_m | 6 | 0.354 | 0.0186 | 31.79 | 0.819 | 684.8 | 491.4 |
+
+- **Finding (honest):** **Q4_K_M used ~13% less peak RAM** (685 vs 788 MB) and a **27% smaller file**
+  (491 vs 676 MB) than Q8_0, at **essentially the same throughput** (~32 tok/s) and **coherent
+  output** for both (per-variant previews committed). So low-bit Q4 buys a real memory/disk saving
+  here with no visible quality loss on these short prompts — the expected low-bit benefit.
+- **⚠️ Not cross-comparable with Stages 5B/9B/9C.** This is a **different model**
+  (`Qwen2.5-0.5B-Instruct`, not `Qwen2-0.5B`), a **different runtime** (`llama.cpp`, not HF
+  `transformers`), and an **instruct/chat** format. The much higher throughput (~32 vs ~5 tok/s) and
+  lower RAM (~0.7 vs ~4 GB) reflect the optimized C++ runtime + low-bit weights, **not** a like-for-
+  like quantization delta against the Transformers runs. Treat this as its **own** low-bit sweep.
+- **Scope:** separate small-model low-bit sweep — **not AirLLM**, **not a large-model baseline**, no
+  Qwen2-7B. Prior measurement dirs unmodified; GGUF weights remain git-ignored.

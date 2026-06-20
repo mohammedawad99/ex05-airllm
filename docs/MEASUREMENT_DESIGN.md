@@ -166,6 +166,22 @@ same prompts/harness, CPU, offline, deterministic.
   `success=false` with a reason — never fabricated. Peak RAM holds both models at once, so it is not
   comparable to the single-model Stage 5B RSS.
 
+## 8d. GGUF low-bit quantization method (Stage 10A Route B)
+
+A user-approved **low-bit GGUF** sweep via `llama-cpp-python` on `Qwen/Qwen2.5-0.5B-Instruct-GGUF`,
+CPU, deterministic (`temperature=0`, `top_p=1`, `seed=0`, `max_tokens=32`), with **real streaming
+TTFT** (first content delta from `create_chat_completion(stream=True)`).
+
+- **Variants:** `q8_0`, `q4_k_m` (F16 excluded — its GGUF is 1266 MB > the ~1.2 GB approval cap, not
+  substituted). Record `quantization_variant`, `gguf_filename`, `estimated_model_file_mb`, TTFT/TPOT/
+  throughput, peak RAM, prompt/output tokens, and an `output_preview`/`output_text` per run. Output
+  tokens are re-tokenized from the generated text via the model's own tokenizer.
+- **Honesty bounds:** this is a **different model** (`Qwen2.5-0.5B-Instruct`) and **runtime**
+  (`llama.cpp`) than the Transformers Qwen2-0.5B stages, so it is **not** cross-comparable with
+  5B/9B/9C — it is its own low-bit sweep. Not AirLLM, not a large-model baseline. GGUF weights stay
+  git-ignored (`.local_models/`); only metrics/summaries are committed. TTFT is from a real stream
+  event or `None` — never estimated.
+
 ## 9. Acceptance criteria for Stage 2B
 
 - A **model shortlist matrix** is prepared (params, format, on-disk size vs 933 GB, RAM vs

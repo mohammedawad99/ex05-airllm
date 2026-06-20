@@ -48,10 +48,12 @@ Status legend: **DONE** (complete, evidenced) · **PARTIAL** (real evidence, not
 - **BLOCKED** — AirLLM run completed → **not achieved**; investigated and root-caused (meta-device
   defect), structured failure evidence kept — *evidence: results/stage3*, results/stage4a*,
   results/analysis/airllm_failure_summary.json, docs/AIRLLM_PATCH_FEASIBILITY.md*
-- **PARTIAL** — Quantization: **dynamic INT8 vs FP32 measured** (Stage 9C Route A, 12/12, no
-  download) — INT8 much faster but **lower quality** (honest trade-off). Low-bit **GGUF Q4/Q8 not
-  done** (approval-gated) — *evidence: results/measurements/transformers_cpu_int8_quantization_qwen2_0_5b/,
-  docs/MEASUREMENT_RUNS.md §9*
+- **DONE (small model)** — Quantization compared **two ways**: Stage 9C **dynamic INT8 vs FP32**
+  (Transformers) and Stage 10A **GGUF Q8_0 vs Q4_K_M** (`llama.cpp`, `Qwen2.5-0.5B-Instruct-GGUF`,
+  12/12) — Q4 ~13% less RAM / 27% smaller file at ~equal throughput, coherent output. F16 GGUF
+  excluded (>~1.2 GB cap). Small-model only; no large-model quant — *evidence:
+  results/measurements/transformers_cpu_int8_quantization_qwen2_0_5b/,
+  results/measurements/gguf_quantization_qwen2_5_0_5b/, docs/MEASUREMENT_RUNS.md §9–§10*
 - **PARTIAL** — Metrics captured: runtime/throughput/peak-RAM **measured**; **TTFT measured**
   (Stage 9B streaming run) and **TPOT decode-only**; peak VRAM **N/A** (no GPU); energy
   **estimated** — *evidence: results/measurements/transformers_cpu_streaming_qwen2_0_5b/,
@@ -76,7 +78,7 @@ Status legend: **DONE** (complete, evidenced) · **PARTIAL** (real evidence, not
 
 ## E. Quality gates (see QUALITY.md)
 - **DONE** — `ruff check .` zero errors; `ruff format --check .` clean — *evidence: run log*
-- **DONE** — Tests pass (happy + error paths); coverage ≥85% — *evidence: pytest (77 passed, ~92%)*
+- **DONE** — Tests pass (happy + error paths); coverage ≥85% — *evidence: pytest (84 passed, ~88%)*
 - **DONE** — Every source file ≤150 code lines — *evidence: line-count audit*
 - **DONE** — Config hierarchy: versioned `config/*.example.*`, `.env` git-ignored, **`.env-example`
   committed** (dummy values only) — *evidence: .env-example, config/*
@@ -123,16 +125,14 @@ audit are complete and the submission is **inspectable with no Hugging Face toke
 submitted, **not** 100% complete, and is **explicitly not claimed as ready for a self-assessment-100
 grade** — the experimental gaps below remain open. The student completes submission manually.
 
-**Closed since (Stage 9B):** **TTFT is now measured** via a real streaming run
-(`TextIteratorStreamer`) on the already-cached `Qwen2-0.5B`, offline, **no new download** (6/6);
-TPOT is now decode-only. Stage 5B raw data unchanged.
+**Closed since (Stages 9B/9C/10A):** **TTFT measured** (Stage 9B streaming, no download); **quantization
+measured two ways** — dynamic INT8 vs FP32 (Stage 9C) and **GGUF Q8_0 vs Q4_K_M** (Stage 10A,
+user-approved download; F16 excluded by the ~1.2 GB cap). Prior raw data unchanged; GGUF weights
+git-ignored.
 
-**Not ready for a self-assessment-100 claim until these are closed** (each needs work / approval):
-- **Quantization — PARTIALLY done.** Stage 9C **Route A executed**: dynamic INT8 vs FP32 measured
-  (no download) — INT8 much faster but quality degraded (honest). **Low-bit GGUF Q4/Q8 (Route B)
-  remains NOT_DONE — requires explicit user approval before any dependency/model download.**
+**Not ready for a self-assessment-100 claim until this is closed** (needs work / approval):
 - **Large-model baseline / memory-pressure case — NOT_DONE** (no >RAM model run); requires explicit
-  user approval before any `Qwen2-7B` download.
+  user approval before any `Qwen2-7B` download (Stage 10B).
 
 Standing on the rest:
 - **Stage 9A closures (DONE):** `.env-example` committed (dummy only); thin **SDK facade**

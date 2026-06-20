@@ -291,11 +291,21 @@ wheels = [
 ]
 
 [[package]]
+name = "diskcache"
+version = "5.6.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/3f/21/1c1ffc1a039ddcc459db43cc108658f32c57d271d7289a2794e401d0fdb6/diskcache-5.6.3.tar.gz", hash = "sha256:2c3a3fa2743d8535d832ec61c2054a1641f41775aa7c556758a109941e33e4fc", size = 67916, upload-time = "2023-08-31T06:12:00.316Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3f/27/4570e78fc0bf5ea0ca45eb1de3818a23787af9b390c0b0a0033a1b8236f9/diskcache-5.6.3-py3-none-any.whl", hash = "sha256:5e31b2d5fbad117cc363ebaf6b689474db18a1f6438bc82358b024abd4c2ca19", size = 45550, upload-time = "2023-08-31T06:11:58.822Z" },
+]
+
+[[package]]
 name = "ex05-airllm"
 version = "1.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "airllm" },
+    { name = "llama-cpp-python" },
     { name = "matplotlib" },
     { name = "optimum" },
     { name = "pandas" },
@@ -319,6 +329,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "airllm", specifier = "==2.11.0" },
+    { name = "llama-cpp-python", specifier = ">=0.3.31" },
     { name = "matplotlib" },
     { name = "optimum", specifier = "==1.23.3" },
     { name = "pandas" },
@@ -540,6 +551,18 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/fa/06/7399a607f434119c6e1fdc8ec89a8d51ccccadf3341dee4ead6bd14caaf5/kiwisolver-1.5.0-graalpy312-graalpy250_312_native-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:c31c13da98624f957b0fb1b5bae5383b2333c2c3f6793d9825dd5ce79b525cb7", size = 194295, upload-time = "2026-03-09T13:15:38.22Z" },
     { url = "https://files.pythonhosted.org/packages/b5/91/53255615acd2a1eaca307ede3c90eb550bae9c94581f8c00081b6b1c8f44/kiwisolver-1.5.0-graalpy312-graalpy250_312_native-win_amd64.whl", hash = "sha256:1f1489f769582498610e015a8ef2d36f28f505ab3096d0e16b4858a9ec214f57", size = 75987, upload-time = "2026-03-09T13:15:39.65Z" },
 ]
+
+[[package]]
+name = "llama-cpp-python"
+version = "0.3.31"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "diskcache" },
+    { name = "jinja2" },
+    { name = "numpy" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e1/17/16fa56a288d66cc6c00f791c8f5af0acd5dbf8005be9e875da670b51652d/llama_cpp_python-0.3.31.tar.gz", hash = "sha256:c3fd23b2c7197770321020a89f23c6515a366511dce4fcda1e81cfb749267a94", size = 70091532, upload-time = "2026-06-20T08:49:57.393Z" }
 
 [[package]]
 name = "markdown-it-py"

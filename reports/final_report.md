@@ -37,6 +37,7 @@ remains a structured **negative result**; none of these is AirLLM or a benchmark
 | **5B** baseline (non-streaming) | runtime / throughput / peak RAM | gen ≈5.68 s; ≈5.07 tok/s; ≈4016 MB; TTFT `None` | `transformers_cpu_qwen2_0_5b/` |
 | **9B** streaming | **real TTFT** + decode-only TPOT | TTFT mean **0.412 s** (min 0.249, max 1.160); TPOT mean **0.192 s/tok**; throughput mean **5.02 tok/s** | `transformers_cpu_streaming_qwen2_0_5b/` |
 | **9C** FP32 vs dynamic INT8 | quantization trade-off | fp32: **6.03 s / 4.83 tok/s / 7192 MB / 28.7 tok** · int8_dynamic: **1.89 s / 17.27 tok/s / 7086 MB / 32.0 tok** | `transformers_cpu_int8_quantization_qwen2_0_5b/` |
+| **10A** GGUF Q8_0 vs Q4_K_M *(diff. model/runtime)* | low-bit sweep (`llama.cpp`, `Qwen2.5-0.5B-Instruct-GGUF`) | q8_0: **32.56 tok/s / 787.6 MB / 675.7 MB file** · q4_k_m: **31.79 tok/s / 684.8 MB / 491.4 MB file** (both coherent; F16 excluded) | `gguf_quantization_qwen2_5_0_5b/` |
 
 ### 2b. Quantization interpretation (Stage 9C Route A)
 
@@ -139,12 +140,14 @@ See README §9 for the concise version. The analytical core:
 - **AirLLM vs OS paging?** AirLLM intends **explicit per-layer streaming** instead of relying on the
   OS to page a too-large mapping. In this environment AirLLM's CPU streaming is **blocked** (§3), so
   we could not measure the streaming-vs-paging contrast on a large model — reported honestly.
-- **Quantization trade-offs?** *Partially measured (Stage 9C Route A).* A **PyTorch dynamic INT8 vs
-  FP32** comparison on the cached Qwen2-0.5B (no download) showed INT8 **≈3.6× faster** generation
-  but **degraded output quality** and only ≈1.5% lower peak RAM — a real, honest trade-off (dynamic
-  INT8 quantizes Linear layers only). A **low-bit GGUF Q4/Q8** sweep remains **not done /
-  approval-gated**, so no Q4/Q8 claim is made. Evidence:
-  `results/measurements/transformers_cpu_int8_quantization_qwen2_0_5b/`.
+- **Quantization trade-offs?** *Measured two ways (small model).* (1) **PyTorch dynamic INT8 vs FP32**
+  (Stage 9C, Transformers, cached Qwen2-0.5B): INT8 **≈3.6× faster** but **degraded output quality**
+  and only ≈1.5% lower peak RAM. (2) **GGUF Q8_0 vs Q4_K_M** (Stage 10A, `llama.cpp`,
+  `Qwen2.5-0.5B-Instruct-GGUF`, user-approved): **Q4 used ~13% less peak RAM and a 27% smaller file at
+  ~equal throughput, both coherent** — the expected low-bit memory benefit. **F16 GGUF excluded**
+  (>~1.2 GB cap). The two are on **different models/runtimes** and are **not** cross-comparable; no
+  large-model quantization. Evidence: `results/measurements/transformers_cpu_int8_quantization_qwen2_0_5b/`,
+  `results/measurements/gguf_quantization_qwen2_5_0_5b/`.
 - **How do prefill/decode map to TTFT/TPOT?** Prefill → first-token latency (TTFT); decode →
   per-token latency (TPOT/ITL). Here TTFT is **unmeasured** (no streaming hook) and TPOT is
   **approximate**; we do not over-claim a prefill/decode split from a single whole-`generate()` timer.
@@ -195,9 +198,9 @@ committed evidence and clearly labelled; neither presents AirLLM as having gener
 An honest negative AirLLM result plus a working, reproducible Transformers CPU measurement pipeline,
 analyzed transparently with assumption-marked cost/energy. Engineering evidence over fabricated
 success. Repository status: **READY_FOR_HONEST_SUBMISSION (with known limitations)** — not submitted,
-not 100% complete, and **not** claimed ready for a self-assessment-100 grade until the remaining gaps
-are closed (see `docs/PLAN.md` §8): a **low-bit GGUF Q4/Q8** quantization sweep (Route B,
-approval-gated) and a **large-model memory-pressure** baseline. **TTFT is measured** (Stage 9B) and a
-**dynamic INT8 vs FP32** quantization comparison is measured (Stage 9C Route A — INT8 faster but
-lower quality). Stage 9A added engineering hygiene only (`.env-example`, SDK facade, fail-closed API
-gatekeeper) — no new experimental result.
+not 100% complete, and **not** claimed ready for a self-assessment-100 grade until the remaining gap
+is closed (see `docs/PLAN.md` §8): a **large-model (>RAM) memory-pressure baseline** (approval-gated).
+**TTFT is measured** (Stage 9B) and **quantization is measured two ways** — dynamic INT8 vs FP32
+(Stage 9C) and GGUF Q8_0 vs Q4_K_M (Stage 10A, user-approved download; F16 excluded by size cap).
+Stage 9A added engineering hygiene only (`.env-example`, SDK facade, fail-closed API gatekeeper) — no
+new experimental result.

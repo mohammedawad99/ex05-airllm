@@ -354,8 +354,8 @@
 | T9.3a | Stage 9C-0 quantization preflight & route decision | P0 | DONE | R-QUANT-01 | `docs/QUANTIZATION_PREFLIGHT.md` — Route A (torch dynamic INT8, no download) recommended; Route B (GGUF Q8/Q4) approval-gated; Route C stop. Planning only; no run/download/dep change |
 | T9.3 | Stage 9C Route A quantization (FP32 vs dynamic INT8) | P0 | DONE | R-QUANT-01,R-MEAS-QUAL | **Route A executed** (user-approved): FP32 vs PyTorch dynamic INT8, 12/12, no download/dep → `results/measurements/transformers_cpu_int8_quantization_qwen2_0_5b/`. INT8 ≈3.6× faster but **quality degraded**, RAM ≈1.5% lower (honest). R-QUANT-01/R-MEAS-QUAL → PARTIALLY_EVIDENCED. 77 tests pass |
 | T9.3r | Stage 9C-R final TTFT/quant report integration (docs only) | P0 | DONE | R-README-01,R-RQ-01 | README §2 + final_report §2a/§2b evidence summary + quant interpretation; ANALYSIS §3c; fixed stale gap-audit blocker lines. No new data; no model run/download |
-| T9.3b | Stage 9C Route B GGUF Q8/Q4 sweep | P1 | TODO (APPROVAL-GATED) | R-QUANT-01,R-MEAS-QUAL | **Requires explicit approval before any dependency/model download** (`download_approved=false`); `docs/QUANTIZATION_PREFLIGHT.md` Route B |
-| T9.4 | Stage 9D optional large-model memory-pressure baseline | P1 | TODO (APPROVAL-GATED) | R-BASE-01 | **Requires explicit user approval before any Qwen2-7B (~15 GB) download**; PLAN §8 |
+| T9.3b | Stage 10A GGUF Q8/Q4 sweep (Route B) | P0 | DONE | R-QUANT-01,R-MEAS-QUAL | **Executed** (user-approved): `llama-cpp-python` + `Qwen2.5-0.5B-Instruct-GGUF` **Q8_0 vs Q4_K_M**, 12/12 → `results/measurements/gguf_quantization_qwen2_5_0_5b/`. Q4 ~13% less RAM / 27% smaller file, ~equal throughput, coherent. F16 excluded (>~1.2 GB cap). GGUF weights git-ignored. 84 tests pass |
+| T9.4 | Stage 10B optional large-model memory-pressure baseline | P1 | TODO (APPROVAL-GATED) | R-BASE-01 | **Requires explicit user approval before any Qwen2-7B (~15 GB) download**; PLAN §8 |
 
 ---
 

@@ -75,6 +75,22 @@ INT8 ≈**3.6× faster** but **output quality regressed** (committed per-variant
 dropped only ≈1.5% — a **speed/quality trade-off, not a free win**. **Dynamic INT8 only — NOT GGUF,
 NOT Q4, NOT Q8** → quantization is **PARTIALLY_EVIDENCED**; a low-bit GGUF sweep remains open.
 
+### 3d. GGUF low-bit sweep (Stage 10A — Q8_0 vs Q4_K_M)
+
+A **separate** user-approved low-bit GGUF sweep (`results/measurements/gguf_quantization_qwen2_5_0_5b/`,
+12/12) via `llama-cpp-python` on **`Qwen2.5-0.5B-Instruct-GGUF`** (different model/runtime than the
+Transformers stages; full detail: `docs/MEASUREMENT_RUNS.md` §10). Per-variant means:
+
+| variant | mean TTFT (s) | mean TPOT (s/tok) | mean tok/s | mean peak RAM (MB) | file (MB) |
+| --- | --- | --- | --- | --- | --- |
+| q8_0 | 0.403 | 0.0173 | 32.56 | 787.6 | 675.7 |
+| q4_k_m | 0.354 | 0.0186 | 31.79 | 684.8 | 491.4 |
+
+**Q4_K_M used ~13% less peak RAM and a 27% smaller file than Q8_0 at ~equal throughput, with coherent
+output for both** — the expected low-bit memory benefit. **F16 excluded** (1266 MB > ~1.2 GB cap).
+This is **not cross-comparable** with the Transformers runs (different model + runtime). With both
+dynamic INT8 (3c) and GGUF Q8/Q4 (3d) measured, low-bit quantization is now genuinely evidenced.
+
 ## 4. Figures
 
 Generated with **plain matplotlib** (no seaborn, no custom styling):

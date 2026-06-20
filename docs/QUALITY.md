@@ -129,3 +129,13 @@ no Qwen2-7B, no AirLLM, no quantization; `pyproject.toml`/`uv.lock`/figures/anal
 pass, ~92% coverage, ruff check + format clean, all files ≤150 code lines.** No download, no new
 dependency, no GGUF/Q4/Q8, no Qwen2-7B, no AirLLM; Stage 5B/9B raw + `pyproject.toml`/`uv.lock`/
 figures/analysis-JSON unchanged. Quantization → PARTIALLY_EVIDENCED (dynamic INT8 only).
+
+**Stage 10A update (user-approved GGUF low-bit sweep):** added `gguf_measurement.py` (pure helpers)
++ `run_gguf_quantization_measurement.py` + tests (fake data). Added the **only approved dependency**
+`llama-cpp-python` via `uv add` (CPU build) and downloaded **only** the approved
+`Qwen2.5-0.5B-Instruct-GGUF` Q8_0 + Q4_K_M files (git-ignored under `.local_models/`; F16 excluded by
+the ~1.2 GB size cap). Ran **Q8_0 vs Q4_K_M** (12/12) →
+`results/measurements/gguf_quantization_qwen2_5_0_5b/`. Gates: **84 tests pass, ~88% coverage, ruff
+check + format clean, all files ≤150 code lines.** Only `pyproject.toml`/`uv.lock` changed (the
+dependency); prior measurement dirs/analysis/figures unchanged; **no GGUF artifact tracked**. Low-bit
+quantization now evidenced (small model); no large-model quant, no Qwen2-7B; AirLLM still blocked.
