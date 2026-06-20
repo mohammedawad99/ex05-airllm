@@ -30,7 +30,7 @@ outscores an unsupported positive claim**.
 | **What works** | HF `transformers` **CPU** inference on `Qwen2-0.5B` (6/6 runs); the measurement SDK (typed schema, metrics collector, result writer); the analysis + figure + cost pipeline; pinned `uv` env; tests/lint/coverage gates. |
 | **What failed** | AirLLM's **CPU forward pass for Qwen2** — meta-device error at its core parameter streaming (3B/3C/4A); a minimal local shim was shown infeasible. |
 | **What was measured** | Wall-clock runtime, throughput (tok/s), peak RAM (RSS), output-token counts — Transformers CPU, `Qwen2-0.5B`, offline. |
-| **What was not attempted** | A successful AirLLM generation; any GPU/DirectML *measurement*; a quantized inference *run*; a streaming TTFT hook. |
+| **What was not attempted** | A successful AirLLM generation; any GPU/DirectML *measurement*; a quantized inference *run*. *(Real TTFT is now measured via a Stage 9B streaming run — see §7.)* |
 | **Larger model** | **`Qwen2-7B` was not downloaded** and is **not approved** (`download_approved=false`). No large-model performance is claimed. |
 
 ## 3. Hardware and environment
@@ -131,11 +131,27 @@ Per-prompt means:
 | memory_management_short | 2 | 5.23 | 5.16 | 4029.1 |
 
 **Caveats (honest):**
-- **TTFT = None.** `generate()` was not token-streamed in this runner, so there is no first-token
-  hook; TTFT is recorded as `None`, never estimated (R-MEAS-TTFT).
-- **TPOT is approximate** = `generation_seconds / output_tokens` (no TTFT to subtract prefill);
-  consistent with the measured mean throughput (~5.07 tok/s ⇒ ≈ 0.20 s/token). Labelled approximate.
+- **TTFT in this Stage 5B run = None** — `generate()` was not token-streamed, so there was no
+  first-token hook (never estimated). **Real TTFT is measured separately in Stage 9B** (below).
+- **TPOT (Stage 5B) is approximate** = `generation_seconds / output_tokens`; the **decode-only TPOT**
+  is measured in the Stage 9B streaming run.
 - **Peak RAM is process RSS**; **peak VRAM is `N/A`** (no usable GPU compute).
+
+**Stage 9B — real TTFT (streaming run, same cached model, no new download).** A separate run observes
+the first generated token via `TextIteratorStreamer` (results under
+`results/measurements/transformers_cpu_streaming_qwen2_0_5b/`, 6/6 succeeded;
+[`docs/MEASUREMENT_RUNS.md`](docs/MEASUREMENT_RUNS.md) §8). It **supersedes Stage 5B for TTFT/TPOT**;
+Stage 5B stays valid for non-streaming total-runtime/throughput.
+
+| metric | min | mean | max |
+| --- | --- | --- | --- |
+| TTFT (s) | 0.249 | 0.412 | 1.160 |
+| TPOT — decode-only (s/token) | 0.189 | 0.192 | 0.196 |
+| throughput (tokens/s) | 4.36 | 5.02 | 5.22 |
+| peak RAM (MB) | 3988.2 | 4008.2 | 4019.9 |
+
+*The mean TTFT is skewed by the cold first run (≈1.16 s); the other five are ≈0.25–0.27 s. TTFT is
+measured (streamer observation), not estimated.*
 
 Figures (plain matplotlib, generated from the committed data):
 
@@ -242,8 +258,9 @@ uv run python -m ex05_airllm.analyze_measurements
   the iGPU.
 - **Cost/API pricing is assumption-based**, not live/market-verified; the energy figure uses an
   assumed wattage, not a meter.
-- **TTFT is unavailable** — the non-streaming `generate()` path exposes no first-token hook; TPOT is
-  therefore approximate.
+- **TTFT** was unavailable in the Stage 5B non-streaming run (`None`); it is now **measured** in the
+  Stage 9B streaming run (§7) on the same small model only — not across quantization levels or a
+  larger model.
 
 ## 12. Repository structure
 
@@ -315,10 +332,12 @@ This project's original contributions are **analytical**, built honestly on the 
 - **READY_FOR_HONEST_SUBMISSION (with known limitations)** — the repository is internally
   consistent, honest, and reproducible for the measured path. It is **not** submitted, **not**
   claimed 100% complete, and is **explicitly not claimed ready for a self-assessment-100 grade.**
+- **Closed (Stage 9B):** **TTFT is now measured** via a real streaming run on the already-cached
+  `Qwen2-0.5B` (no new download) — see §7.
 - **Open before any self-assessment-100 claim** (each needs work / approval; see
   [`docs/SUBMISSION_CHECKLIST.md`](docs/SUBMISSION_CHECKLIST.md) and `docs/PLAN.md` §8): a
-  **quantization** measured run (Stage 9C, approval-gated download), **TTFT** measurement (Stage 9B,
-  no new download), and a **large-model memory-pressure baseline** (approval-gated `Qwen2-7B`).
+  **quantization** measured run (Stage 9C, approval-gated download) and a **large-model
+  memory-pressure baseline** (approval-gated `Qwen2-7B`).
 - **Engineering hygiene (Stage 9A):** a committed [`.env-example`](.env-example) (dummy values), a
   thin **SDK facade** (`src/ex05_airllm/sdk.py`) over the pure logic, and a fail-closed
   disabled-by-default **API gatekeeper** (`src/ex05_airllm/api_gatekeeper.py`) — the project makes

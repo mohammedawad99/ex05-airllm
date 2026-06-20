@@ -274,7 +274,10 @@ compute/download. These are estimates and will not be reported as actual duratio
 disabled-by-default **`ApiGatekeeper`** guard (no live API exists → `N/A_WITH_RATIONALE`) with tests.
 Docs reframed: **not** self-assessment-100-ready; quantization/TTFT/large-model gaps stated openly.
 
-**Stage 9B — TTFT streaming measurement (NO new download).**
+**Stage 9B — TTFT streaming measurement (NO new download). ✅ DONE.** Real TTFT measured via
+`TextIteratorStreamer` (6/6, cached Qwen2-0.5B, offline) → `results/measurements/
+transformers_cpu_streaming_qwen2_0_5b/`; TTFT mean ≈0.41 s (steady ≈0.25–0.27 s), TPOT decode-only
+≈0.19 s/tok; Stage 5B raw data untouched (`docs/MEASUREMENT_RUNS.md` §8).
 - *Scope:* measure **TTFT** (and a cleaner TPOT = (gen_time − TTFT)/(out_tokens − 1)) on the
   **already-cached** `Qwen/Qwen2-0.5B`, CPU, offline — same model/prompts as Stage 5B.
 - *Method:* add a streaming first-token hook (e.g. `TextIteratorStreamer` or a per-step callback) to

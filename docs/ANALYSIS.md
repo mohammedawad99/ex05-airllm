@@ -41,6 +41,25 @@ token-streamed in this runner.
 
 Authoritative copy: `results/analysis/transformers_cpu_qwen2_0_5b_summary_stats.json`.
 
+### 3b. Streaming TTFT run (Stage 9B — real first-token timing)
+
+A **separate** streaming run (`results/measurements/transformers_cpu_streaming_qwen2_0_5b/`,
+6/6 succeeded) measures **real TTFT** via `TextIteratorStreamer` on the same cached Qwen2-0.5B,
+CPU, offline — **superseding Stage 5B for TTFT/TPOT** while Stage 5B stays valid for non-streaming
+total-runtime/throughput. Numbers below are computed directly from that run's `summary.csv` (not
+from the Stage 6A figures, which are unchanged):
+
+| metric | min | mean | max |
+| --- | --- | --- | --- |
+| ttft_seconds | 0.2486 | 0.4122 | 1.1599 |
+| tpot_seconds | 0.1892 | 0.1922 | 0.1961 |
+| tokens_per_second | 4.3599 | 5.0240 | 5.2151 |
+| generation_seconds | 5.1773 | 5.7321 | 6.6516 |
+| peak_ram_mb | 3988.2 | 4008.15 | 4019.9 |
+
+The **mean TTFT is skewed by the first (cold) run ≈1.16 s**; the other five are ≈0.25–0.27 s. TTFT
+is measured (streamer observation), not estimated; TPOT here is the real decode-only per-token time.
+
 ## 4. Figures
 
 Generated with **plain matplotlib** (no seaborn, no custom styling):

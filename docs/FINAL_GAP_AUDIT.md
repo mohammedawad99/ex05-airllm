@@ -26,7 +26,7 @@ Status legend: **SATISFIED** · **PARTIALLY_SATISFIED** · **BLOCKED** · **NOT_
 | 4 | Direct baseline / local inference | PARTIALLY_SATISFIED | `results/measurements/transformers_cpu_qwen2_0_5b/`, `docs/MEASUREMENT_RUNS.md` | HF `transformers` CPU baseline on `Qwen2-0.5B` ran **6/6**; baseline on a larger/selected model not done. |
 | 5 | AirLLM integration | BLOCKED | `results/stage3*`, `results/stage4a*`, `results/analysis/airllm_failure_summary.json`, `docs/AIRLLM_PATCH_FEASIBILITY.md` | Installs/imports; format fixed by re-shard; **CPU forward fails** (meta-device) — root-caused to AirLLM core param streaming. `any_success=false`. Not a success. |
 | 6 | Quantization | NOT_DONE | `docs/TODO.md`, `docs/REQUIREMENTS_AUDIT.md` R-QUANT-01 | Discussed only; CUDA `bitsandbytes` unavailable, CPU GGUF route not executed. **No quantized run/measurement.** |
-| 7 | Metrics (runtime, throughput, TPOT, TTFT, RAM, VRAM, energy) | PARTIALLY_SATISFIED | `results/measurements/...`, `results/analysis/...`, `docs/ANALYSIS.md` | runtime **SATISFIED**; throughput **SATISFIED**; RAM (RSS) **SATISFIED**; TPOT **PARTIALLY** (approx = gen_s/out_tokens); TTFT **NOT_DONE** (no streaming hook → `None`); VRAM **N/A** (no GPU compute); energy **PARTIALLY** (assumption-based estimate). |
+| 7 | Metrics (runtime, throughput, TPOT, TTFT, RAM, VRAM, energy) | PARTIALLY_SATISFIED | `results/measurements/...`, `results/analysis/...`, `docs/ANALYSIS.md` | runtime **SATISFIED**; throughput **SATISFIED**; RAM (RSS) **SATISFIED**; **TTFT SATISFIED** (Stage 9B streaming run); **TPOT SATISFIED** (decode-only, Stage 9B) — Stage 5B's TPOT was approximate; VRAM **N/A** (no GPU compute); energy **PARTIALLY** (assumption-based estimate). |
 | 8 | Cost analysis (API / On-Prem / break-even) | PARTIALLY_SATISFIED | `results/analysis/cost_energy_estimate.json`, `figures/cost_break_even_estimate.png`, `docs/COSTS.md` | Computed under explicit assumptions; `pricing_status=assumption_not_live_verified`. CAPEX=0 sensitivity stated. Not market-verified. |
 | 9 | Graphs / figures | SATISFIED | `figures/*.png`, `docs/ANALYSIS.md` §4 | 4 plain-matplotlib figures generated from committed data (runtime, throughput, peak RAM, break-even). |
 | 10 | Lecture concept linkage | PARTIALLY_SATISFIED | `README.md` §9, `reports/final_report.md` §5–6 | Concepts tied to *our* evidence with measured-vs-discussed markers; some (quantization, prefill/decode split) discussed, not measured. |
@@ -36,7 +36,7 @@ Status legend: **SATISFIED** · **PARTIALLY_SATISFIED** · **BLOCKED** · **NOT_
 | 14 | SDK facade & config hygiene | SATISFIED | `src/ex05_airllm/sdk.py`, `.env-example`, `tests/unit/test_sdk.py` | Stage 9A: thin SDK facade delegating to existing modules (no logic duplicated, no model/network); `.env-example` committed. |
 | 15 | API gatekeeper | N/A_WITH_RATIONALE | `src/ex05_airllm/api_gatekeeper.py`, `config/rate_limits.example.json`, `tests/unit/test_api_gatekeeper.py` | No live external API is called anywhere (cost is assumption-based); a fail-closed, disabled-by-default guard is implemented + tested for any future path. |
 | 16 | Quantization measured run | NOT_DONE | `docs/PLAN.md` Stage 9C | No quantized inference executed; planned GGUF/CPU, **requires explicit user approval before any download**. |
-| 17 | TTFT measurement | NOT_DONE | `docs/PLAN.md` Stage 9B | No streaming hook (`None`); Stage 9B can measure on the already-cached `Qwen2-0.5B`, **no new download**. |
+| 17 | TTFT measurement | SATISFIED | `results/measurements/transformers_cpu_streaming_qwen2_0_5b/`, `docs/MEASUREMENT_RUNS.md` §8 | Stage 9B: **real TTFT measured** via `TextIteratorStreamer` (6/6, cached Qwen2-0.5B, offline, no new download). mean ≈0.41 s (skewed by cold first run; steady ≈0.25–0.27 s); TPOT now decode-only. Supersedes Stage 5B's `None`. |
 | 18 | Large-model memory-pressure case | NOT_DONE | `docs/PLAN.md` | No >RAM model run; **requires explicit user approval before any `Qwen2-7B` download**. |
 
 ## 3. Explicit blockers
@@ -87,11 +87,12 @@ token-free-inspectable; the course **group code** is handled manually by the stu
 facade** (`sdk.py`); **API gatekeeper** `N/A_WITH_RATIONALE` with a fail-closed disabled-by-default
 guard implemented + tested.
 
-**Still open before any self-assessment-100 claim** (rows 16–18 above):
+**Closed since (Stage 9B):** **TTFT now measured** via a real streaming run on the already-cached
+`Qwen2-0.5B` (no new download); TPOT is now decode-only. Stage 5B raw data unchanged.
+
+**Still open before any self-assessment-100 claim** (rows 16 & 18 above):
 - **Quantization measured run — NOT_DONE** → Stage 9C (GGUF/CPU), **requires user approval before any
   download**.
-- **TTFT — NOT_DONE/PARTIAL** → Stage 9B, measurable on the **already-cached** `Qwen2-0.5B`, no new
-  download.
 - **Large-model memory-pressure baseline — NOT_DONE** → requires user approval before any `Qwen2-7B`
   download.
 

@@ -50,9 +50,10 @@ Status legend: **DONE** (complete, evidenced) · **PARTIAL** (real evidence, not
   results/analysis/airllm_failure_summary.json, docs/AIRLLM_PATCH_FEASIBILITY.md*
 - **TODO** — Quantization sweep (≥2 levels) → **not a measured run** (CUDA `bitsandbytes`
   unavailable; CPU GGUF route not executed) — *evidence: docs/TODO.md, R-QUANT-01*
-- **PARTIAL** — Metrics captured: runtime/throughput/peak-RAM **measured**; TPOT **approximate**;
-  TTFT **None** (no streaming hook); peak VRAM **N/A** (no GPU); energy **estimated** — *evidence:
-  results/measurements/..., results/analysis/..., docs/ANALYSIS.md*
+- **PARTIAL** — Metrics captured: runtime/throughput/peak-RAM **measured**; **TTFT measured**
+  (Stage 9B streaming run) and **TPOT decode-only**; peak VRAM **N/A** (no GPU); energy
+  **estimated** — *evidence: results/measurements/transformers_cpu_streaming_qwen2_0_5b/,
+  docs/MEASUREMENT_RUNS.md §8, docs/ANALYSIS.md §3b*
 - **TODO** — Qualitative output samples per config preserved — *evidence: reports/quality_samples.md
   (not yet created)*
 
@@ -73,7 +74,7 @@ Status legend: **DONE** (complete, evidenced) · **PARTIAL** (real evidence, not
 
 ## E. Quality gates (see QUALITY.md)
 - **DONE** — `ruff check .` zero errors; `ruff format --check .` clean — *evidence: run log*
-- **DONE** — Tests pass (happy + error paths); coverage ≥85% — *evidence: pytest (64 passed, ~97%)*
+- **DONE** — Tests pass (happy + error paths); coverage ≥85% — *evidence: pytest (71 passed, ~97%)*
 - **DONE** — Every source file ≤150 code lines — *evidence: line-count audit*
 - **DONE** — Config hierarchy: versioned `config/*.example.*`, `.env` git-ignored, **`.env-example`
   committed** (dummy values only) — *evidence: .env-example, config/*
@@ -120,11 +121,13 @@ audit are complete and the submission is **inspectable with no Hugging Face toke
 submitted, **not** 100% complete, and is **explicitly not claimed as ready for a self-assessment-100
 grade** — the experimental gaps below remain open. The student completes submission manually.
 
+**Closed since (Stage 9B):** **TTFT is now measured** via a real streaming run
+(`TextIteratorStreamer`) on the already-cached `Qwen2-0.5B`, offline, **no new download** (6/6);
+TPOT is now decode-only. Stage 5B raw data unchanged.
+
 **Not ready for a self-assessment-100 claim until these are closed** (each needs work / approval):
 - **Quantization measured run — NOT_DONE** (no quantized inference executed; planned Stage 9C,
   GGUF/CPU, **requires explicit user approval before any dependency/model download**).
-- **TTFT — NOT_DONE/PARTIAL** (no streaming hook → `None`); planned Stage 9B can measure it on the
-  **already-cached** `Qwen2-0.5B` with **no new download**.
 - **Large-model baseline / memory-pressure case — NOT_DONE** (no >RAM model run); requires explicit
   user approval before any `Qwen2-7B` download.
 

@@ -81,3 +81,35 @@ varies run-to-run even with a fixed seed; absolute values are environment-specif
   `docs/COSTS.md` §7) — **not** verified market pricing.
 - **Final-report integration (Stage 6/7):** this measurement as the honest local-inference
   baseline, alongside the AirLLM failure analysis and (optional) DirectML extension.
+
+## 8. Stage 9B — streaming TTFT measurement (separate run; real first-token timing)
+
+Stage 5B used a non-streaming `generate()`, so **TTFT was `None`** there. Stage 9B adds a separate
+streaming run that observes the **first generated token** via `TextIteratorStreamer` (generation on
+a worker thread), measuring **real TTFT** — never estimated from total runtime.
+
+- **Runner:** `src/ex05_airllm/run_transformers_cpu_streaming_measurement.py` (+ pure helpers in
+  `src/ex05_airllm/streaming_measurement.py`). **Results:**
+  `results/measurements/transformers_cpu_streaming_qwen2_0_5b/` (6 per-run JSON + `summary.csv`).
+- **Config:** same model/prompts as Stage 5B — `Qwen/Qwen2-0.5B`, CPU, offline
+  (`HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1`, `local_files_only=True`), `torch.manual_seed(0)`,
+  `do_sample=False`, `max_new_tokens=32`, 3 prompts × 2 repeats = **6 runs, all succeeded**.
+- **Definitions:** `ttft_seconds` = start → first observed token; `generation_seconds` = full
+  generate window (start → end); `tpot_seconds = (generation_seconds − ttft_seconds)/(output_tokens
+  − 1)`; `tokens_per_second = output_tokens / generation_seconds`.
+
+| metric | min | mean | max |
+| --- | --- | --- | --- |
+| **ttft_seconds** | 0.2486 | 0.4122 | 1.1599 |
+| tpot_seconds | 0.1892 | 0.1922 | 0.1961 |
+| tokens_per_second | 4.3599 | 5.0240 | 5.2151 |
+| generation_seconds | 5.1773 | 5.7321 | 6.6516 |
+| peak_ram_mb | 3988.2 | 4008.15 | 4019.9 |
+| output_tokens | 27 | 28.67 | 30 |
+
+- *Note:* the **mean TTFT is skewed by the first run (≈1.16 s, cold)**; the other five runs are
+  ≈0.25–0.27 s. Absolute values are environment-specific and vary run-to-run.
+- **Supersedes / preserves:** this streaming run **supersedes Stage 5B for TTFT/TPOT
+  interpretation**; **Stage 5B remains valid** for the non-streaming total-runtime/throughput
+  evidence. Stage 5B raw data is **unmodified** (separate directory). Still **not** AirLLM, **not** a
+  benchmark, **no** quantization, **no** download, **no** Qwen2-7B.

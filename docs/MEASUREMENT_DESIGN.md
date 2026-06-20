@@ -134,6 +134,23 @@ Every run emits one record with these columns (authoritative copy:
 - **WSL filesystem I/O may differ from host NVMe** — VHDX/9p overhead means disk numbers are
   WSL-relative; attribute carefully (R-WSL-DISK).
 
+## 8b. Streaming TTFT method (Stage 9B)
+
+Stage 5B's non-streaming `generate()` exposed no first-token hook, so it recorded `ttft_seconds =
+None` (never estimated). Stage 9B measures **real TTFT** with a genuine streaming path:
+
+- **Mechanism:** `transformers.TextIteratorStreamer` with `generate()` on a worker thread; the main
+  thread iterates the streamer and stamps the wall-clock at the **first non-empty chunk** (= first
+  observed token). TTFT = that stamp − the pre-generation stamp.
+- **Derived:** `generation_seconds` = full generate window (start→end); `tpot_seconds =
+  (generation_seconds − ttft_seconds)/(output_tokens − 1)`; `tokens_per_second = output_tokens /
+  generation_seconds`. Output-token count is exact (from the returned ids, not the text chunks).
+- **Honesty rule:** if the streamer never yields a token, the run is `success=false` with
+  `ttft_seconds=None` and a clear note — TTFT is **never fabricated**.
+- **Separation:** results live under `results/measurements/transformers_cpu_streaming_qwen2_0_5b/`
+  and **do not** modify Stage 5B raw data. This streaming run supersedes Stage 5B for TTFT/TPOT
+  interpretation; Stage 5B stays valid for non-streaming total-runtime/throughput.
+
 ## 9. Acceptance criteria for Stage 2B
 
 - A **model shortlist matrix** is prepared (params, format, on-disk size vs 933 GB, RAM vs

@@ -68,9 +68,18 @@ prompts × 2 repeats = 6 runs**. Authoritative values:
 | peak RAM — RSS (MB) | 3985.4 | 4015.6 | 4029.1 |
 | output tokens | 27 | 28.7 | 30 |
 
-- **TTFT = None** (no streaming hook) — recorded, never estimated.
-- **TPOT approximate** = generation_seconds / output_tokens; ≈ 0.20 s/token at the mean throughput.
+- **TTFT = None in this Stage 5B run** (no streaming hook) — recorded, never estimated. **Real TTFT
+  is measured in the Stage 9B streaming run** (below).
+- **TPOT (Stage 5B) approximate** = generation_seconds / output_tokens; the decode-only TPOT is
+  measured in Stage 9B.
 - **Peak VRAM = N/A** (CPU-only). RAM is process RSS.
+
+**Stage 9B — real TTFT (streaming, same cached model, no new download).** A separate run observes the
+first generated token via `TextIteratorStreamer` (`results/measurements/
+transformers_cpu_streaming_qwen2_0_5b/`, 6/6). It **supersedes Stage 5B for TTFT/TPOT**; Stage 5B
+stays valid for non-streaming total-runtime/throughput. **TTFT** min/mean/max = **0.249 / 0.412 /
+1.160 s** (mean skewed by the cold first run ≈1.16 s; steady ≈0.25–0.27 s); **decode-only TPOT** ≈
+**0.19 s/token**; throughput ≈ 4.36–5.22 tok/s; peak RAM ≈ 3988–4020 MB. Measured, not estimated.
 
 The numbers are tight and stable across repeats, which is the point: a small, **reproducible**
 measurement, not a competitive benchmark.
@@ -159,6 +168,6 @@ An honest negative AirLLM result plus a working, reproducible Transformers CPU m
 analyzed transparently with assumption-marked cost/energy. Engineering evidence over fabricated
 success. Repository status: **READY_FOR_HONEST_SUBMISSION (with known limitations)** — not submitted,
 not 100% complete, and **not** claimed ready for a self-assessment-100 grade until the quantization
-(Stage 9C), TTFT (Stage 9B), and large-model memory-pressure gaps are closed (see `docs/PLAN.md` §8).
-Stage 9A added engineering hygiene only (`.env-example`, SDK facade, fail-closed API gatekeeper) — no
-new experimental result.
+(Stage 9C) and large-model memory-pressure gaps are closed (see `docs/PLAN.md` §8). **TTFT is now
+measured** (Stage 9B streaming run, no new download). Stage 9A added engineering hygiene only
+(`.env-example`, SDK facade, fail-closed API gatekeeper) — no new experimental result.

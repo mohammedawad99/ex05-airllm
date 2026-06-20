@@ -112,3 +112,11 @@ rate_limits.example.json`, and committed **`.env-example`** (dummy values). New 
 modules (tmp_path, no network). Gates: **64 tests pass, ~97% coverage, ruff check + format clean, all
 files ≤150 code lines.** Raw results/analysis/figures untouched; `pyproject.toml`/`uv.lock` unchanged.
 Repo is **not** claimed self-assessment-100-ready — quantization/TTFT/large-model gaps stay open.
+
+**Stage 9B update (real TTFT streaming measurement; cached model, no download):** added
+`run_transformers_cpu_streaming_measurement.py` + pure `streaming_measurement.py` helpers + tests
+(fake-timing). Ran a **separate** streaming run (6/6) measuring **real TTFT** via
+`TextIteratorStreamer` on the cached Qwen2-0.5B (offline) → new dir
+`results/measurements/transformers_cpu_streaming_qwen2_0_5b/`; Stage 5B raw data untouched. Gates:
+**71 tests pass, ~97% coverage, ruff check + format clean, all files ≤150 code lines.** No download,
+no Qwen2-7B, no AirLLM, no quantization; `pyproject.toml`/`uv.lock`/figures/analysis-JSON unchanged.

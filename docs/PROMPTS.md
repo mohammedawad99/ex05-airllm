@@ -1353,6 +1353,41 @@
 
 ---
 
+## Prompt 025 — Stage 9B: Real TTFT streaming measurement (no new download)
+
+- **Stage:** 9B
+- **Date:** 2026-06-20
+- **Intent:** Add + run a **separate** CPU streaming measurement for **real TTFT** on the
+  already-cached `Qwen/Qwen2-0.5B`, offline/local-cache only. Do not overwrite Stage 5B; download
+  nothing.
+- **Context:** Stage 5B used non-streaming `generate()` → TTFT=None. The model is cached locally.
+- **Key constraints encoded:** runner
+  `run_transformers_cpu_streaming_measurement.py` (+ split pure helpers `streaming_measurement.py`,
+  ≤150 lines); reuse `MeasurementResult`/`ResultWriter`; offline (`HF_HUB_OFFLINE=1
+  TRANSFORMERS_OFFLINE=1`, `local_files_only=True`), CPU, `torch.manual_seed(0)`, `do_sample=False`,
+  `max_new_tokens≤32`, 3 prompts × 2 repeats = 6 runs; **TTFT from a genuine `TextIteratorStreamer`
+  first-token observation** (never estimated; if not observed → success=false / ttft=None, no
+  fabrication); `tpot=(generation−ttft)/(out−1)`; write to **new** dir
+  `results/measurements/transformers_cpu_streaming_qwen2_0_5b/`; heavy imports inside functions; unit
+  tests use fake streamer/timings only. Forbidden: download, Qwen2-7B, AirLLM, Ollama, DirectML,
+  quantization, editing Stage 5B raw data / analysis JSON / figures / pyproject / uv.lock, fake
+  results, stage/commit/push.
+- **Outcome:** 6/6 streaming runs succeeded with **real TTFT**. min/mean/max — TTFT 0.249/0.412/1.160
+  s (mean skewed by the cold first run ≈1.16 s; steady ≈0.25–0.27 s); decode-only TPOT
+  0.189/0.192/0.196 s/tok; throughput 4.36/5.02/5.22 tok/s; peak RAM 3988/4008/4020 MB; gen
+  5.18/5.73/6.65 s; out 27/28.7/30. Validation: **71 tests pass, ~97% cov, ruff/format clean, all
+  files ≤150 lines**; post-run checker green; Stage 5B/analysis/figures/pyproject/uv.lock `git diff`
+  empty; no model artifacts tracked. Docs updated (MEASUREMENT_RUNS §8, MEASUREMENT_DESIGN §8b,
+  ANALYSIS §3b, FINAL_GAP_AUDIT, SUBMISSION_CHECKLIST, REQUIREMENTS_AUDIT R-MEAS-TTFT/TPOT, TODO T9.2,
+  PLAN §8, QUALITY, README §7, final_report §4). **No download, no Qwen2-7B, no AirLLM, no
+  quantization, no fake results, no commit/push.**
+- **Iterations / corrections:** `ruff format` wrapped one long `_run_one` signature.
+- **Lessons / notes for next prompts:** TTFT closed; remaining 100-grade gaps are **quantization
+  (Stage 9C)** and the **large-model pressure case** — both need explicit user approval before any
+  dependency/model download. AirLLM stays a structured negative result.
+
+---
+
 *Template for future entries:*
 *Prompt NNN — <stage>: <title> — Intent / Context / Constraints / Verbatim prompt /
 Actions / Outcome / Iterations / Lessons.*
