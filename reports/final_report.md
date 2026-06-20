@@ -27,6 +27,31 @@
 | Analysis + figures | Generated from committed data | `results/analysis/`, `figures/`, `docs/ANALYSIS.md` |
 | Cost/energy | Assumption-based estimate | `results/analysis/cost_energy_estimate.json`, `docs/COSTS.md` |
 
+### 2a. Measured evidence summary
+
+Three measured CPU evidence groups, all on the cached `Qwen/Qwen2-0.5B` (offline, deterministic). AirLLM
+remains a structured **negative result**; none of these is AirLLM or a benchmark.
+
+| stage | what it measures | headline numbers | evidence dir |
+| --- | --- | --- | --- |
+| **5B** baseline (non-streaming) | runtime / throughput / peak RAM | gen ≈5.68 s; ≈5.07 tok/s; ≈4016 MB; TTFT `None` | `transformers_cpu_qwen2_0_5b/` |
+| **9B** streaming | **real TTFT** + decode-only TPOT | TTFT mean **0.412 s** (min 0.249, max 1.160); TPOT mean **0.192 s/tok**; throughput mean **5.02 tok/s** | `transformers_cpu_streaming_qwen2_0_5b/` |
+| **9C** FP32 vs dynamic INT8 | quantization trade-off | fp32: **6.03 s / 4.83 tok/s / 7192 MB / 28.7 tok** · int8_dynamic: **1.89 s / 17.27 tok/s / 7086 MB / 32.0 tok** | `transformers_cpu_int8_quantization_qwen2_0_5b/` |
+
+### 2b. Quantization interpretation (Stage 9C Route A)
+
+Dynamic INT8 was **≈3.6× faster** (17.27 vs 4.83 tok/s; gen 1.89 vs 6.03 s) but **peak RAM barely
+dropped (~1.5%, 7086 vs 7192 MB)** and **output quality regressed clearly** — FP32 produced a coherent
+answer while INT8 produced incoherent text (per-variant `output_preview`/`output_text` are committed).
+The honest summary: **INT8 provided a speed/quality trade-off, not a free win.**
+
+**Why this is PARTIAL, not full quantization satisfaction:** it is **PyTorch dynamic INT8 only**
+(quantizes Linear modules at inference), **not GGUF, not Q4, not Q8**, and not a low-bit sweep. The RAM
+figure also holds both the FP32 reference and the derived INT8 model in memory at once, so it is not
+comparable to the single-model Stage 5B RSS. A true **low-bit GGUF Q4/Q8** comparison remains
+**NOT_DONE / approval-gated** (Route B). So R-QUANT-01 / R-MEAS-QUAL are **PARTIALLY_EVIDENCED**, never
+"fully satisfied".
+
 ## 3. AirLLM forensic detail
 
 AirLLM's premise is **layer-wise loading**: keep only the active transformer layer resident, stream

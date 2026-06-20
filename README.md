@@ -33,6 +33,23 @@ outscores an unsupported positive claim**.
 | **What was not attempted** | A successful AirLLM generation; any GPU/DirectML *measurement*; a **low-bit GGUF Q4/Q8** sweep. *(Real TTFT is measured in Stage 9B; a dynamic-INT8 vs FP32 quantization comparison in Stage 9C Route A — see §7.)* |
 | **Larger model** | **`Qwen2-7B` was not downloaded** and is **not approved** (`download_approved=false`). No large-model performance is claimed. |
 
+### Measured evidence summary
+
+Three measured CPU evidence groups exist, all on the cached `Qwen/Qwen2-0.5B` (offline, deterministic
+— **not** a benchmark, **not** AirLLM). AirLLM itself remains a structured **negative result**.
+
+| stage | what it measures | headline numbers | evidence |
+| --- | --- | --- | --- |
+| **5B** baseline (non-streaming) | runtime / throughput / peak RAM | gen ≈5.68 s mean; ≈5.07 tok/s; ≈4016 MB; TTFT `None` | `results/measurements/transformers_cpu_qwen2_0_5b/` |
+| **9B** streaming TTFT/TPOT | **real TTFT** + decode-only TPOT | **TTFT mean 0.412 s** (min 0.249, max 1.160); TPOT mean **0.192 s/token**; throughput mean **5.02 tok/s** | `results/measurements/transformers_cpu_streaming_qwen2_0_5b/` |
+| **9C** FP32 vs dynamic INT8 | quantization speed/quality trade-off | fp32: gen **6.03 s**, **4.83 tok/s**, **7192 MB**, **28.7** out tok · int8_dynamic: gen **1.89 s**, **17.27 tok/s**, **7086 MB**, **32.0** out tok | `results/measurements/transformers_cpu_int8_quantization_qwen2_0_5b/` |
+
+**Interpretation (honest):** dynamic **INT8 was ≈3.6× faster but output quality regressed and peak RAM
+barely dropped (~1.5%)** in this measurement — a **speed/quality trade-off, not a free win**. TTFT is
+measured **only for the Transformers CPU streaming path**, not for AirLLM. This is **dynamic INT8
+only** — **not GGUF, not Q4, not Q8**, and not a full low-bit sweep; quantization is therefore
+**partially evidenced**, and a GGUF Q4/Q8 sweep plus a large-model pressure baseline remain open.
+
 ## 3. Hardware and environment
 
 Hardware is measured on both layers (host + WSL2) in [`docs/HARDWARE.md`](docs/HARDWARE.md); no

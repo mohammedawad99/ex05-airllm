@@ -60,6 +60,21 @@ from the Stage 6A figures, which are unchanged):
 The **mean TTFT is skewed by the first (cold) run ≈1.16 s**; the other five are ≈0.25–0.27 s. TTFT
 is measured (streamer observation), not estimated; TPOT here is the real decode-only per-token time.
 
+### 3c. Dynamic INT8 quantization run (Stage 9C Route A — FP32 vs INT8)
+
+A **separate** no-download run (`results/measurements/transformers_cpu_int8_quantization_qwen2_0_5b/`,
+12/12) compares FP32 vs **PyTorch dynamic INT8** on the same cached Qwen2-0.5B (full detail:
+`docs/MEASUREMENT_RUNS.md` §9). Per-variant means:
+
+| variant | mean gen (s) | mean tok/s | mean peak RAM (MB) | mean out tokens |
+| --- | --- | --- | --- | --- |
+| fp32_reference | 6.03 | 4.83 | 7192.4 | 28.7 |
+| int8_dynamic | 1.89 | 17.27 | 7086.3 | 32.0 |
+
+INT8 ≈**3.6× faster** but **output quality regressed** (committed per-variant previews) and peak RAM
+dropped only ≈1.5% — a **speed/quality trade-off, not a free win**. **Dynamic INT8 only — NOT GGUF,
+NOT Q4, NOT Q8** → quantization is **PARTIALLY_EVIDENCED**; a low-bit GGUF sweep remains open.
+
 ## 4. Figures
 
 Generated with **plain matplotlib** (no seaborn, no custom styling):

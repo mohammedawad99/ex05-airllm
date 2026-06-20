@@ -46,9 +46,12 @@ Status legend: **SATISFIED** · **PARTIALLY_SATISFIED** · **BLOCKED** · **NOT_
 - **`Qwen2-7B` — DEFERRED.** Not downloaded, not approved (`download_approved=false`); the same
   AirLLM core path would fail identically, so a ~15 GB download to reproduce a known blocker is
   unjustified.
-- **Quantization — NOT_DONE as a measured run.** No quantized inference executed; only discussed.
-- **TTFT — MISSING.** The non-streaming `generate()` path exposes no first-token hook; recorded
-  `None`, never estimated. TPOT is therefore approximate.
+- **Quantization — PARTIALLY done.** Stage 9C Route A measured FP32 vs **PyTorch dynamic INT8** (no
+  download): INT8 ≈3.6× faster but quality degraded and RAM ≈1.5% lower — a speed/quality trade-off.
+  **Dynamic INT8 only; a low-bit GGUF Q4/Q8 sweep remains NOT_DONE / approval-gated** (Route B).
+- **TTFT — measured (Stage 9B), Transformers CPU streaming only.** Real TTFT via
+  `TextIteratorStreamer` (mean ≈0.41 s); decode-only TPOT. Stage 5B's non-streaming run still records
+  `None`. TTFT is **not** measured for AirLLM (blocked).
 
 ## 4. Risk assessment for grading
 

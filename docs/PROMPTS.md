@@ -1457,6 +1457,39 @@
 
 ---
 
+## Prompt 028 — Stage 9C-R: Final quantization/TTFT report integration (docs only)
+
+- **Stage:** 9C-R
+- **Date:** 2026-06-20
+- **Intent:** Docs-only integration so README + final report clearly communicate the three measured
+  CPU evidence groups (Stage 5B baseline, Stage 9B streaming TTFT, Stage 9C dynamic INT8) without
+  overclaiming or creating any new experimental data.
+- **Context:** Stage 9B (TTFT) and Stage 9C Route A (dynamic INT8) are committed; the narrative needed
+  a single evidence summary and an explicit, honest quantization interpretation.
+- **Key constraints encoded:** docs-only (no model runs/downloads/dep changes; no edits to src/tests/
+  results/figures/measurement_summary/pyproject/uv.lock/config/.env-example); add a compact "Measured
+  evidence summary" table to README + mirror in final_report with the exact key numbers (TTFT
+  mean 0.412 / 0.249 / 1.160 s; streaming TPOT 0.192 s/tok; throughput 5.02 tok/s; fp32 6.03 s /
+  4.83 tok/s / 7192 MB / 28.7 tok; int8 1.89 s / 17.27 tok/s / 7086 MB / 32.0 tok); add a
+  quantization-interpretation subsection ("speed/quality trade-off, not a free win"; PARTIAL not full
+  Q4/Q8); ensure FINAL_GAP_AUDIT/SUBMISSION_CHECKLIST/REQUIREMENTS_AUDIT carry TTFT=satisfied(9B
+  streaming only), quantization=PARTIALLY_EVIDENCED (dynamic INT8 only), GGUF Q4/Q8 + large-model
+  baseline open/approval-gated, AirLLM blocked. NOT OK: claim Q4/Q8/GGUF measured, quantization fully
+  satisfied, AirLLM success, Qwen2-7B downloaded/tested, 100-ready.
+- **Outcome:** Added the evidence summary + interpretation to README §2 and `reports/final_report.md`
+  §2a/§2b; added ANALYSIS §3c (quant run); fixed two stale lines in FINAL_GAP_AUDIT §3 blockers
+  (quantization now PARTIAL; TTFT now measured). Verified checklist/requirements statuses already
+  correct (TTFT PARTIALLY_EVIDENCED/9B; R-QUANT-01 + R-MEAS-QUAL PARTIALLY_EVIDENCED). Validation
+  green (77 tests, ruff/format clean); all protected diffs empty; no secrets; no model artifacts.
+  **Docs-only; no experimental data changed; no downloads/model runs/dependency changes; no
+  commit/push.**
+- **Iterations / corrections:** none.
+- **Lessons / notes for next prompts:** remaining experimental gaps before any self-assessment-100
+  claim are the **low-bit GGUF Q4/Q8 sweep** (Route B) and the **large-model memory-pressure
+  baseline** — both approval-gated before any dependency/model download. AirLLM stays blocked.
+
+---
+
 *Template for future entries:*
 *Prompt NNN — <stage>: <title> — Intent / Context / Constraints / Verbatim prompt /
 Actions / Outcome / Iterations / Lessons.*
