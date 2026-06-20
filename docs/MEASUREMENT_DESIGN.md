@@ -182,6 +182,35 @@ TTFT** (first content delta from `create_chat_completion(stream=True)`).
   git-ignored (`.local_models/`); only metrics/summaries are committed. TTFT is from a real stream
   event or `None` — never estimated.
 
+## 8e. Large-model memory-pressure method (Stage 10B)
+
+A **guarded** direct large-model (>RAM) baseline — the deliberately *larger-than-memory* case — run
+under explicit approval. It is designed to produce a **structured negative result**, not a benchmark:
+a 7B fp16 model (~15.24 GB) exceeds this host's ~11 GiB RAM + ~3 GiB swap, so an OOM/`MemoryError`/
+kill/timeout is the **expected, in-spec** outcome.
+
+- **Model / backend:** `Qwen/Qwen2.5-7B-Instruct`, **fp16 HF `transformers` CPU**, offline from the
+  already-cached snapshot (`local_files_only` semantics; no re-download). One prompt (`os_definition`),
+  `do_sample=False`, **`max_new_tokens=8`**, fixed seed.
+- **Guard (parent/child):** the parent resolves the cached snapshot on disk and launches a **child
+  subprocess** under a strict timeout. The child applies an explicit address-space cap
+  (`resource.setrlimit(RLIMIT_AS, …)`, **`CHILD_MEMORY_LIMIT_MB=13312`**) **before** importing
+  torch/transformers, then loads the model and attempts the tiny generation. The cap sits **below** the
+  fp16 footprint, so the child hits the budget and raises `Cannot allocate memory` rather than letting
+  the OOM killer SIGKILL the parent — keeping the parent alive to write a structured record.
+- **Recorded fields:** `attempt_type`, `backend`, `environment`, `success`,
+  `structured_negative_result`, `failure_class` (e.g. `memory_budget_exceeded`,
+  `cache_snapshot_missing`, `memory_guard_unavailable`), `returncode`, `timed_out`,
+  `download_completed`, `local_snapshot_found`, `child_memory_limit_mb`, `load_completed`,
+  `generation_completed`, `elapsed_seconds`/`child_elapsed_seconds`, `child_maxrss_mb`,
+  truncated `stdout_tail`/`stderr_tail`, and `notes`.
+- **Honesty bounds:** a load OOM under the cap is a **valid structured negative**, not a project
+  failure — but it is a **guarded memory-budget attempt, not a full benchmark** and **never** an
+  AirLLM result. If the local snapshot is absent the parent records `cache_snapshot_missing` and stops
+  (no download); if `resource` is unavailable it records `memory_guard_unavailable` and stops. Weights
+  stay git-ignored (`.hf_cache/`); only the JSON/CSV record is committed. No large-model performance is
+  claimed. Pure helpers (`large_model_pressure.py`) are unit-tested with fake data only (no model/net).
+
 ## 9. Acceptance criteria for Stage 2B
 
 - A **model shortlist matrix** is prepared (params, format, on-disk size vs 933 GB, RAM vs

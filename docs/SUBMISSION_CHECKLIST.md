@@ -42,9 +42,11 @@ Status legend: **DONE** (complete, evidenced) · **PARTIAL** (real evidence, not
   — *evidence: docs/HARDWARE.md*
 - **PARTIAL** — Model selected & justified vs hardware; final large pick deferred (ADR-0101a/0018) —
   *evidence: docs/MODEL_SELECTION.md*
-- **PARTIAL** — Direct local baseline run (HF `transformers` CPU on `Qwen2-0.5B`, 6/6); baseline on
-  a larger/selected model not done — *evidence: results/measurements/transformers_cpu_qwen2_0_5b/,
-  docs/MEASUREMENT_RUNS.md*
+- **PARTIAL** — Direct local baseline run (HF `transformers` CPU on `Qwen2-0.5B`, 6/6, full measured
+  path). A separate **direct large-model (>RAM) pressure baseline** on `Qwen2.5-7B` (Stage 10B) was
+  **attempted & evidenced** as a guarded memory-budget **structured negative** (`memory_budget_exceeded`
+  during load; not a full benchmark) — *evidence: results/measurements/transformers_cpu_qwen2_0_5b/,
+  results/measurements/large_model_pressure_qwen2_5_7b/, docs/MEASUREMENT_RUNS.md §11*
 - **BLOCKED** — AirLLM run completed → **not achieved**; investigated and root-caused (meta-device
   defect), structured failure evidence kept — *evidence: results/stage3*, results/stage4a*,
   results/analysis/airllm_failure_summary.json, docs/AIRLLM_PATCH_FEASIBILITY.md*
@@ -130,11 +132,17 @@ measured two ways** — dynamic INT8 vs FP32 (Stage 9C) and **GGUF Q8_0 vs Q4_K_
 user-approved download; F16 excluded by the ~1.2 GB cap). Prior raw data unchanged; GGUF weights
 git-ignored.
 
-**Not ready for a self-assessment-100 claim until this is closed** (needs work / approval):
-- **Large-model baseline / memory-pressure case — NOT_DONE** (no >RAM model run). Stage 10B-0
-  **preflight done** (`docs/LARGE_MODEL_PREFLIGHT.md`): 7B fp16 (~15 GB) > 11 GiB RAM → OOM expected,
-  a structured negative result is acceptable. Requires explicit user approval before any Qwen 7B
-  download (Stage 10B).
+**Closed since (Stage 10B):** the **direct large-model (>RAM) memory-pressure baseline** is now
+**ATTEMPTED & EVIDENCED** as a guarded **structured negative**. A `Qwen/Qwen2.5-7B-Instruct` fp16
+direct Transformers CPU attempt under a **13312 MiB** `RLIMIT_AS` child budget hit `Cannot allocate
+memory` **during load** → `memory_budget_exceeded` (`success=false`, `returncode=3`, not timed out;
+local snapshot found; weights git-ignored, never committed). Evidence:
+`results/measurements/large_model_pressure_qwen2_5_7b/`, `docs/MEASUREMENT_RUNS.md §11`,
+`docs/LARGE_MODEL_PREFLIGHT.md §1`. **A guarded memory-budget attempt, not a full benchmark; no
+large-model performance claimed; not AirLLM.**
+
+**Still not claimed self-assessment-100-ready / 100% complete:** AirLLM generation stays **BLOCKED**;
+quantization stays small-model; cost/energy stays assumption-based. None of these is overstated.
 
 Standing on the rest:
 - **Stage 9A closures (DONE):** `.env-example` committed (dummy only); thin **SDK facade**
@@ -150,5 +158,7 @@ Standing on the rest:
 - **License:** not explicitly declared; attribution/credits present, no model weights, none invented
   (ADR-0106).
 
-No item above overstates: no AirLLM success, no `Qwen2-7B` run/download, no market-verified pricing,
-no fabricated results, not submitted, not 100% complete, not claimed self-assessment-100 ready.
+No item above overstates: no AirLLM success, **no full large-model benchmark** (the Stage 10B 7B run
+is a guarded memory-budget structured negative, weights git-ignored/never committed), no
+market-verified pricing, no fabricated results, not submitted, not 100% complete, not claimed
+self-assessment-100 ready.

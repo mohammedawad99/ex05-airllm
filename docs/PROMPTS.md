@@ -1559,6 +1559,50 @@
 
 ---
 
+## Prompt 031 — Stage 10B: Integrate the guarded large-model memory-pressure result (docs only)
+
+- **Stage:** 10B (post-run documentation integration)
+- **Date:** 2026-06-21
+- **Intent:** Validate the already-produced Stage 10B guarded large-model memory-pressure result and
+  update all submission docs to state it is now **ATTEMPTED & EVIDENCED** as a structured negative —
+  **without** rerunning, downloading, committing, or overstating.
+- **Context:** The Stage 10B guarded attempt had already run and succeeded **as a structured negative
+  result** (`results/measurements/large_model_pressure_qwen2_5_7b/`): a guarded
+  `Qwen/Qwen2.5-7B-Instruct` fp16 direct Transformers CPU baseline under a **13312 MiB** `RLIMIT_AS`
+  child budget hit `Cannot allocate memory` **during load** (`memory_budget_exceeded`,
+  `success=false`, returncode 3, not timed out; local snapshot found; no generation). The result was
+  explicitly **not** to be rerun.
+- **Key constraints encoded:** validate the result (CSV + JSON field assertions + memory-failure text
+  check) and stop if corrupt; update README, final_report, MEASUREMENT_RUNS, MEASUREMENT_DESIGN,
+  ANALYSIS, LARGE_MODEL_PREFLIGHT, FINAL_GAP_AUDIT, SUBMISSION_CHECKLIST, REQUIREMENTS_AUDIT, TODO,
+  PLAN, QUALITY, PROMPTS. Required stance: Stage 10B **attempted & evidenced**; a **guarded
+  memory-budget attempt, not a full benchmark**; structured negative `memory_budget_exceeded`; local
+  snapshot found and model files **ignored/untracked**; child capped at 13312 MiB `RLIMIT_AS`; failed
+  during load before generation; demonstrates direct fp16 7B memory pressure; **closes the direct
+  large-model pressure baseline gap**; AirLLM stays **blocked/not evidenced**; GGUF Q4/Q8 + dynamic
+  INT8 stay separate small-model results. **Do not:** claim AirLLM success / a full large-model
+  benchmark / 100-ready / 100% complete; rerun; download; commit/push/stage; edit prior raw
+  measurement dirs / analysis JSON / figures / `reports/measurement_summary.md`; edit the Stage 10B
+  JSON/CSV (unless validation proves corruption); commit model artifacts; put absolute local cache
+  paths in README/final_report (okay to say *ignored HF cache*). Then run `uv run pytest`, ruff
+  check/format, a ≤150-code-line audit, protected-diff audit, secret/model-artifact audit, and a text
+  audit.
+- **Outcome:** Validation **passed** (`OK: Stage 10B memory-pressure result validated`). Updated the 13
+  docs to the required stance; added README §7a, final_report §4a, MEASUREMENT_RUNS §11, and
+  MEASUREMENT_DESIGN §8e describing the guarded parent/child `RLIMIT_AS` design and the structured
+  negative. Gates: **103 tests pass, ~88% coverage, ruff check + format clean, all Python files ≤150
+  code lines**. Protected diffs (Stage 5B/9B/9C/10A raw dirs, analysis JSON, figures,
+  `measurement_summary.md`, `pyproject.toml`/`uv.lock`) **empty**; no secrets; **no model artifacts
+  tracked** (7B weights git-ignored under `.hf_cache/`). **No rerun, no download, no commit/push, no
+  staging.** AirLLM remains blocked/not evidenced; no full-benchmark or 100-ready claim made.
+- **Iterations / corrections:** none.
+- **Lessons / notes for next prompts:** the direct large-model (>RAM) pressure baseline gap is now
+  closed as a guarded structured negative. The remaining open items (AirLLM generation, large-model
+  quantization, market-verified pricing) stay documented limitations; the repo is still **not** claimed
+  self-assessment-100-ready.
+
+---
+
 *Template for future entries:*
 *Prompt NNN — <stage>: <title> — Intent / Context / Constraints / Verbatim prompt /
 Actions / Outcome / Iterations / Lessons.*

@@ -139,3 +139,15 @@ the ~1.2 GB size cap). Ran **Q8_0 vs Q4_K_M** (12/12) →
 check + format clean, all files ≤150 code lines.** Only `pyproject.toml`/`uv.lock` changed (the
 dependency); prior measurement dirs/analysis/figures unchanged; **no GGUF artifact tracked**. Low-bit
 quantization now evidenced (small model); no large-model quant, no Qwen2-7B; AirLLM still blocked.
+
+**Stage 10B update (guarded large-model memory-pressure baseline; user-approved):** added pure helpers
+`large_model_pressure.py` + runner `run_large_model_pressure_baseline.py` + tests (fake data only, no
+model/network). The real load path is `# pragma: no cover` (it needs the 7B weights). Ran a **guarded**
+`Qwen/Qwen2.5-7B-Instruct` fp16 Transformers CPU attempt under a **13312 MiB** `RLIMIT_AS` child budget
+→ **structured negative** `memory_budget_exceeded` (child hit `Cannot allocate memory` during load; no
+generation) → new dir `results/measurements/large_model_pressure_qwen2_5_7b/`. Gates: **103 tests pass,
+~88% coverage, ruff check + format clean, all files ≤150 code lines.** `pyproject.toml`/`uv.lock`/
+figures/analysis-JSON unchanged; prior measurement dirs untouched; **no model artifacts tracked**
+(7B weights git-ignored under `.hf_cache/`, never committed). The run was **not** rerun for docs.
+**Guarded memory-budget attempt, not a full benchmark; no large-model performance claimed; AirLLM
+stays blocked.** Repo still **not** claimed self-assessment-100-ready / 100% complete.

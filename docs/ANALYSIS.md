@@ -133,7 +133,14 @@ All numbers derive from documented **assumptions**, not verified live pricing
 - The **runnable measurement path** is Transformers CPU on Qwen2-0.5B — real, repeatable numbers.
 - **AirLLM** is an investigated **negative result** in this environment (blocked at its core CPU
   streaming); it is presented as a limitation analysis, never as a success.
-- **No generalization to Qwen2-7B** — not downloaded, not run; the same AirLLM core path applies.
+- **Direct large-model pressure (Stage 10B)** is **attempted & evidenced** as a **structured
+  negative**: a guarded `Qwen/Qwen2.5-7B-Instruct` fp16 Transformers CPU load under a 13312 MiB child
+  budget hit `Cannot allocate memory` during load (`memory_budget_exceeded`,
+  `results/measurements/large_model_pressure_qwen2_5_7b/`). It is a guarded memory-budget attempt, not
+  a full benchmark, and is excluded from the small-model analysis pipeline above. **No large-model
+  performance is claimed.**
+- **No large-model *performance* generalization** — the 7B never generated; the result is a
+  load-time memory-pressure negative, not a throughput/latency benchmark.
 
 ## 8. Next steps
 

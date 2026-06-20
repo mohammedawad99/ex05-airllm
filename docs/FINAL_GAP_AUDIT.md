@@ -23,7 +23,7 @@ Status legend: **SATISFIED** · **PARTIALLY_SATISFIED** · **BLOCKED** · **NOT_
 | 1 | GitHub repo & reproducibility | SATISFIED | `README.md`, `pyproject.toml`, `uv.lock`, `src/`, `tests/`, `results/`, git history | Repo pushed (`origin/main`); the measured path + analysis regenerate via documented `uv` commands. Residual user inputs (group code, license) tracked separately. |
 | 2 | Hardware characterization | SATISFIED | `docs/HARDWARE.md`, `README.md` §3 | Host + WSL2 measured; CPU-only determination; VRAM `N/A_WITH_RATIONALE`. |
 | 3 | Model selection rationale | PARTIALLY_SATISFIED | `docs/MODEL_SELECTION.md`, `DECISIONS.md` ADR-0101a/0018 | Rationale documented; `Qwen2-0.5B` measured; `Qwen2-7B` deferred (not downloaded/approved); final large pick not finalized. |
-| 4 | Direct baseline / local inference | PARTIALLY_SATISFIED | `results/measurements/transformers_cpu_qwen2_0_5b/`, `docs/MEASUREMENT_RUNS.md` | HF `transformers` CPU baseline on `Qwen2-0.5B` ran **6/6**; baseline on a larger/selected model not done. |
+| 4 | Direct baseline / local inference | PARTIALLY_SATISFIED | `results/measurements/transformers_cpu_qwen2_0_5b/`, `results/measurements/large_model_pressure_qwen2_5_7b/`, `docs/MEASUREMENT_RUNS.md` | HF `transformers` CPU baseline on `Qwen2-0.5B` ran **6/6** (full measured path). A separate **direct large-model (>RAM) pressure baseline** on `Qwen2.5-7B` (Stage 10B) was **attempted & evidenced** as a guarded memory-budget **structured negative** (`memory_budget_exceeded`, see row 18) — not a full benchmark. |
 | 5 | AirLLM integration | BLOCKED | `results/stage3*`, `results/stage4a*`, `results/analysis/airllm_failure_summary.json`, `docs/AIRLLM_PATCH_FEASIBILITY.md` | Installs/imports; format fixed by re-shard; **CPU forward fails** (meta-device) — root-caused to AirLLM core param streaming. `any_success=false`. Not a success. |
 | 6 | Quantization | SATISFIED (small model) | `results/measurements/transformers_cpu_int8_quantization_qwen2_0_5b/`, `results/measurements/gguf_quantization_qwen2_5_0_5b/`, `docs/MEASUREMENT_RUNS.md` §9–§10 | Two measured comparisons: Stage 9C **dynamic INT8 vs FP32** (Transformers) and Stage 10A **GGUF Q8_0 vs Q4_K_M** (`llama.cpp`, `Qwen2.5-0.5B-Instruct-GGUF`) — Q4 ~13% less RAM / 27% smaller file at ~equal throughput, coherent output. **F16 GGUF excluded** (1266 MB > ~1.2 GB cap). Small-model only; not cross-comparable across runtimes; no large-model quant. |
 | 7 | Metrics (runtime, throughput, TPOT, TTFT, RAM, VRAM, energy) | PARTIALLY_SATISFIED | `results/measurements/...`, `results/analysis/...`, `docs/ANALYSIS.md` | runtime **SATISFIED**; throughput **SATISFIED**; RAM (RSS) **SATISFIED**; **TTFT SATISFIED** (Stage 9B streaming run); **TPOT SATISFIED** (decode-only, Stage 9B) — Stage 5B's TPOT was approximate; VRAM **N/A** (no GPU compute); energy **PARTIALLY** (assumption-based estimate). |
@@ -37,7 +37,7 @@ Status legend: **SATISFIED** · **PARTIALLY_SATISFIED** · **BLOCKED** · **NOT_
 | 15 | API gatekeeper | N/A_WITH_RATIONALE | `src/ex05_airllm/api_gatekeeper.py`, `config/rate_limits.example.json`, `tests/unit/test_api_gatekeeper.py` | No live external API is called anywhere (cost is assumption-based); a fail-closed, disabled-by-default guard is implemented + tested for any future path. |
 | 16 | Quantization measured run | SATISFIED (small model) | `results/measurements/transformers_cpu_int8_quantization_qwen2_0_5b/`, `results/measurements/gguf_quantization_qwen2_5_0_5b/`, `docs/MEASUREMENT_RUNS.md` §9–§10 | Stage 9C (dynamic INT8 vs FP32) **and** Stage 10A (**GGUF Q8_0 vs Q4_K_M**, 12/12) both executed. F16 GGUF excluded (size cap). Low-bit quantization genuinely evidenced on a small model; no large-model quant. |
 | 17 | TTFT measurement | SATISFIED | `results/measurements/transformers_cpu_streaming_qwen2_0_5b/`, `docs/MEASUREMENT_RUNS.md` §8 | Stage 9B: **real TTFT measured** via `TextIteratorStreamer` (6/6, cached Qwen2-0.5B, offline, no new download). mean ≈0.41 s (skewed by cold first run; steady ≈0.25–0.27 s); TPOT now decode-only. Supersedes Stage 5B's `None`. |
-| 18 | Large-model memory-pressure case | NOT_DONE (preflight done) | `docs/LARGE_MODEL_PREFLIGHT.md`, `docs/PLAN.md` | No >RAM model run. Stage 10B-0 preflight scoped it: 7B fp16 (~15 GB) > 11 GiB RAM → OOM expected; guarded attempt + structured-negative-result plan. **Requires explicit user approval before any Qwen 7B download** (Stage 10B). |
+| 18 | Large-model memory-pressure case | ATTEMPTED & EVIDENCED (structured negative) | `results/measurements/large_model_pressure_qwen2_5_7b/`, `docs/LARGE_MODEL_PREFLIGHT.md`, `docs/MEASUREMENT_RUNS.md` §11 | Stage 10B executed (approved): a **guarded** `Qwen/Qwen2.5-7B-Instruct` fp16 **direct Transformers CPU** attempt under a **13312 MiB** `RLIMIT_AS` child budget. Local snapshot found (download done, weights git-ignored under `.hf_cache/`); the child hit **`Cannot allocate memory`** **during load** (no generation) → **structured negative** `memory_budget_exceeded` (`success=false`, `returncode=3`, not timed out). Demonstrates direct fp16 7B memory pressure on this WSL CPU env. **A guarded memory-budget attempt, not a full benchmark.** AirLLM remains a separate (blocked) path. |
 
 ## 3. Explicit blockers
 
@@ -97,10 +97,13 @@ guard implemented + tested.
 (Transformers) and **GGUF Q8_0 vs Q4_K_M** (`llama.cpp`, user-approved download) — so the low-bit
 quantization gap is **SATISFIED on a small model** (F16 GGUF excluded by the ~1.2 GB cap).
 
-**Still open before any self-assessment-100 claim** (row 18 above):
-- **Large-model memory-pressure baseline — NOT_DONE** (Stage 10B-0 preflight done,
-  `docs/LARGE_MODEL_PREFLIGHT.md`) → requires explicit user approval before any Qwen 7B (~15 GB)
-  download (Stage 10B); 7B fp16 > RAM, so an OOM/structured-negative-result is the expected outcome.
+**Closed since (Stage 10B):** the **direct large-model (>RAM) memory-pressure baseline** is now
+**ATTEMPTED & EVIDENCED** as a structured negative (row 18). A guarded `Qwen/Qwen2.5-7B-Instruct` fp16
+Transformers CPU attempt under a 13312 MiB `RLIMIT_AS` child budget hit `Cannot allocate memory`
+during load → `memory_budget_exceeded` (`results/measurements/large_model_pressure_qwen2_5_7b/`). This
+is a **guarded memory-budget attempt, not a full benchmark**, and does **not** claim AirLLM success.
+The repo is still **not** claimed self-assessment-100-ready / 100% complete: AirLLM remains blocked,
+quantization stays small-model, cost/energy stays assumption-based.
 
 AirLLM remains **BLOCKED** (structured negative result, not a success); the original analytical
 extensions are the AirLLM forensic analysis + the assumption-based break-even analysis; license not

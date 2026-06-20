@@ -7,11 +7,26 @@
 
 ## 1. Status
 
-- **Large-model memory-pressure baseline: NOT_DONE.** No >RAM model has been downloaded or run.
-  Nothing here changes that — this is a feasibility decision, not an execution.
+> **Update — Stage 10B executed (2026-06-20).** This preflight has since been acted on under explicit
+> approval. The guarded attempt ran and produced a **structured negative result**
+> (`failure_class=memory_budget_exceeded`): the `Qwen/Qwen2.5-7B-Instruct` fp16 weights were found in
+> the local (git-ignored) HF cache, a child subprocess capped at **13312 MiB** `RLIMIT_AS` began the
+> load and hit **`Cannot allocate memory`** (`DefaultCPUAllocator`) **during model load** — before any
+> generation (`load_completed=false`, `generation_completed=false`, `returncode=3`, not timed out).
+> Evidence: `results/measurements/large_model_pressure_qwen2_5_7b/` (summary.csv + result JSON). This
+> **attempts and evidences** the direct large-model (>RAM) pressure baseline as a guarded
+> memory-budget structured negative — **not a full benchmark, not a success**. AirLLM stays **blocked /
+> not evidenced**; no model artifacts are committed (weights stay git-ignored under `.hf_cache/`). The
+> sections below are the original preflight plan, preserved for the record.
+
+- **Large-model memory-pressure baseline: NOT_DONE** *(as written at preflight time; now **ATTEMPTED &
+  EVIDENCED** as a structured negative — see the update box above).* At preflight this was a
+  feasibility decision, not an execution.
 - **HEAD:** `ee038ca`. Working tree clean except ignored artifacts. Model artifacts are git-ignored
   (`.local_models/`, `.hf_cache/`, `*.safetensors`, `*.bin`, `*.gguf`, `*.pt`, `*.pth`).
-- **`Qwen2-7B` remains not downloaded / not approved.** AirLLM remains **blocked / not evidenced**.
+- **`Qwen2-7B` remains not downloaded / not approved** *(at preflight; Stage 10B later downloaded
+  `Qwen/Qwen2.5-7B-Instruct` to the ignored HF cache under explicit approval — never committed).*
+  AirLLM remains **blocked / not evidenced**.
 
 ## 2. Why this stage exists
 

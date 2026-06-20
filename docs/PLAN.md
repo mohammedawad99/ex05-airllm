@@ -323,8 +323,14 @@ scopes the 7B Transformers pressure test against the measured hardware (11 GiB R
 ~15 GB fp16 7B → **OOM expected/acceptable**), with guardrails, success/failure criteria, and the
 exact approval text. No download/run/dependency change.
 
-**Stage 10B — optional large-model memory-pressure baseline (REQUIRES EXPLICIT USER APPROVAL before
-any Qwen 7B (~15 GB) download).** A genuine larger-than-RAM case; expected to OOM or thrash → a
-**structured negative result** is an acceptable, in-spec outcome (not a success requirement). Guarded
-single-prompt attempt, tiny `max_new_tokens`, strict timeout, no committed weights — see
-`docs/LARGE_MODEL_PREFLIGHT.md`. Not started; no download.
+**Stage 10B — large-model memory-pressure baseline (✅ DONE; user-approved, guarded).** A genuine
+larger-than-RAM case, run as a guarded single-prompt attempt (`max_new_tokens=8`, strict timeout, no
+committed weights). The `Qwen/Qwen2.5-7B-Instruct` fp16 snapshot was found in the **ignored HF cache**
+(download done, weights git-ignored); a child subprocess capped at **13312 MiB** (`RLIMIT_AS`, below
+the ~15.24 GB fp16 footprint) hit **`Cannot allocate memory`** (`DefaultCPUAllocator`) **during model
+load, before generation** → a **structured negative result** `memory_budget_exceeded` (`success=false`,
+`returncode=3`, not timed out; `load_completed=false`, `generation_completed=false`). Evidence:
+`results/measurements/large_model_pressure_qwen2_5_7b/`; method in `docs/LARGE_MODEL_PREFLIGHT.md` and
+`docs/MEASUREMENT_RUNS.md` §11. This **attempts & evidences** the direct large-model pressure baseline
+and **closes that gap** — a **guarded memory-budget attempt, not a full benchmark**; no large-model
+performance is claimed and AirLLM stays **blocked / not evidenced**. The run is not rerun.

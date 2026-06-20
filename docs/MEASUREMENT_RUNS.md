@@ -179,3 +179,44 @@ succeeded**.
   like quantization delta against the Transformers runs. Treat this as its **own** low-bit sweep.
 - **Scope:** separate small-model low-bit sweep — **not AirLLM**, **not a large-model baseline**, no
   Qwen2-7B. Prior measurement dirs unmodified; GGUF weights remain git-ignored.
+
+## 11. Stage 10B — guarded large-model (>RAM) memory-pressure baseline (structured negative)
+
+The deliberately *larger-than-memory* case, executed under explicit approval as a **guarded** attempt
+(method scoped in `docs/LARGE_MODEL_PREFLIGHT.md`). It **attempts and evidences** the direct
+large-model pressure baseline — **not** a full benchmark and **not** an AirLLM run.
+
+- **What ran:** a direct `Qwen/Qwen2.5-7B-Instruct` **fp16 Transformers CPU** load + one tiny
+  generation attempt (`max_new_tokens=8`, deterministic). The model snapshot was found in the
+  **ignored HF cache** (`download_completed=true`, `local_snapshot_found=true`); weights are
+  **git-ignored** (`.hf_cache/`) and **never committed**.
+- **Guard design:** the parent stays light and resolves the cached snapshot offline (no re-download);
+  a **child subprocess** applies an address-space cap of **13312 MiB** (`RLIMIT_AS`) **before**
+  importing torch/transformers, so allocations count against the budget and the parent survives to
+  write a structured record instead of being OOM-killed. 13312 MiB sits **below** the ~15.24 GB fp16
+  footprint on this ~11 GiB-RAM + ~3 GiB-swap host — so hitting the cap is the expected, in-spec
+  outcome.
+- **Outcome (structured negative):** the child raised **`Cannot allocate memory`**
+  (`DefaultCPUAllocator`) **during model load, before any generation**.
+
+| field | value |
+| --- | --- |
+| model_id | `Qwen/Qwen2.5-7B-Instruct` |
+| attempt_type / backend / environment | `transformers_7b_direct_cpu_baseline` / `transformers` / `wsl_cpu` |
+| success / structured_negative_result | `false` / `true` |
+| failure_class | `memory_budget_exceeded` |
+| download_completed / local_snapshot_found | `true` / `true` |
+| load_completed / generation_completed | `false` / `false` |
+| child_memory_limit_mb | `13312` |
+| returncode / timed_out | `3` / `false` |
+| elapsed_seconds / child_elapsed_seconds | `4.65` / `1.68` |
+| child_maxrss_mb / max_new_tokens | `871.8` / `8` |
+
+- **Evidence:** `results/measurements/large_model_pressure_qwen2_5_7b/` (`summary.csv` + result JSON).
+  Runner `src/ex05_airllm/run_large_model_pressure_baseline.py`, pure helpers
+  `src/ex05_airllm/large_model_pressure.py`, tests `tests/unit/test_large_model_pressure.py`.
+- **Interpretation:** this **demonstrates direct fp16 7B memory pressure** on the WSL CPU environment
+  and **closes the direct large-model pressure baseline gap**. It is a **guarded memory-budget
+  attempt, not a full benchmark**; it never generated, so **no large-model performance is claimed**.
+  AirLLM remains **blocked / not evidenced** (a separate path). Prior measurement dirs unmodified; no
+  model artifacts committed. The run was **not** rerun for this write-up.
