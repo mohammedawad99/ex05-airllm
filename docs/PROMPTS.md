@@ -1388,6 +1388,38 @@
 
 ---
 
+## Prompt 026 — Stage 9C-0: Quantization preflight & decision plan
+
+- **Stage:** 9C-0
+- **Date:** 2026-06-20
+- **Intent:** Plan how to close the quantization gap **without** any download, dependency change, or
+  model run — produce an evidence-based route decision document.
+- **Context:** Quantization is the main remaining experimental gap (TTFT closed in 9B). Two viable
+  routes exist; one needs new download/dependency.
+- **Key constraints encoded:** planning/audit ONLY — no downloads, no `uv add`, no pyproject/uv.lock
+  edits, no model generation, no quantization run; create `docs/QUANTIZATION_PREFLIGHT.md` with the
+  required structure (status, current evidence, open requirement, Route A torch dynamic INT8
+  no-download, Route B GGUF Q8/Q4 approval-gated, Route C stop, risk table, recommendation, exact
+  approval text, guardrails, allowed vs protected files); update TODO/PLAN/FINAL_GAP_AUDIT/
+  SUBMISSION_CHECKLIST/PROMPTS + tiny README/final_report pointers; prefer Route A first, Route B
+  only on explicit dependency+download approval, do not recommend Qwen2-7B. Forbidden: model/GGUF/
+  Qwen2-7B download, install deps, edit pyproject/uv.lock/source/tests/raw-results/analysis/figures,
+  run any model/quant/AirLLM/Ollama/DirectML, stage/commit/push.
+- **Outcome:** Confirmed HEAD `b6a3b47`, clean tree, both measurement dirs committed, **no
+  GGUF/llama-cpp/bitsandbytes dependency** present, no model artifacts tracked. Wrote
+  `docs/QUANTIZATION_PREFLIGHT.md` (12 sections). **Recommendation: Route A** (PyTorch dynamic INT8,
+  fp32-vs-INT8, no download/dependency, low risk) as default; **Route B** (GGUF Q8/Q4) only with
+  explicit dependency+download approval; `Qwen2-7B` not recommended. Updated TODO (T9.3a DONE, T9.3
+  routes), PLAN (Stage 9C-0), FINAL_GAP_AUDIT (row 16 + verdict), SUBMISSION_CHECKLIST, README,
+  final_report. Validation green (71 tests, ruff/format clean); all protected diffs empty; no
+  secrets; no model artifacts. **No downloads, no dependency changes, no model/quant runs.**
+- **Iterations / corrections:** none.
+- **Lessons / notes for next prompts:** to proceed, the user picks a route — Route A needs only a
+  go-ahead; Route B needs explicit approval of a `llama-cpp-python` dependency **and** a named GGUF
+  model download (license/access checked first). Quantization stays NOT_DONE until then.
+
+---
+
 *Template for future entries:*
 *Prompt NNN — <stage>: <title> — Intent / Context / Constraints / Verbatim prompt /
 Actions / Outcome / Iterations / Lessons.*

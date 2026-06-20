@@ -289,8 +289,14 @@ transformers_cpu_streaming_qwen2_0_5b/`; TTFT mean ≈0.41 s (steady ≈0.25–0
   TTFT reported as measured only if the hook genuinely fires (else stays `None`, never estimated).
 - *Effort:* small (runner tweak + a focused test with a fake streamer; no network).
 
-**Stage 9C — GGUF / CPU quantization experiment (REQUIRES EXPLICIT USER APPROVAL before any
-dependency or model download).**
+**Stage 9C-0 — quantization preflight & route decision (done; planning only).** Evaluated three
+routes in `docs/QUANTIZATION_PREFLIGHT.md`: **Route A** = PyTorch dynamic INT8 (fp32-vs-INT8, **no
+download, no new dependency**, low risk — recommended default); **Route B** = GGUF Q8/Q4 sweep
+(approval-gated dependency + model download); **Route C** = stop (quantization stays NOT_DONE). No
+download/dependency/run performed.
+
+**Stage 9C — quantization measured run (REQUIRES EXPLICIT USER APPROVAL; Route B also needs approval
+before any dependency or model download).**
 - *Scope:* compare ≥2 precisions (e.g. Q8 vs Q4) of a small model on CPU and record
   runtime/throughput/peak-RAM + a qualitative sample per level → a real quantization comparison.
 - *Why approval-gated:* needs a CPU-friendly GGUF runtime (e.g. `llama-cpp-python`) **and** a GGUF

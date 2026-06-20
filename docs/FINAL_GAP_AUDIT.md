@@ -35,7 +35,7 @@ Status legend: **SATISFIED** · **PARTIALLY_SATISFIED** · **BLOCKED** · **NOT_
 | 13 | Secrets / model-weight hygiene | SATISFIED | `.gitignore`, `.env-example`, repo audit | No secrets/tokens committed; `.env-example` has dummy values only; **no model weights/shards tracked**; weights/caches/raw logs git-ignored. |
 | 14 | SDK facade & config hygiene | SATISFIED | `src/ex05_airllm/sdk.py`, `.env-example`, `tests/unit/test_sdk.py` | Stage 9A: thin SDK facade delegating to existing modules (no logic duplicated, no model/network); `.env-example` committed. |
 | 15 | API gatekeeper | N/A_WITH_RATIONALE | `src/ex05_airllm/api_gatekeeper.py`, `config/rate_limits.example.json`, `tests/unit/test_api_gatekeeper.py` | No live external API is called anywhere (cost is assumption-based); a fail-closed, disabled-by-default guard is implemented + tested for any future path. |
-| 16 | Quantization measured run | NOT_DONE | `docs/PLAN.md` Stage 9C | No quantized inference executed; planned GGUF/CPU, **requires explicit user approval before any download**. |
+| 16 | Quantization measured run | NOT_DONE (route planned) | `docs/QUANTIZATION_PREFLIGHT.md`, `docs/PLAN.md` Stage 9C | No quantized inference executed. Stage 9C-0 preflight chose **Route A** (torch dynamic INT8, no download/dep — recommended) vs **Route B** (GGUF Q8/Q4, approval-gated download+dep). Awaiting user go-ahead. |
 | 17 | TTFT measurement | SATISFIED | `results/measurements/transformers_cpu_streaming_qwen2_0_5b/`, `docs/MEASUREMENT_RUNS.md` §8 | Stage 9B: **real TTFT measured** via `TextIteratorStreamer` (6/6, cached Qwen2-0.5B, offline, no new download). mean ≈0.41 s (skewed by cold first run; steady ≈0.25–0.27 s); TPOT now decode-only. Supersedes Stage 5B's `None`. |
 | 18 | Large-model memory-pressure case | NOT_DONE | `docs/PLAN.md` | No >RAM model run; **requires explicit user approval before any `Qwen2-7B` download**. |
 
@@ -91,8 +91,9 @@ guard implemented + tested.
 `Qwen2-0.5B` (no new download); TPOT is now decode-only. Stage 5B raw data unchanged.
 
 **Still open before any self-assessment-100 claim** (rows 16 & 18 above):
-- **Quantization measured run — NOT_DONE** → Stage 9C (GGUF/CPU), **requires user approval before any
-  download**.
+- **Quantization measured run — NOT_DONE** → route chosen in `docs/QUANTIZATION_PREFLIGHT.md`:
+  **Route A** (torch dynamic INT8, no download/dep — recommended) needs a go-ahead; **Route B**
+  (GGUF Q8/Q4) **requires user approval before any dependency/model download**.
 - **Large-model memory-pressure baseline — NOT_DONE** → requires user approval before any `Qwen2-7B`
   download.
 

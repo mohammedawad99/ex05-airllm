@@ -126,8 +126,10 @@ grade** — the experimental gaps below remain open. The student completes submi
 TPOT is now decode-only. Stage 5B raw data unchanged.
 
 **Not ready for a self-assessment-100 claim until these are closed** (each needs work / approval):
-- **Quantization measured run — NOT_DONE** (no quantized inference executed; planned Stage 9C,
-  GGUF/CPU, **requires explicit user approval before any dependency/model download**).
+- **Quantization measured run — NOT_DONE** (no quantized inference executed). Stage 9C-0 preflight
+  (`docs/QUANTIZATION_PREFLIGHT.md`) chose **Route A** (torch dynamic INT8 — **no download/dependency**,
+  recommended; needs a go-ahead) vs **Route B** (GGUF Q8/Q4 — **requires explicit user approval
+  before any dependency/model download**).
 - **Large-model baseline / memory-pressure case — NOT_DONE** (no >RAM model run); requires explicit
   user approval before any `Qwen2-7B` download.
 

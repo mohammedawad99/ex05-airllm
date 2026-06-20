@@ -168,6 +168,7 @@ An honest negative AirLLM result plus a working, reproducible Transformers CPU m
 analyzed transparently with assumption-marked cost/energy. Engineering evidence over fabricated
 success. Repository status: **READY_FOR_HONEST_SUBMISSION (with known limitations)** — not submitted,
 not 100% complete, and **not** claimed ready for a self-assessment-100 grade until the quantization
-(Stage 9C) and large-model memory-pressure gaps are closed (see `docs/PLAN.md` §8). **TTFT is now
-measured** (Stage 9B streaming run, no new download). Stage 9A added engineering hygiene only
-(`.env-example`, SDK facade, fail-closed API gatekeeper) — no new experimental result.
+(Stage 9C; route chosen in `docs/QUANTIZATION_PREFLIGHT.md`) and large-model memory-pressure gaps are
+closed (see `docs/PLAN.md` §8). **TTFT is now measured** (Stage 9B streaming run, no new download).
+Stage 9A added engineering hygiene only (`.env-example`, SDK facade, fail-closed API gatekeeper) — no
+new experimental result.

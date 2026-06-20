@@ -336,8 +336,10 @@ This project's original contributions are **analytical**, built honestly on the 
   `Qwen2-0.5B` (no new download) — see §7.
 - **Open before any self-assessment-100 claim** (each needs work / approval; see
   [`docs/SUBMISSION_CHECKLIST.md`](docs/SUBMISSION_CHECKLIST.md) and `docs/PLAN.md` §8): a
-  **quantization** measured run (Stage 9C, approval-gated download) and a **large-model
-  memory-pressure baseline** (approval-gated `Qwen2-7B`).
+  **quantization** measured run — route chosen in
+  [`docs/QUANTIZATION_PREFLIGHT.md`](docs/QUANTIZATION_PREFLIGHT.md) (Route A = torch dynamic INT8,
+  no download; Route B = GGUF Q8/Q4, approval-gated) — and a **large-model memory-pressure baseline**
+  (approval-gated `Qwen2-7B`).
 - **Engineering hygiene (Stage 9A):** a committed [`.env-example`](.env-example) (dummy values), a
   thin **SDK facade** (`src/ex05_airllm/sdk.py`) over the pure logic, and a fail-closed
   disabled-by-default **API gatekeeper** (`src/ex05_airllm/api_gatekeeper.py`) — the project makes
