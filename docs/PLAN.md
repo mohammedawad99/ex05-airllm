@@ -334,3 +334,28 @@ load, before generation** → a **structured negative result** `memory_budget_ex
 `docs/MEASUREMENT_RUNS.md` §11. This **attempts & evidences** the direct large-model pressure baseline
 and **closes that gap** — a **guarded memory-budget attempt, not a full benchmark**; no large-model
 performance is claimed and AirLLM stays **blocked / not evidenced**. The run is not rerun.
+
+## 9. Stage 11A — final-analysis hardening (DONE; docs/code only, no model run/download)
+
+A reproducible analysis layer over the **committed** evidence, addressing remaining strict-audit gaps
+without any new experiment. Entry points: `uv run python -m ex05_airllm.analysis_pipeline` and
+`uv run python -m ex05_airllm.cost_model`.
+
+- **Cost model v2** (`cost_model.py` -> `results/analysis/cost_model_v2.json`,
+  `figures/final_cost_break_even.png`): a **nonzero allocated CAPEX** ($900 laptop x 25% usage = $225,
+  amortized 4 yr -> **$4.6875/month**), Israel electricity tariff (0.6432 ILS/kWh / 3.70 =
+  $0.1738/kWh), and OpenAI API price assumptions - **all dated 2026-06-21, not guaranteed pricing**.
+  Meaningful **amortized break-even** ~47k req/month (gpt-4o-mini) / ~13k (gpt-4.1-mini);
+  **electricity-only is tiny** (break-even 0); **CAPEX dominates** local cost; privacy/offline may
+  still justify local.
+- **Evidence + Roofline** (`analysis_pipeline.py`): `final_evidence_summary.json` (5 groups) and a
+  **Roofline-style qualitative classification** (`roofline_classification.json`) - explicitly not a
+  formal HW roofline - plus figures `final_quantization_speed_ram.png`, `final_ttft_tpot.png`,
+  `final_roofline_classification.png`.
+- **Tests/quality:** added tests for the pipeline, cost v2, and the two previously under-tested
+  runners -> **123 tests, ~96% coverage** (both quantization runners now 100% line-covered), ruff
+  clean, all files <=150 code lines.
+- **Honesty:** 9C INT8 and 10A GGUF Q4/Q8 stay **separate** quantization experiments (not
+  cross-comparable); 10B stays a guarded structured negative; AirLLM stays blocked; prior raw dirs /
+  `reports/measurement_summary.md` / `pyproject.toml` / `uv.lock` untouched; no artifacts tracked;
+  repo **not** claimed 100-ready.

@@ -148,3 +148,35 @@ All numbers derive from documented **assumptions**, not verified live pricing
   `reports/final_report.md`; gaps tracked in `docs/FINAL_GAP_AUDIT.md`.
 - *Optional:* a Windows-native DirectML analysis if time permits (extension, not AirLLM).
 - **No Qwen2-7B** unless the AirLLM blocker is resolved on a viable backend.
+
+## 9. Stage 11A — final-analysis hardening (cost v2, roofline, figures; docs/code only)
+
+A reproducible pipeline `src/ex05_airllm/analysis_pipeline.py` reads **only committed** measurement
+CSV/JSON (5B/9B/9C/10A/10B) and writes new analysis artifacts — **no model run, no download, no raw
+file mutated**. Run: `uv run python -m ex05_airllm.analysis_pipeline` (and `… -m ex05_airllm.cost_model`).
+
+- **Evidence summary** — `results/analysis/final_evidence_summary.json` with all five groups (5B
+  baseline, 9B streaming TTFT/TPOT, 9C dynamic INT8, 10A GGUF Q8/Q4, 10B 7B memory-pressure).
+- **Cost model v2** — `src/ex05_airllm/cost_model.py` → `results/analysis/cost_model_v2.json`. Adds a
+  **nonzero allocated CAPEX**: $900 laptop × 25% local-LLM usage = **$225** effective, amortized over
+  4 years = **$4.6875/month**. Electricity: **0.6432 ILS/kWh ÷ 3.70 = $0.1738/kWh** (Israel
+  residential tariff assumption). API: OpenAI **gpt-4o-mini $0.15/$0.60**, **gpt-4.1-mini $0.40/$1.60**
+  per 1M in/out. Workload 512 in / 128 out tokens over [100 … 1,000,000] req/month. **All values are
+  dated assumptions accessed 2026-06-21 — NOT guaranteed future prices.**
+  - **Electricity-only** local cost is tiny (sub-cent/request) ⇒ electricity-only break-even is **0**
+    (local cheaper from the first request).
+  - **CAPEX dominates** local economics; the meaningful **amortized break-even** is **≈47,487
+    req/month** vs gpt-4o-mini and **≈13,215 req/month** vs gpt-4.1-mini.
+  - Privacy / offline capability may justify local inference even when pure cost does not.
+- **Roofline-style qualitative classification** — `results/analysis/roofline_classification.json`
+  (from measured evidence; **not** a formal hardware roofline benchmark): 5B memory/CPU-constrained,
+  moderate throughput; 9B prefill latency (TTFT) visible, decode TPOT stable; 9C INT8 faster but
+  quality regresses with small RAM savings (Linear-only + both models held); 10A GGUF Q4 lower memory
+  at near-equal throughput; 10B 7B fp16 memory-capacity bound (budget exceeded before generation).
+- **Figures** (plain matplotlib, default colors, no subplots): `figures/final_quantization_speed_ram.png`,
+  `figures/final_ttft_tpot.png`, `figures/final_cost_break_even.png`,
+  `figures/final_roofline_classification.png`.
+- **Honesty:** 9C dynamic INT8 (Transformers) and 10A GGUF Q4/Q8 (`llama.cpp`) stay **separate**
+  quantization experiments on different models/runtimes — **not cross-comparable**. AirLLM stays
+  blocked/not evidenced; 10B stays a guarded memory-pressure **structured negative**, not a full 7B
+  benchmark. The repo is **not** claimed 100-ready / 100% complete.

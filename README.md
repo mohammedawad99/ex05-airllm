@@ -279,6 +279,40 @@ An **assumption-based, illustrative** estimate (`src/ex05_airllm/cost_model.py`;
 > **Firm caveat:** real provider prices and a metered wattage must be sourced and dated before any
 > quantitative cost claim. No live/market pricing is asserted here.
 
+### 8a. Cost model v2 — CAPEX-aware break-even (Stage 11A, dated assumptions)
+
+The Stage 11A **cost model v2** (`src/ex05_airllm/cost_model.py`;
+`results/analysis/cost_model_v2.json`) adds a **nonzero allocated CAPEX** so the break-even is
+meaningful rather than zero. **Every price/tariff/FX value below is a documented assumption accessed
+2026-06-21 — not guaranteed future pricing.**
+
+- **CAPEX:** $900 general-purpose laptop × **25%** local-LLM usage = **$225** effective, amortized
+  over **4 years** → **$4.6875/month** allocated.
+- **Electricity:** **0.6432 ILS/kWh ÷ 3.70 = $0.1738/kWh** (Israel residential tariff assumption).
+- **API (assumed OpenAI list):** gpt-4o-mini **$0.15 / $0.60**, gpt-4.1-mini **$0.40 / $1.60** per 1M
+  input/output tokens. Workload: 512 input / 128 output tokens per request.
+- **Findings:** electricity-only local cost is **tiny** (sub-cent/request) → electricity-only
+  break-even is **0** (local cheaper from request 1). With CAPEX, the **amortized break-even** is
+  **≈47,487 req/month** vs gpt-4o-mini and **≈13,215 req/month** vs gpt-4.1-mini — i.e. **CAPEX
+  dominates** local economics, and privacy/offline capability may justify local even when pure cost
+  does not.
+
+![Cost model v2 break-even (assumption-based)](figures/final_cost_break_even.png)
+
+### 8b. Stage 11A analysis figures (from committed evidence)
+
+A reproducible pipeline (`uv run python -m ex05_airllm.analysis_pipeline`) reads **only committed**
+measurement data and emits `results/analysis/final_evidence_summary.json`,
+`results/analysis/roofline_classification.json`, and these figures (no model run, no download):
+
+![Quantization throughput + peak RAM](figures/final_quantization_speed_ram.png)
+![Streaming TTFT per run](figures/final_ttft_tpot.png)
+![Roofline-style throughput by stage](figures/final_roofline_classification.png)
+
+The quantization figure spans **different runtimes** (HF dynamic INT8/FP32 vs `llama.cpp` GGUF) and is
+**not** cross-comparable; the 7B stage shows zero throughput (OOM at load). The Roofline view is a
+**qualitative** classification from measured evidence, **not** a formal hardware roofline benchmark.
+
 ## 9. Course concept mapping
 
 Each concept is tied to *this* evidence, with an explicit measured-vs-discussed marker:
@@ -303,9 +337,13 @@ Each concept is tied to *this* evidence, with an explicit measured-vs-discussed 
 - **Quantization as a memory-reduction route** — *Discussed, not a completed run.* Lower precision
   (Q8/Q4) would shrink the resident footprint, but AirLLM's `bitsandbytes` path is CUDA-oriented
   (unavailable) and a CPU GGUF route was not executed. **No quantized inference result is claimed.**
-- **On-Prem vs API trade-off** — *Discussed + illustrative estimate.* §8 sketches the trade-off
-  under explicit assumptions; the honest takeaway is methodological (CAPEX dominates break-even),
-  not a verified price comparison.
+- **On-Prem vs API trade-off** — *Discussed + assumption-based model (v2).* §8/§8a model the trade-off
+  under explicit dated assumptions; with a **nonzero allocated CAPEX** the amortized break-even is
+  meaningful (~47k/~13k req/month) and **CAPEX dominates** — still methodological, not verified pricing.
+- **Roofline-style memory- vs compute-bound** — *Qualitative classification from measured evidence.*
+  Stage 11A maps each stage to a regime (`results/analysis/roofline_classification.json`,
+  `figures/final_roofline_classification.png`): 0.5B CPU decode memory/CPU-constrained; 7B fp16
+  memory-capacity bound (OOM at load). Explicitly **not** a formal hardware roofline benchmark.
 
 ## 10. Reproducibility
 

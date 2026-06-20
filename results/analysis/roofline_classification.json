@@ -1,0 +1,10 @@
+{
+  "label": "Roofline-style qualitative classification from measured evidence (not a formal hardware roofline benchmark); throughput/TTFT anchors in final_evidence_summary.json",
+  "classifications": {
+    "5B_baseline_transformers_cpu": "memory/CPU constrained, moderate throughput",
+    "9B_streaming": "prefill latency visible (TTFT); decode TPOT stable",
+    "9C_dynamic_int8": "speed up, quality regresses; small RAM savings (Linear-only)",
+    "10A_gguf_q4_q8": "memory footprint improves with Q4 at near-equal throughput",
+    "10B_7b_fp16_direct": "memory-capacity bound; budget exceeded before generation"
+  }
+}

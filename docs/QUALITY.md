@@ -151,3 +151,15 @@ figures/analysis-JSON unchanged; prior measurement dirs untouched; **no model ar
 (7B weights git-ignored under `.hf_cache/`, never committed). The run was **not** rerun for docs.
 **Guarded memory-budget attempt, not a full benchmark; no large-model performance claimed; AirLLM
 stays blocked.** Repo still **not** claimed self-assessment-100-ready / 100% complete.
+
+**Stage 11A update (final-analysis hardening; docs/code only, no model run/download):** added
+`analysis_pipeline.py` (reads committed CSV/JSON → `final_evidence_summary.json` +
+`roofline_classification.json` + 3 figures) and a **cost model v2** in `cost_model.py`
+(`cost_model_v2.json` + `final_cost_break_even.png`) with **nonzero allocated CAPEX** and a meaningful
+break-even, plus tests for both and for the two previously under-tested runners
+(`run_gguf_quantization_measurement.py`, `run_transformers_cpu_int8_quantization_measurement.py`).
+Gates: **123 tests pass, ~96% coverage (up from ~88%), ruff check + format clean, all files ≤150 code
+lines.** Both runners now 100% line-covered. Raw measurement dirs, `reports/measurement_summary.md`,
+`pyproject.toml`/`uv.lock`/`.env-example`/`config/` unchanged; **no model artifacts tracked**. Pricing/
+tariff/FX are **dated assumptions (2026-06-21)**, not guaranteed pricing. AirLLM stays blocked; 10B
+stays a guarded structured negative; repo still **not** 100-ready / 100% complete.

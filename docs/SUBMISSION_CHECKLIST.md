@@ -64,23 +64,28 @@ Status legend: **DONE** (complete, evidenced) · **PARTIAL** (real evidence, not
   (not yet created)*
 
 ## D. Analysis
-- **DONE** — Tables + 4 figures generated from real committed data — *evidence: figures/,
-  docs/ANALYSIS.md*
-- **PARTIAL** — Compute- vs memory-bound (Roofline) argument made in prose; not a separate figure —
-  *evidence: README.md §9, reports/final_report.md §5*
-- **PARTIAL** — Cost model: API vs On-Prem + break-even figure under **assumed** pricing
-  (`pricing_status=assumption_not_live_verified`); not market-verified — *evidence:
-  results/analysis/cost_energy_estimate.json, figures/cost_break_even_estimate.png, docs/COSTS.md*
+- **DONE** — Tables + **8 figures** generated from real committed data (4 original + 4 Stage 11A:
+  quantization speed/RAM, streaming TTFT, cost break-even, Roofline-style) — *evidence: figures/,
+  docs/ANALYSIS.md §4/§9*
+- **DONE** — Compute- vs memory-bound (**Roofline-style qualitative**) classification of all five
+  evidence groups, anchored to measured throughput/TTFT (explicitly **not** a formal HW roofline) —
+  *evidence: results/analysis/roofline_classification.json, figures/final_roofline_classification.png*
+- **PARTIAL** — Cost model **v2**: API vs On-Prem + break-even with **nonzero allocated CAPEX** ($225
+  → $4.6875/month) → meaningful amortized break-even (~47k/~13k req-month); electricity-only 0; CAPEX
+  dominates. All prices/tariff/FX are **dated assumptions (2026-06-21)**, not market-verified —
+  *evidence: results/analysis/cost_model_v2.json, figures/final_cost_break_even.png, docs/ANALYSIS.md §9*
 - **PARTIAL** — Required concepts explained and tied to evidence (measured-vs-discussed markers) —
   *evidence: README.md §9, reports/final_report.md §5*
 - **PARTIAL** — Research Questions explicitly answered with honest gaps — *evidence:
   reports/final_report.md §6*
-- **TODO** — ≥1 original extension delivered (candidate: break-even simulator, ADR-0105) —
-  *evidence: reports/extension.md (not yet created)*
+- **PARTIAL** — Original extension: a parameterized **CAPEX-aware break-even cost model v2**
+  (multi-scenario, dated-assumption) is delivered (Stage 11A) alongside the AirLLM forensic analysis —
+  *evidence: src/ex05_airllm/cost_model.py, results/analysis/cost_model_v2.json, docs/ANALYSIS.md §9*
 
 ## E. Quality gates (see QUALITY.md)
 - **DONE** — `ruff check .` zero errors; `ruff format --check .` clean — *evidence: run log*
-- **DONE** — Tests pass (happy + error paths); coverage ≥85% — *evidence: pytest (84 passed, ~88%)*
+- **DONE** — Tests pass (happy + error paths); coverage ≥85% — *evidence: pytest (123 passed, ~96%;
+  Stage 11A added runner/pipeline/cost-v2 tests, both quantization runners now 100% line-covered)*
 - **DONE** — Every source file ≤150 code lines — *evidence: line-count audit*
 - **DONE** — Config hierarchy: versioned `config/*.example.*`, `.env` git-ignored, **`.env-example`
   committed** (dummy values only) — *evidence: .env-example, config/*

@@ -1,0 +1,104 @@
+{
+  "assumptions": {
+    "access_date": "2026-06-21",
+    "hardware_purchase_usd": 900.0,
+    "amortization_years": 4,
+    "annual_local_llm_usage_fraction": 0.25,
+    "electricity_price_ils_per_kwh": 0.6432,
+    "usd_ils": 3.7,
+    "api_prices_usd_per_1m": {
+      "gpt_4o_mini": {
+        "input": 0.15,
+        "output": 0.6
+      },
+      "gpt_4_1_mini": {
+        "input": 0.4,
+        "output": 1.6
+      }
+    },
+    "input_tokens_per_request": 512,
+    "output_tokens_per_request": 128,
+    "local_energy_watts": 45.0,
+    "local_energy_watts_sensitivity": 65.0,
+    "requests_per_month": [
+      100,
+      1000,
+      10000,
+      100000,
+      1000000
+    ],
+    "pricing_status": "dated_assumption_not_guaranteed_future_pricing"
+  },
+  "derived": {
+    "effective_local_llm_capex_usd": 225.0,
+    "monthly_allocated_capex_usd": 4.6875,
+    "electricity_price_usd_per_kwh": 0.173838,
+    "per_request_runtime_seconds": 25.26,
+    "electricity_only_local_cost_per_request_usd_45w": 5.489e-05,
+    "electricity_only_local_cost_per_request_usd_65w": 7.928e-05,
+    "api_cost_per_request_usd": {
+      "gpt_4o_mini": 0.0001536,
+      "gpt_4_1_mini": 0.0004096
+    }
+  },
+  "scenarios": [
+    {
+      "requests_per_month": 100,
+      "electricity_only_local_usd": 0.0055,
+      "amortized_local_usd": 4.693,
+      "api_usd": {
+        "gpt_4o_mini": 0.0154,
+        "gpt_4_1_mini": 0.041
+      }
+    },
+    {
+      "requests_per_month": 1000,
+      "electricity_only_local_usd": 0.0549,
+      "amortized_local_usd": 4.7424,
+      "api_usd": {
+        "gpt_4o_mini": 0.1536,
+        "gpt_4_1_mini": 0.4096
+      }
+    },
+    {
+      "requests_per_month": 10000,
+      "electricity_only_local_usd": 0.5489,
+      "amortized_local_usd": 5.2364,
+      "api_usd": {
+        "gpt_4o_mini": 1.536,
+        "gpt_4_1_mini": 4.096
+      }
+    },
+    {
+      "requests_per_month": 100000,
+      "electricity_only_local_usd": 5.4889,
+      "amortized_local_usd": 10.1764,
+      "api_usd": {
+        "gpt_4o_mini": 15.36,
+        "gpt_4_1_mini": 40.96
+      }
+    },
+    {
+      "requests_per_month": 1000000,
+      "electricity_only_local_usd": 54.8893,
+      "amortized_local_usd": 59.5768,
+      "api_usd": {
+        "gpt_4o_mini": 153.6,
+        "gpt_4_1_mini": 409.6
+      }
+    }
+  ],
+  "break_even_requests_per_month_amortized": {
+    "gpt_4o_mini": 47487.3,
+    "gpt_4_1_mini": 13215.0
+  },
+  "electricity_only_break_even_requests": 0,
+  "conclusions": [
+    "Electricity-only local inference cost is tiny (sub-cent per request).",
+    "Allocated CAPEX dominates local economics (fixed $4.6875/month).",
+    "API cost scales with tokens and request volume.",
+    "Break-even is meaningful only with nonzero allocated CAPEX (electricity-only is 0).",
+    "Privacy / offline capability may justify local inference even when cost does not."
+  ],
+  "caveat": "dated assumptions (2026-06-21); not guaranteed future market pricing"
+}

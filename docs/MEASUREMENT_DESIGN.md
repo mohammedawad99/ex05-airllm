@@ -217,3 +217,23 @@ kill/timeout is the **expected, in-spec** outcome.
   ~11 GiB, AirLLM family support).
 - A **final candidate is chosen with written rationale** (ADR), sized to the constraints.
 - **No download occurs before the model decision is approved.**
+
+## 10. Stage 11A — analysis/cost methodology (reads committed evidence only)
+
+The Stage 11A pipeline (`analysis_pipeline.py`) and **cost model v2** (`cost_model.py`) are pure
+read+compute over committed measurement artifacts — no model, no network, no raw-file mutation.
+
+- **Evidence summary method:** per-group means over **successful** rows only (blank/`None` excluded,
+  never fabricated), reusing the tested `comparison_summary` / `summarize` helpers for 9C/10A/10B.
+- **Cost model v2 method:** `effective_capex = purchase × usage_fraction`; `monthly_capex =
+  effective_capex / (years × 12)`; per-request local generation time = `output_tokens ÷ measured
+  tokens/sec` (throughput read from the committed 5B CSV); `electricity = kWh × USD/kWh`;
+  `api = in/1e6×in_price + out/1e6×out_price`; **amortized break-even** `= monthly_capex ÷
+  (api_per_request − local_electricity_per_request)`. CAPEX, tariff, FX and API prices are
+  **documented assumptions dated 2026-06-21**, recorded with `pricing_status` in the JSON — not
+  guaranteed pricing. A 45 W primary + 65 W sensitivity wattage is used.
+- **Roofline-style classification:** a **qualitative** mapping of each stage to a memory/compute
+  regime, anchored to the measured throughput/TTFT in the evidence summary. Explicitly labelled *not*
+  a formal hardware roofline benchmark.
+- **Figure rules:** matplotlib only, default colors, **no seaborn**, **no subplots** (each figure is a
+  separate plot), generated from the committed/derived data only.

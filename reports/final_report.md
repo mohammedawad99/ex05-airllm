@@ -199,6 +199,19 @@ local ≈ **$1.4×10⁻⁵**, assumed API ≈ **$4.9×10⁻⁵**, break-even **0
 `results/analysis/cost_energy_estimate.json`; method: `docs/COSTS.md`. **Not market-verified
 pricing.**
 
+**Cost model v2 (Stage 11A — CAPEX-aware).** To make the break-even meaningful, a v2 model
+(`src/ex05_airllm/cost_model.py` → `results/analysis/cost_model_v2.json`,
+`figures/final_cost_break_even.png`) adds a **nonzero allocated CAPEX**: $900 laptop × 25% usage =
+**$225** effective, amortized over 4 years = **$4.6875/month**; electricity **0.6432 ILS/kWh ÷ 3.70 =
+$0.1738/kWh**; assumed OpenAI **gpt-4o-mini $0.15/$0.60** and **gpt-4.1-mini $0.40/$1.60** per 1M; 512
+in / 128 out tokens. **All values are dated assumptions accessed 2026-06-21, not guaranteed future
+pricing.** Result: electricity-only local cost is **tiny** (break-even 0), but the **amortized
+break-even** is **≈47,487 req/month** (gpt-4o-mini) / **≈13,215 req/month** (gpt-4.1-mini) — **CAPEX
+dominates** local economics; privacy/offline may justify local even when pure cost does not. A
+**Roofline-style qualitative classification** (`results/analysis/roofline_classification.json`) and
+four `figures/final_*.png` summarize quantization, TTFT, cost, and the per-stage memory/compute regime
+— all from committed evidence, no new runs (`docs/ANALYSIS.md` §9).
+
 ## 8. Reproducibility
 
 ```bash

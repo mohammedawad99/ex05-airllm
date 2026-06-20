@@ -1,0 +1,87 @@
+{
+  "5B_baseline_transformers_cpu": {
+    "runs": 6,
+    "mean_total_runtime_seconds": 5.6824,
+    "mean_tokens_per_second": 5.0673,
+    "mean_peak_ram_mb": 4015.6167,
+    "mean_output_tokens": 28.6667,
+    "mean_ttft_seconds": null,
+    "mean_tpot_seconds": 0.1981
+  },
+  "9B_streaming_ttft_tpot": {
+    "runs": 6,
+    "mean_total_runtime_seconds": 5.7321,
+    "mean_tokens_per_second": 5.024,
+    "mean_peak_ram_mb": 4008.15,
+    "mean_output_tokens": 28.6667,
+    "mean_ttft_seconds": 0.4122,
+    "mean_tpot_seconds": 0.1922
+  },
+  "9C_dynamic_int8": {
+    "variant_count": {
+      "fp32_reference": 6,
+      "int8_dynamic": 6
+    },
+    "fp32_reference": {
+      "runs": 6,
+      "mean_generation_seconds": 6.0256,
+      "mean_total_runtime_seconds": 6.0256,
+      "mean_tokens_per_second": 4.8336,
+      "mean_peak_ram_mb": 7192.4333,
+      "mean_output_tokens": 28.6667
+    },
+    "int8_dynamic": {
+      "runs": 6,
+      "mean_generation_seconds": 1.8918,
+      "mean_total_runtime_seconds": 1.8918,
+      "mean_tokens_per_second": 17.2675,
+      "mean_peak_ram_mb": 7086.2833,
+      "mean_output_tokens": 32.0
+    },
+    "note": "PyTorch dynamic INT8 (torch.ao.quantization.quantize_dynamic on Linear modules) vs FP32 reference, same cached Qwen2-0.5B, CPU. Dynamic INT8 only — NOT GGUF, NOT Q4, NOT Q8.",
+    "deltas": {
+      "int8_vs_fp32_throughput_ratio": 3.5724,
+      "int8_vs_fp32_peak_ram_ratio": 0.9852,
+      "int8_vs_fp32_generation_ratio": 0.314
+    }
+  },
+  "10A_gguf_q8_q4": {
+    "note": "GGUF CPU low-bit quantization sweep (llama-cpp-python) on Qwen2.5-0.5B-Instruct-GGUF. Separate small-model sweep — NOT AirLLM, NOT the Transformers Qwen2-0.5B runs, NOT a large-model baseline.",
+    "variants": {
+      "q8_0": {
+        "runs": 6,
+        "mean_ttft_seconds": 0.4026,
+        "mean_tpot_seconds": 0.0173,
+        "mean_tokens_per_second": 32.5574,
+        "mean_generation_seconds": 0.8887,
+        "mean_peak_ram_mb": 787.5833,
+        "mean_estimated_model_file_mb": 675.7
+      },
+      "q4_k_m": {
+        "runs": 6,
+        "mean_ttft_seconds": 0.3543,
+        "mean_tpot_seconds": 0.0186,
+        "mean_tokens_per_second": 31.7943,
+        "mean_generation_seconds": 0.819,
+        "mean_peak_ram_mb": 684.7667,
+        "mean_estimated_model_file_mb": 491.4
+      }
+    }
+  },
+  "10B_large_model_pressure": {
+    "attempts": 1,
+    "success": "False",
+    "failure_class": "memory_budget_exceeded",
+    "child_memory_limit_mb": "13312",
+    "download_completed": "True",
+    "load_completed": "False",
+    "generation_completed": "False",
+    "elapsed_seconds": "4.65",
+    "note": "7B fp16 direct CPU baseline; OOM/kill/timeout is an expected structured negative.",
+    "error": "__CHILD_RESULT__{\"load_completed\": false, \"generation_completed\": false, \"output_preview\": \"\", \"error\": \"RuntimeError: [enforce fail at alloc_cpu.cpp:117] err == 0. DefaultCPUAllocator: can't allocate memory: you tried to allocate 135790592 bytes. Error code 12 (Cannot allocate memory)\", \"child_elapsed_seconds\": 1.68, \"child_maxrss_mb\": 871.8}\n"
+  },
+  "notes": [
+    "9C dynamic INT8 (Transformers) and 10A GGUF Q8/Q4 (llama.cpp) are SEPARATE quantization experiments on different models/runtimes — not cross-comparable.",
+    "10B is a guarded memory-pressure structured negative, NOT a full 7B benchmark; AirLLM remains blocked/not evidenced."
+  ]
+}

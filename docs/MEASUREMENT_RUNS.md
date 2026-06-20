@@ -220,3 +220,24 @@ large-model pressure baseline — **not** a full benchmark and **not** an AirLLM
   attempt, not a full benchmark**; it never generated, so **no large-model performance is claimed**.
   AirLLM remains **blocked / not evidenced** (a separate path). Prior measurement dirs unmodified; no
   model artifacts committed. The run was **not** rerun for this write-up.
+
+## 12. Stage 11A — final-analysis pipeline over the committed evidence (no new runs)
+
+Stage 11A adds a reproducible analysis layer that **reads only committed measurement artifacts** and
+emits new analysis JSON + figures — **no model run, no download, and no raw measurement file is
+edited**. Entry points: `uv run python -m ex05_airllm.analysis_pipeline` and
+`uv run python -m ex05_airllm.cost_model`.
+
+- **Inputs (read-only):** the Stage 5B/9B/9C/10A `summary.csv` files and the Stage 10B `summary.csv`
+  + result JSON.
+- **Outputs (new only):** `results/analysis/final_evidence_summary.json` (all five evidence groups),
+  `results/analysis/roofline_classification.json`, `results/analysis/cost_model_v2.json`, and four
+  figures under `figures/final_*.png` (quantization speed/RAM, streaming TTFT, cost break-even,
+  Roofline-style throughput by stage).
+- **Cost model v2** introduces a **nonzero allocated CAPEX** ($225 effective → $4.6875/month) so the
+  break-even is meaningful (≈47k req/month vs gpt-4o-mini; ≈13k vs gpt-4.1-mini); electricity-only
+  break-even is 0. **All prices/tariffs are dated assumptions (2026-06-21), not guaranteed pricing.**
+- **Scope/honesty:** 9C dynamic INT8 and 10A GGUF Q4/Q8 stay **separate** quantization experiments
+  (different model/runtime, not cross-comparable); 10B stays a guarded memory-pressure structured
+  negative (not a full benchmark); AirLLM stays blocked/not evidenced. Prior raw dirs and
+  `reports/measurement_summary.md` are untouched.
